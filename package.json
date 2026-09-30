@@ -5,6 +5,7 @@
     "dev": "vite",
     "build": "vite build",
     "test": "node tests/smoke.mjs",
+    "typecheck": "tsc --noEmit",
     "db:migrate:local": "wrangler d1 migrations apply webapp-production --local",
     "preview": "wrangler pages dev",
     "deploy": "npm run build && wrangler pages deploy",
@@ -17,6 +18,7 @@
     "@hono/vite-build": "^1.11.1",
     "@hono/vite-dev-server": "^0.26.1",
     "@playwright/test": "^1.63.0",
+    "typescript": "^5.9.3",
     "vite": "^8.1.4",
     "wrangler": "^4.110.0"
   }

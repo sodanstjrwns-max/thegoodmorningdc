@@ -3,7 +3,7 @@ import { serveStatic } from 'hono/cloudflare-workers'
 import { getCookie, setCookie, deleteCookie } from 'hono/cookie'
 import { secureHeaders } from 'hono/secure-headers'
 import { bodyLimit } from 'hono/body-limit'
-import { treatments, doctors, generalFaq, branches } from './data'
+import { treatments, doctors, allFaq, branches } from './data'
 import { shell, home, heading, esc, icon } from './ui'
 import * as pages from './pages'
 import { glossary } from './glossary'
@@ -34,7 +34,7 @@ app.get('/about',c=>c.redirect('/directions',301))
 app.get('/reservation',c=>render(c,'전화 상담·예약 안내',pages.directionsPage(true)))
 app.get('/contents',c=>render(c,'치과 영상·건강정보·백과사전',pages.contentsPage()))
 app.get('/video',c=>render(c,'원장 설명 영상',pages.videoPage()))
-app.get('/faq',c=>render(c,'자주 묻는 질문',pages.faqPage(),[{'@context':'https://schema.org','@type':'FAQPage',mainEntity:[...generalFaq,...treatments.find(t=>t.slug==='sedation')!.faq].map(([q,a])=>({'@type':'Question',name:q,acceptedAnswer:{'@type':'Answer',text:a}}))}]))
+app.get('/faq',c=>render(c,'자주 묻는 질문',pages.faqPage(),[{'@context':'https://schema.org','@type':'FAQPage',mainEntity:allFaq.map(([q,a])=>({'@type':'Question',name:q,acceptedAnswer:{'@type':'Answer',text:a}}))}]))
 app.get('/symptom-checker',c=>render(c,'증상별 진료 정보 찾기',pages.checkerPage()))
 app.get('/cases',c=>render(c,'치료사례 공개 안내',pages.casesPage()))
 app.get('/pricing',c=>render(c,'비급여 진료비 확인 안내',pages.pricingPage()))
@@ -47,7 +47,7 @@ for(const type of ['blog','notice']){
  app.get('/'+type,async c=>render(c,type==='notice'?'병원 소식':'치과 건강정보',pages.postList(await posts(c,type),type==='notice')))
  app.get('/'+type+'/:slug',async c=>{const p=await c.env.DB?.prepare('SELECT * FROM posts WHERE slug=? AND type=? AND status=?').bind(c.req.param('slug'),type,'published').first();if(!p)return render(c,'페이지를 찾을 수 없습니다',pages.notFound(),[],404);return render(c,p.title,pages.postPage(p),[{'@context':'https://schema.org','@type':'Article',headline:p.title,datePublished:p.created_at,dateModified:p.updated_at,author:{'@type':'Organization',name:'더굿모닝치과'}}])})
 }
-app.get('/api/search',c=>{const q=(c.req.query('q')||'').trim().toLowerCase().slice(0,100);const items=[...treatments.map(t=>({title:t.name,category:'진료 안내',url:'/treatments/'+t.slug,keywords:t.symptoms.join(' ')})),...doctors.map(d=>({title:d.name+' 원장',category:'의료진',url:'/doctors/'+d.slug,keywords:d.role})),...glossary.map(t=>({title:t.term,category:'치과 용어 · 관련 진료',url:'/treatments/'+t.slug,keywords:t.description})),{title:'오시는 길 · 진료시간',category:'병원 안내',url:'/directions',keywords:'위치 청량리 광명 전화 주차 일요일 시간'},{title:'상담 예약',category:'내원 안내',url:'/reservation',keywords:'예약 전화 상담'}];return c.json({results:q?items.filter(t=>(t.title+' '+t.keywords).toLowerCase().includes(q)).slice(0,15):[]})})
+app.get('/api/search',c=>{const q=(c.req.query('q')||'').trim().toLowerCase().slice(0,100);const items=[...treatments.map(t=>({title:t.name,category:'진료 안내',url:'/treatments/'+t.slug,keywords:[t.description,...t.symptoms,...t.sections.map(s=>s.title),...t.faq.map(([q])=>q)].join(' ')})),...doctors.map(d=>({title:d.name+' 원장',category:'의료진',url:'/doctors/'+d.slug,keywords:d.role})),...glossary.map(t=>({title:t.term,category:'치과 용어 · 관련 진료',url:'/treatments/'+t.slug,keywords:t.description})),{title:'오시는 길 · 진료시간',category:'병원 안내',url:'/directions',keywords:'위치 청량리 광명 전화 주차 일요일 시간'},{title:'상담 예약',category:'내원 안내',url:'/reservation',keywords:'예약 전화 상담'}];return c.json({results:q?items.filter(t=>(t.title+' '+t.keywords).toLowerCase().includes(q)).slice(0,15):[]})})
 app.get('/api/health',c=>c.json({ok:true,service:'the-good-morning'}))
 app.get('/admin',async c=>{c.header('Cache-Control','no-store');return render(c,'관리자 콘텐츠 스튜디오',pages.adminPage(await isAdmin(c),!!c.env.ADMIN_PASSWORD))})
 app.post('/api/admin/login',async c=>{

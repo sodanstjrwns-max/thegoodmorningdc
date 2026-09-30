@@ -29,5 +29,12 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+# Private source material, credentials and local test outputs
+.sources/
+.env.*
+.dev.vars*
+test-results/
+*.tar.gz
+
 # misc
 .DS_Store

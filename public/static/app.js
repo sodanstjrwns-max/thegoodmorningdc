@@ -9,7 +9,32 @@ toggle?.addEventListener('click',()=>{if(!menu.hidden){closeMenu();return}menu.h
 document.addEventListener('keydown',e=>{if(!menu.hidden){if(e.key==='Escape'){closeMenu();toggle.focus()}if(e.key==='Tab'){const list=[toggle,...$$('a',menu)];const first=list[0],last=list.at(-1);if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus()}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus()}}}});
 $$('a',menu).forEach(a=>a.addEventListener('click',closeMenu));
 $('.back-top')?.addEventListener('click',()=>window.scrollTo({top:0,behavior:reduced?'instant':'smooth'}));
-if(!reduced&&matchMedia('(pointer:fine)').matches){$('#hero-section')?.addEventListener('pointermove',e=>{const x=(e.clientX/innerWidth-.5)*22,y=(e.clientY/innerHeight-.5)*15;e.currentTarget.style.setProperty('--mx',x+'px');e.currentTarget.style.setProperty('--my',y+'px')})}
+// Hero motion is opt-out, silent and static-first. No video autoplay dependency.
+const hero=$('#hero-section'),motionButton=$('#hero-motion-toggle');
+if(hero&&motionButton){
+ const preference=matchMedia('(prefers-reduced-motion: reduce)');
+ const connection=navigator.connection;
+ let userPaused=false,inView=true;
+ const syncMotion=()=>{
+  const constrained=preference.matches||!!connection?.saveData;
+  hero.classList.toggle('motion-ready',!constrained);
+  hero.classList.toggle('motion-paused',userPaused);
+  hero.classList.toggle('motion-suspended',document.hidden||!inView);
+  motionButton.hidden=false;
+  motionButton.disabled=constrained;
+  motionButton.setAttribute('aria-pressed',String(userPaused||constrained));
+  const label=constrained?'모션 줄이기 적용':userPaused?'모션 재생':'모션 정지';
+  $('span',motionButton).textContent=label;
+  motionButton.setAttribute('aria-label',constrained?'기기 설정에 따라 히어로 모션을 줄였습니다':'히어로 '+label);
+  hero.dataset.motionState=constrained?'reduced':userPaused?'paused':document.hidden||!inView?'suspended':'playing';
+ };
+ motionButton.addEventListener('click',()=>{userPaused=!userPaused;hero.classList.add('motion-intro-finished');syncMotion()});
+ preference.addEventListener('change',syncMotion);
+ connection?.addEventListener?.('change',syncMotion);
+ document.addEventListener('visibilitychange',syncMotion);
+ if('IntersectionObserver'in window)new IntersectionObserver(entries=>{inView=entries[0].isIntersecting;syncMotion()},{threshold:0}).observe(hero);
+ syncMotion();
+}
 if(!reduced&&$('#sedation-story')){const scene=$('#sedation-story');let queued=false;const update=()=>{const rect=scene.getBoundingClientRect();const p=Math.max(0,Math.min(1,(innerHeight-rect.top)/(innerHeight+rect.height*.3)));scene.style.setProperty('--sun-shift',String(Math.round((1-p)*120)));scene.style.setProperty('--sun-glow',String(.25+p*.75));queued=false};window.addEventListener('scroll',()=>{if(!queued){queued=true;requestAnimationFrame(update)}},{passive:true});update()}
 const names={cheongnyangni:'청량리 본점',gwangmyeong:'광명사거리점'},phones={cheongnyangni:'02-969-3776',gwangmyeong:'02-6013-2828'};let branch='cheongnyangni';try{const q=new URLSearchParams(location.search).get('branch');branch=names[q]?q:(sessionStorage.getItem('gm_branch')||branch);if(!names[branch])branch='cheongnyangni'}catch{}
 function hoursStatus(){const date=new Date();const parts=new Intl.DateTimeFormat('en-US',{timeZone:'Asia/Seoul',weekday:'short',hour:'numeric',minute:'numeric',hourCycle:'h23'}).formatToParts(date);const get=t=>parts.find(p=>p.type===t)?.value;const day=get('weekday'),now=Number(get('hour'))*60+Number(get('minute'));let start=570,end=1110,lunchStart=780,lunchEnd=branch==='cheongnyangni'?(day==='Wed'?930:870):840;let closed=false;if(day==='Sat'){end=840;lunchStart=lunchEnd=0}if(day==='Sun'){if(branch==='cheongnyangni'){start=600;end=840;lunchStart=lunchEnd=0}else closed=true}if(day==='Mon'&&branch==='gwangmyeong')end=1230;const status=$('#regular-hours-status');if(status){status.textContent=closed?'정규 일정 · 휴진':now>=lunchStart&&now<lunchEnd?'정규 일정 · 점심시간':now>=start&&now<end?'정규 일정 · '+Math.floor(end/60)+':'+String(end%60).padStart(2,'0')+'까지':'정규 일정 · 진료시간 외';status.title='공휴일·임시 휴진은 반영되지 않습니다. 실제 진료 여부는 전화로 확인해 주세요.'}}

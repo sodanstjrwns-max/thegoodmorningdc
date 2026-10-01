@@ -151,6 +151,78 @@ $$('[data-story-mode]').forEach(scene=>{
  else{complete=true;render(true)}
  sync();
 });
+// Scroll-assembled care architecture; the native page scroll is never intercepted.
+const assembly=$('#preservation-assembly');
+if(assembly){
+ const notes=$$('[data-assembly-note]',assembly),layers=$$('[data-plan-layer]',assembly),range=$('#assembly-range'),follow=$('#assembly-follow');
+ const labels=notes.map(note=>$('h3',note).textContent);let manual=false,queued=false;
+ function paint(value){
+  const v=Math.max(1,Math.min(4,value)),index=Math.min(3,Math.floor(v-.001));
+  layers.forEach((layer,i)=>layer.style.setProperty('--assembled',String(motionAllowed()?Math.min(1,Math.max(0,v-i)):1)));
+  notes.forEach((note,i)=>note.classList.toggle('is-current',i===index));
+  $('.assembly-count',assembly).innerHTML=String(index+1).padStart(2,'0')+' <small>/ 04</small>';
+  $('#assembly-active-label').textContent=labels[index];range.value=String(v);range.setAttribute('aria-valuetext',(index+1)+'단계 '+labels[index]);
+  assembly.dataset.assemblyStage=String(index);assembly.dataset.assemblyValue=String(v);
+ }
+ function update(){
+  queued=false;const mobile=matchMedia('(max-width:760px)').matches;
+  follow.hidden=mobile;follow.disabled=!motionAllowed();follow.setAttribute('aria-pressed',String(!manual));
+  assembly.dataset.assemblyMode=!motionAllowed()?'static':manual||mobile?'manual':'scroll';
+  if(!motionAllowed()){paint(4);return}if(manual||mobile)return;
+  const first=notes[0].getBoundingClientRect(),last=notes.at(-1).getBoundingClientRect();
+  if(last.bottom<0||first.top>innerHeight)return;
+  paint(1+3*Math.max(0,Math.min(1,(innerHeight*.4-first.top)/Math.max(1,last.top-first.top))));
+ }
+ function queue(){if(!queued){queued=true;requestAnimationFrame(update)}}
+ range.addEventListener('input',()=>{manual=true;paint(Number(range.value));assembly.dataset.assemblyMode='manual';follow.setAttribute('aria-pressed','false')});
+ follow.addEventListener('click',()=>{manual=false;queue()});
+ $('.assembly-controls',assembly).hidden=false;paint(4);update();addEventListener('scroll',queue,{passive:true});addEventListener('resize',queue,{passive:true});document.addEventListener('site-motion-change',queue);
+}
+// Physician cards: user-driven coverflow with safe links and a static-grid fallback.
+const deck=$('#physician-deck');
+if(deck){
+ const viewport=$('.physician-deck-viewport',deck),cards=$$('[data-physician-card]',deck),selectors=$$('[data-deck-select]',deck),controls=$('.physician-deck-controls',deck),announcement=$('.deck-announcement',deck);
+ let active=0,enabled=false,start=null,suppressClick=false;
+ function render(announce=true){
+  const gap=Math.min(230,viewport.clientWidth*.28);
+  cards.forEach((card,i)=>{let offset=i-active;if(offset>2)offset-=cards.length;if(offset<-2)offset+=cards.length;const distance=Math.abs(offset);
+   card.style.setProperty('--deck-x',offset*gap+'px');card.style.setProperty('--deck-rotate',-offset*13+'deg');card.style.setProperty('--deck-scale',String(1-distance*.12));card.style.setProperty('--deck-z',String(10-distance));card.style.setProperty('--deck-opacity',String(1-distance*.25));card.classList.toggle('is-active',i===active);
+   if(enabled&&i!==active){card.setAttribute('aria-hidden','true');$$('a',card).forEach(a=>a.tabIndex=-1)}else{card.removeAttribute('aria-hidden');$$('a',card).forEach(a=>a.removeAttribute('tabindex'))}
+  });
+  selectors.forEach((button,i)=>button.setAttribute('aria-pressed',String(i===active)));deck.dataset.deckActive=String(active);
+  if(announce)announcement.textContent=(active+1)+' / '+cards.length+' · '+$('h3',cards[active]).textContent;
+ }
+ function select(index){active=(index+cards.length)%cards.length;render()}
+ function sync(){enabled=motionAllowed();deck.classList.toggle('deck-enhanced',enabled);controls.hidden=!enabled;announcement.hidden=!enabled;viewport.tabIndex=enabled?0:-1;$('.deck-footnote',deck).firstChild.textContent=enabled?'좌우로 드래그하거나 이름을 선택하세요.':'의료진의 전체 약력과 진료 분야를 살펴보세요.';start=null;render(false)}
+ $('[data-deck-previous]',deck).addEventListener('click',()=>select(active-1));$('[data-deck-next]',deck).addEventListener('click',()=>select(active+1));selectors.forEach((button,i)=>button.addEventListener('click',()=>select(i)));
+ cards.forEach((card,i)=>{card.addEventListener('click',event=>{if(!enabled)return;if(suppressClick){event.preventDefault();suppressClick=false;return}if(i!==active){event.preventDefault();select(i)}});$$('img',card).forEach(img=>img.draggable=false)});
+ viewport.addEventListener('pointerdown',event=>{if(!enabled||!event.isPrimary||event.button!==0||event.target.closest('a,button'))return;start={id:event.pointerId,x:event.clientX,y:event.clientY};suppressClick=false});
+ viewport.addEventListener('pointermove',event=>{if(start&&start.id===event.pointerId&&Math.abs(event.clientX-start.x)>10)suppressClick=true});
+ const end=event=>{if(!start||start.id!==event.pointerId)return;const dx=event.clientX-start.x,dy=event.clientY-start.y;start=null;if(Math.abs(dx)>40&&Math.abs(dx)>Math.abs(dy)*1.3){select(active+(dx<0?1:-1));suppressClick=true}setTimeout(()=>suppressClick=false,0)};
+ addEventListener('pointerup',end);addEventListener('pointercancel',()=>{start=null;suppressClick=false});
+ deck.addEventListener('keydown',event=>{if(!enabled||event.target.closest('a')||!['ArrowLeft','ArrowRight','Home','End'].includes(event.key))return;event.preventDefault();select(event.key==='Home'?0:event.key==='End'?cards.length-1:active+(event.key==='ArrowRight'?1:-1))});
+ document.addEventListener('site-motion-change',sync);addEventListener('resize',()=>render(false),{passive:true});sync();
+}
+// A reveal lens translates existing glossary content, not patient data or AI output.
+const language=$('#language-reveal');
+if(language){
+ const panels=$$('[data-term-panel]',language),selectors=$$('[data-term-select]',language),range=$('#language-range'),replay=$('#language-replay');
+ let selected=0,raf=0,began=0,startValue=0,visible=false,played=false;
+ function value(v){range.value=String(v);range.setAttribute('aria-valuetext','쉬운 말 '+Math.round(v)+'% 표시');language.style.setProperty('--term-reveal',v+'%');language.dataset.revealValue=String(v)}
+ function stop(){if(raf)cancelAnimationFrame(raf);raf=0;language.dataset.revealState='idle'}
+ function animate(){
+  stop();if(!motionAllowed()||!visible||document.hidden){value(100);return}
+  value(0);startValue=0;began=performance.now();language.dataset.revealState='playing';
+  function frame(now){if(!motionAllowed()||!visible||document.hidden){stop();return}const p=Math.min(1,(now-began)/1800),eased=1-Math.pow(1-p,3);value(startValue+(100-startValue)*eased);if(p<1)raf=requestAnimationFrame(frame);else{raf=0;language.dataset.revealState='complete'}}
+  raf=requestAnimationFrame(frame);
+ }
+ function select(index){selected=index;panels.forEach((panel,i)=>panel.hidden=i!==index);selectors.forEach((button,i)=>button.setAttribute('aria-pressed',String(i===index)));language.dataset.termActive=String(index);animate()}
+ range.addEventListener('input',()=>{stop();value(Number(range.value))});replay.addEventListener('click',animate);selectors.forEach((button,i)=>button.addEventListener('click',()=>select(i)));
+ language.addEventListener('keydown',event=>{if(!event.target.matches('[data-term-select]')||!['ArrowLeft','ArrowRight','Home','End'].includes(event.key))return;event.preventDefault();const next=event.key==='Home'?0:event.key==='End'?panels.length-1:(selected+(event.key==='ArrowRight'?1:-1)+panels.length)%panels.length;selectors[next].focus();select(next)});
+ document.addEventListener('site-motion-change',()=>{if(!motionAllowed()){stop();value(100)}});document.addEventListener('visibilitychange',()=>{if(document.hidden)stop()});
+ language.classList.add('language-enhanced');$('.language-selectors',language).hidden=false;$('.language-range-controls',language).hidden=false;panels.forEach((panel,i)=>panel.hidden=i!==0);language.dataset.termActive='0';value(motionAllowed()?50:100);
+ if('IntersectionObserver'in window)new IntersectionObserver(entries=>{visible=entries[0].isIntersecting;if(!visible)stop();else if(!played){played=true;animate()}},{threshold:.2}).observe(language);else value(100);
+}
 // The shared scroll scheduler also drives the sedation sunrise.
 const names={cheongnyangni:'청량리 본점',gwangmyeong:'광명사거리점'},phones={cheongnyangni:'02-969-3776',gwangmyeong:'02-6013-2828'};let branch='cheongnyangni';try{const q=new URLSearchParams(location.search).get('branch');branch=names[q]?q:(sessionStorage.getItem('gm_branch')||branch);if(!names[branch])branch='cheongnyangni'}catch{}
 function hoursStatus(){const date=new Date();const parts=new Intl.DateTimeFormat('en-US',{timeZone:'Asia/Seoul',weekday:'short',hour:'numeric',minute:'numeric',hourCycle:'h23'}).formatToParts(date);const get=t=>parts.find(p=>p.type===t)?.value;const day=get('weekday'),now=Number(get('hour'))*60+Number(get('minute'));let start=570,end=1110,lunchStart=780,lunchEnd=branch==='cheongnyangni'?(day==='Wed'?930:870):840;let closed=false;if(day==='Sat'){end=840;lunchStart=lunchEnd=0}if(day==='Sun'){if(branch==='cheongnyangni'){start=600;end=840;lunchStart=lunchEnd=0}else closed=true}if(day==='Mon'&&branch==='gwangmyeong')end=1230;const status=$('#regular-hours-status');if(status){status.textContent=closed?'정규 일정 · 휴진':now>=lunchStart&&now<lunchEnd?'정규 일정 · 점심시간':now>=start&&now<end?'정규 일정 · '+Math.floor(end/60)+':'+String(end%60).padStart(2,'0')+'까지':'정규 일정 · 진료시간 외';status.title='공휴일·임시 휴진은 반영되지 않습니다. 실제 진료 여부는 전화로 확인해 주세요.'}}

@@ -56,6 +56,18 @@ try{
  }
  await page.setViewportSize({width:1440,height:1000})
  console.log(`PASS: ${urls.length} public routes, 31 source-based treatments, 285 FAQs with exact schema parity, nine differentiators, eight treatment cards, five doctors, 320–1440px layouts.`)
+ // Safari/iOS byte-range probes and seek requests must return real partial bytes.
+ for(const filename of ['clinic-opening.mp4','clinic-opening-mobile.mp4']){
+  const original=fs.readFileSync('public/static/video/'+filename),url=base+'/films/'+filename;
+  for(const [range,start,end] of [['bytes=0-1',0,1],['bytes=100-199',100,199],['bytes=-16',original.length-16,original.length-1],['bytes=100-',100,original.length-1]]){
+   const response=await context.request.get(url,{headers:{Range:range}});assert.equal(response.status(),206);assert.equal(response.headers()['accept-ranges'],'bytes');assert.equal(response.headers()['content-range'],`bytes ${start}-${end}/${original.length}`);assert.deepEqual(await response.body(),original.subarray(start,end+1));
+  }
+  const head=await context.request.head(url);assert.equal(Number(head.headers()['content-length']),original.length);
+  const bad=await context.request.get(url,{headers:{Range:'bytes=99999999-'}});assert.equal(bad.status(),416);
+  const ifRange=await context.request.get(url,{headers:{Range:'bytes=0-1','If-Range':'"outdated"'}});assert.equal(ifRange.status(),200);
+ }
+ assert.equal((await context.request.get(base+'/films/clinic-original.mp4')).status(),404);
+ console.log('PASS: both films support byte-exact 206 ranges, HEAD, suffix/open ranges, 416 and If-Range.');
  // Original film: actual decoded playback, pause/resume, preference, and static fallbacks.
  const motionContext=await browser.newContext({viewport:{width:1440,height:1000},reducedMotion:'no-preference'})
  const motionPage=await motionContext.newPage();motionPage.on('pageerror',e=>errors.push(e.message))
@@ -84,7 +96,7 @@ try{
  await motionPage.waitForFunction(()=>document.querySelector('#hero-section').dataset.motionState==='playing')
  await motionPage.emulateMedia({reducedMotion:'reduce'})
  await motionPage.waitForFunction(()=>document.querySelector('#hero-section').dataset.motionState==='reduced')
- assert.equal(await motionPage.locator('#hero-motion-toggle').isDisabled(),true)
+ assert.equal(await motionPage.locator('#hero-motion-toggle').isDisabled(),false,'explicit media playback must stay available')
  assert.equal(await motionPage.locator('#hero-section').evaluate(el=>el.getAnimations({subtree:true}).filter(a=>a.playState==='running').length),0,'reduced motion must be static')
  assert.equal(await motionPage.locator('.hero-frame-one').evaluate(el=>getComputedStyle(el).opacity),'1')
  await motionPage.emulateMedia({reducedMotion:'no-preference'})
@@ -170,9 +182,29 @@ try{
  assert.equal(await staticPage.locator('.physician-deck-card:visible').count(),5);assert.equal(await staticPage.locator('.language-panel:visible').count(),4);assert.equal(await staticPage.locator('.assembly-note:visible').count(),4);assert.equal(await staticPage.locator('.assembly-controls:visible,.language-range-controls:visible,.physician-deck-controls:visible').count(),0)
  await staticContext.close()
  assert.equal(await page.locator('#hero-clinic-film').count(),0) // page currently on a treatment route
- const constrained=await browser.newContext({reducedMotion:'reduce'});const cp=await constrained.newPage();await cp.goto(base);assert.equal(await cp.locator('video').getAttribute('src'),null,'reduced motion does not download film');await constrained.close()
- const dataSaver=await browser.newContext();await dataSaver.addInitScript(()=>Object.defineProperty(navigator,'connection',{configurable:true,value:{saveData:true,addEventListener(){}}}));const dp=await dataSaver.newPage();await dp.goto(base);assert.equal(await dp.locator('video').getAttribute('src'),null,'Save-Data does not download film');await dataSaver.close()
- const failed=await browser.newContext();await failed.route('**/static/video/**',route=>route.abort());const fp=await failed.newPage();await fp.goto(base);await fp.waitForFunction(()=>document.querySelector('#hero-section').dataset.filmState==='poster');assert.equal(await fp.locator('.hero-frame-one img').evaluate(el=>el.complete&&el.naturalWidth>0),true);assert.equal(await fp.locator('.hero-actions .btn').isVisible(),true);await failed.close()
+ // Regression: preferences must not disable explicit media playback or hide a playing video.
+ for(const mode of ['reduced','saved-off','save-data','autoplay-blocked']){
+  const recovery=await browser.newContext({viewport:{width:390,height:844},isMobile:true,hasTouch:true,reducedMotion:mode==='reduced'?'reduce':'no-preference'});
+  if(mode==='saved-off')await recovery.addInitScript(()=>sessionStorage.setItem('gm_motion','off'));
+  if(mode==='save-data')await recovery.addInitScript(()=>Object.defineProperty(navigator,'connection',{configurable:true,value:{saveData:true,addEventListener(){}}}));
+  if(mode==='autoplay-blocked')await recovery.addInitScript(()=>{const play=HTMLMediaElement.prototype.play;window.testPlayCalls=0;HTMLMediaElement.prototype.play=function(){window.testPlayCalls++;return navigator.userActivation.isActive?play.call(this):Promise.reject(new DOMException('Autoplay blocked','NotAllowedError'))}});
+  const rp=await recovery.newPage();rp.on('pageerror',e=>errors.push(e.message));await rp.goto(base,{waitUntil:'domcontentloaded'});
+  await rp.locator('#hero-play-button').waitFor({state:'visible'});
+  if(mode!=='autoplay-blocked')assert.equal(await rp.locator('video').getAttribute('src'),null,mode+' does not auto-download');
+  else {await rp.waitForFunction(()=>document.querySelector('#hero-section').dataset.playbackReason==='autoplay');const count=await rp.evaluate(()=>window.testPlayCalls);await rp.waitForTimeout(300);assert.equal(await rp.evaluate(()=>window.testPlayCalls),count,'no autoplay retry loop')}
+  const visibleBounds=await rp.locator('#hero-play-button').boundingBox();assert.ok(visibleBounds.y>75&&visibleBounds.y+visibleBounds.height<600,mode+' play button stays in first viewport');
+  assert.equal(await rp.locator('#hero-motion-toggle').isDisabled(),false);
+  if(mode==='reduced')await rp.screenshot({path:'test-results/film-recovery-mobile.png'});
+  await rp.locator('#hero-play-button').tap();
+  await rp.waitForFunction(()=>{const v=document.querySelector('video');return !v.paused&&v.currentTime>.2&&getComputedStyle(v).opacity==='1'});
+  assert.equal(await rp.locator('#hero-playback-prompt').isVisible(),false,mode+' prompt clears after real playback');
+  if(mode!=='autoplay-blocked')assert.equal(await rp.locator('html').evaluate(el=>el.classList.contains('motion-off')),true,'decorative motion remains off');
+  const time=await rp.locator('video').evaluate(v=>v.currentTime);await rp.waitForTimeout(250);assert.ok(await rp.locator('video').evaluate(v=>v.currentTime)>time,mode+' frames advance');
+  await rp.locator('#hero-motion-toggle').click();await rp.waitForTimeout(80);assert.equal(await rp.locator('video').evaluate(v=>v.paused),true);
+  await recovery.close();
+ }
+ const failed=await browser.newContext();let abortFilm=true;await failed.route('**/films/**',route=>abortFilm?route.abort():route.continue());const fp=await failed.newPage();await fp.goto(base,{waitUntil:'domcontentloaded'});await fp.waitForFunction(()=>document.querySelector('#hero-section').dataset.filmState==='poster');assert.equal(await fp.locator('.hero-frame-one img').evaluate(el=>el.complete&&el.naturalWidth>0),true);assert.equal(await fp.locator('#hero-play-button').isVisible(),true);assert.match(await fp.locator('#hero-playback-status').textContent(),/불러오지 못했습니다/);abortFilm=false;await fp.locator('#hero-play-button').click();await fp.waitForFunction(()=>{const v=document.querySelector('video');return !v.paused&&v.currentTime>.2});await failed.close();
+ console.log('PASS: mobile tap playback with reduced-motion, saved OFF, Save-Data, blocked autoplay, visible video opacity and failed-network recovery.');
  console.log('PASS: original MP4 playback, responsive source, frame seeking, pause/resume, global motion toggle, split typography, offscreen suspension, reduced-motion/Save-Data/no-JS/network-failure fallbacks, and navigation.')
  const api=await context.request.get(base+'/api/admin/posts');assert.equal(api.status(),401)
  const password=fs.readFileSync('.dev.vars','utf8').match(/ADMIN_PASSWORD="([^"]+)"/)[1]

@@ -55,15 +55,29 @@ toggle?.addEventListener('click',()=>{if(!menu.hidden){closeMenu();return}menu.h
 document.addEventListener('keydown',e=>{if(!menu.hidden){if(e.key==='Escape'){closeMenu();toggle.focus()}if(e.key==='Tab'){const list=[toggle,...$$('a',menu)];const first=list[0],last=list.at(-1);if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus()}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus()}}}});
 $$('a',menu).forEach(a=>a.addEventListener('click',closeMenu));
 $('.back-top')?.addEventListener('click',()=>window.scrollTo({top:0,behavior:reduced?'instant':'smooth'}));
-// Original user-provided film. Lazy source selection; static poster if autoplay is denied.
+// Motion preferences prevent autoplay, never a visitor's explicit media playback.
 const hero=$('#hero-section'),motionButton=$('#hero-motion-toggle');
 if(hero&&motionButton){
- const preference=matchMedia('(prefers-reduced-motion: reduce)');
- const connection=navigator.connection;
- const film=$('#hero-clinic-film');let userPaused=false,inView=true,playPending=false;
+ const film=$('#hero-clinic-film'),prompt=$('#hero-playback-prompt'),playButton=$('#hero-play-button'),status=$('#hero-playback-status');
+ let userPaused=false,explicitPlayback=false,inView=true,playPending=false,blocked=false,issue='',attempt=0,slowTimer;
  const chapters=$$('.film-chapters [data-film-chapter]',hero);
  const chapterLabels=['함께 이야기하는 의료진','원장님이 직접 전하는 이야기','좋은 아침을 맞이하는 공간','진료에 집중할 수 있는 공간','진단을 위한 장비'];
- const wantsPlayback=()=>motionAllowed()&&!userPaused&&!document.hidden&&inView&&!$('#video-dialog')?.open;
+ const playbackAllowed=()=>explicitPlayback||motionAllowed();
+ const suspended=()=>document.hidden||!inView||!!$('#video-dialog')?.open;
+ const wantsPlayback=()=>playbackAllowed()&&!userPaused&&!suspended();
+ function paintPlayback(){
+  const playing=!!film&&!film.paused&&film.readyState>=2&&!blocked;
+  motionButton.hidden=false;motionButton.disabled=false;
+  motionButton.setAttribute('aria-pressed',String(!playing));
+  const label=playing?'영상 정지':'영상 재생';$('span',motionButton).textContent=label;motionButton.setAttribute('aria-label','히어로 '+label);
+  hero.classList.toggle('motion-paused',userPaused);hero.classList.toggle('motion-suspended',suspended());
+  hero.dataset.motionState=!playbackAllowed()?'reduced':suspended()?'suspended':userPaused?'paused':blocked?'blocked':'playing';
+  hero.dataset.playbackReason=issue||(!playbackAllowed()?'preference':userPaused?'paused':playing?'playing':'loading');
+  const controls=$('.film-chapters',hero);if(controls)controls.hidden=!film?.getAttribute('src');
+  if(playButton)playButton.hidden=false;
+  if(status)status.textContent=issue==='network'?'영상을 불러오지 못했습니다. 다시 재생하거나 새 창에서 열어주세요.':issue==='autoplay'?'자동재생이 제한되었습니다. 눌러서 영상을 재생하세요.':issue==='slow'?'영상 연결이 지연되고 있습니다. 다시 재생하거나 새 창에서 열어주세요.':!playbackAllowed()?'자동재생은 꺼져 있습니다. 영상만 직접 재생할 수 있습니다.':userPaused?'영상이 일시정지되었습니다.':'원내 소개 영상 · 무음 재생';
+  if(prompt){if(playing&&prompt.contains(document.activeElement))motionButton.focus({preventScroll:true});prompt.hidden=playing||suspended()}
+ }
  function updateFilmChapter(){
   if(!film||!Number.isFinite(film.duration))return;
   const index=Math.min(4,Math.floor(film.currentTime/3.2));
@@ -71,37 +85,36 @@ if(hero&&motionButton){
   $('.film-counter',hero).textContent='0'+(index+1)+' / 05';$('#hero-film-caption').textContent=chapterLabels[index];
   chapters.forEach((b,i)=>b.setAttribute('aria-pressed',String(i===index)));
  }
- const syncFilm=()=>{
+ function syncFilm(){
   if(!film)return;
-  if(!wantsPlayback()){film.pause();return}
-  if(!film.getAttribute('src')){film.muted=true;film.src=matchMedia('(max-width:760px)').matches?film.dataset.mobile:film.dataset.desktop;film.load()}
-  if(film.paused&&!playPending){playPending=true;film.play().catch(()=>{if(wantsPlayback()){hero.classList.remove('film-playing');hero.dataset.filmState='poster';$('span',motionButton).textContent='영상 재생';motionButton.setAttribute('aria-label','히어로 영상 재생')}}).finally(()=>{playPending=false;if(!wantsPlayback())film.pause()})}
- };
- film?.addEventListener('playing',()=>{if(!wantsPlayback()){film.pause();return}hero.classList.add('film-playing');hero.dataset.filmState='playing'});
- film?.addEventListener('error',()=>{hero.classList.remove('film-playing');hero.dataset.filmState='poster'});
+  if(!wantsPlayback()){film.pause();clearTimeout(slowTimer);paintPlayback();return}
+  if(blocked){paintPlayback();return}
+  if(!film.getAttribute('src')){film.defaultMuted=true;film.muted=true;film.playsInline=true;film.src=matchMedia('(max-width:760px)').matches?film.dataset.mobile:film.dataset.desktop;film.load()}
+  if(film.paused&&!playPending){
+   playPending=true;const currentAttempt=++attempt;
+   clearTimeout(slowTimer);slowTimer=setTimeout(()=>{if(currentAttempt===attempt&&wantsPlayback()&&(film.paused||film.readyState<3)){issue='slow';paintPlayback()}},8000);
+   film.play().catch(error=>{
+    if(currentAttempt!==attempt||!wantsPlayback())return;
+    blocked=true;issue=error.name==='NotAllowedError'?'autoplay':'network';hero.dataset.filmState='poster';hero.classList.remove('film-playing');
+   }).finally(()=>{if(currentAttempt!==attempt)return;playPending=false;if(!wantsPlayback())film.pause();paintPlayback()});
+  }
+  paintPlayback();
+ }
+ function syncMotion(){root.classList.toggle('hero-in-view',inView);hero.classList.toggle('motion-ready',motionAllowed());syncFilm()}
+ function directPlay(){
+  // Called synchronously inside the trusted click; do not defer play() to metadata/timers.
+  explicitPlayback=true;userPaused=false;blocked=false;issue='';playPending=false;++attempt;
+  if(film?.error)film.load();hero.classList.add('motion-intro-finished');syncMotion();
+ }
+ film?.addEventListener('playing',()=>{if(!wantsPlayback()){film.pause();return}blocked=false;issue='';clearTimeout(slowTimer);hero.classList.add('film-playing');hero.dataset.filmState='playing';paintPlayback()});
+ film?.addEventListener('pause',paintPlayback);
+ film?.addEventListener('error',()=>{blocked=true;issue='network';playPending=false;clearTimeout(slowTimer);hero.classList.remove('film-playing');hero.dataset.filmState='poster';paintPlayback()});
  film?.addEventListener('timeupdate',updateFilmChapter);
- chapters.forEach(b=>b.addEventListener('click',()=>{if(!film||!motionAllowed()||!Number.isFinite(film.duration))return;film.currentTime=Number(b.dataset.filmChapter)*3.2+.03;updateFilmChapter()}));
- const syncMotion=()=>{
-  const constrained=preference.matches||!!connection?.saveData||sitePaused;
-  root.classList.toggle('hero-in-view',inView);
-  hero.classList.toggle('motion-ready',!constrained);
-  hero.classList.toggle('motion-paused',userPaused);
-  hero.classList.toggle('motion-suspended',document.hidden||!inView);
-  motionButton.hidden=false;
-  motionButton.disabled=constrained;
-  const chapterControls=$('.film-chapters',hero);if(chapterControls)chapterControls.hidden=constrained;
-  motionButton.setAttribute('aria-pressed',String(userPaused||constrained));
-  const label=constrained?'모션 줄이기 적용':userPaused?'영상 재생':'영상 정지';
-  $('span',motionButton).textContent=label;
-  motionButton.setAttribute('aria-label',constrained?'기기 설정에 따라 히어로 모션을 줄였습니다':'히어로 '+label);
-  hero.dataset.motionState=constrained?'reduced':userPaused?'paused':document.hidden||!inView?'suspended':'playing';
-  syncFilm();
- };
- motionButton.addEventListener('click',()=>{if(hero.dataset.filmState==='poster'){userPaused=false;film?.load()}else userPaused=!userPaused;hero.classList.add('motion-intro-finished');syncMotion()});
+ chapters.forEach(b=>b.addEventListener('click',()=>{if(!film||!Number.isFinite(film.duration))return;film.currentTime=Number(b.dataset.filmChapter)*3.2+.03;updateFilmChapter()}));
+ playButton?.addEventListener('click',directPlay);
+ motionButton.addEventListener('click',()=>{if(!film?.paused&&!blocked){userPaused=true;hero.classList.add('motion-intro-finished');syncMotion()}else directPlay()});
  document.addEventListener('video-dialog-change',syncMotion);
- document.addEventListener('site-motion-change',syncMotion);
- preference.addEventListener('change',syncMotion);
- connection?.addEventListener?.('change',syncMotion);
+ document.addEventListener('site-motion-change',()=>{explicitPlayback=false;syncMotion()});
  document.addEventListener('visibilitychange',syncMotion);
  if('IntersectionObserver'in window)new IntersectionObserver(entries=>{inView=entries[0].isIntersecting;syncMotion()},{threshold:0}).observe(hero);
  syncMotion();

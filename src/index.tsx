@@ -8,7 +8,7 @@ import { shell, home, heading, esc, icon } from './ui'
 import * as pages from './pages'
 import { glossary } from './glossary'
 
-type Env = { DB:any; R2:any; ADMIN_PASSWORD?:string; PUBLIC_SITE_URL?:string }
+type Env = { DB:any; R2:any; ASSETS?:{fetch:(request:Request)=>Promise<Response>}; ADMIN_PASSWORD?:string; PUBLIC_SITE_URL?:string }
 const app = new Hono<{Bindings:Env}>()
 app.use('*', secureHeaders({referrerPolicy:'strict-origin-when-cross-origin',xFrameOptions:'DENY',contentSecurityPolicy:{defaultSrc:["'self'"],scriptSrc:["'self'"],styleSrc:["'self'","'unsafe-inline'",'https://fonts.googleapis.com'],fontSrc:["'self'",'https://fonts.gstatic.com'],imgSrc:["'self'",'data:'],connectSrc:["'self'"],frameSrc:['https://www.youtube-nocookie.com'],objectSrc:["'none'"],baseUri:["'self'"],formAction:["'self'"],frameAncestors:["'none'"]}}))
 app.use('/static/*',serveStatic({root:'./public'}))
@@ -48,6 +48,31 @@ for(const type of ['blog','notice']){
  app.get('/'+type+'/:slug',async c=>{const p=await c.env.DB?.prepare('SELECT * FROM posts WHERE slug=? AND type=? AND status=?').bind(c.req.param('slug'),type,'published').first();if(!p)return render(c,'페이지를 찾을 수 없습니다',pages.notFound(),[],404);return render(c,p.title,pages.postPage(p),[{'@context':'https://schema.org','@type':'Article',headline:p.title,datePublished:p.created_at,dateModified:p.updated_at,author:{'@type':'Organization',name:'더굿모닝치과'}}])})
 }
 app.get('/api/search',c=>{const q=(c.req.query('q')||'').trim().toLowerCase().slice(0,100);const items=[...treatments.map(t=>({title:t.name,category:'진료 안내',url:'/treatments/'+t.slug,keywords:[t.description,...t.symptoms,...t.sections.map(s=>s.title),...t.faq.map(([q])=>q)].join(' ')})),...doctors.map(d=>({title:d.name+' 원장',category:'의료진',url:'/doctors/'+d.slug,keywords:d.role})),...glossary.map(t=>({title:t.term,category:'치과 용어 · 관련 진료',url:'/treatments/'+t.slug,keywords:t.description})),{title:'오시는 길 · 진료시간',category:'병원 안내',url:'/directions',keywords:'위치 청량리 광명 전화 주차 일요일 시간'},{title:'상담 예약',category:'내원 안내',url:'/reservation',keywords:'예약 전화 상담'}];return c.json({results:q?items.filter(t=>(t.title+' '+t.keywords).toLowerCase().includes(q)).slice(0,15):[]})})
+// The preview asset server ignores Range. Serve the two public films with correct
+// byte ranges so Safari/iOS can probe and seek them. No arbitrary file/proxy access.
+app.get('/films/:file',async c=>{
+ const file=c.req.param('file');
+ if(!['clinic-opening.mp4','clinic-opening-mobile.mp4'].includes(file))return c.notFound();
+ if(!c.env.ASSETS)return c.text('영상 연결을 사용할 수 없습니다.',503);
+ const source=await c.env.ASSETS.fetch(new Request(new URL('/static/video/'+file,c.req.url)));
+ if(!source.ok)return c.text('영상을 불러오지 못했습니다.',502);
+ const bytes=await source.arrayBuffer(),size=bytes.byteLength;
+ const headers=new Headers({'Content-Type':'video/mp4','Accept-Ranges':'bytes','Cache-Control':'public, max-age=0, must-revalidate','Content-Length':String(size)});
+ const etag=source.headers.get('ETag');if(etag)headers.set('ETag',etag);
+ const range=c.req.header('Range'),ifRange=c.req.header('If-Range');
+ if(range&&(!ifRange||ifRange===etag)){
+  const match=/^bytes=(\d*)-(\d*)$/.exec(range);
+  let start=0,end=size-1;
+  if(match&&(match[1]||match[2])){
+   if(match[1]){start=Number(match[1]);if(match[2])end=Math.min(Number(match[2]),size-1)}
+   else {const count=Number(match[2]);start=Math.max(0,size-count);if(count===0)start=size}
+  }else start=size;
+  if(!Number.isSafeInteger(start)||!Number.isSafeInteger(end)||start<0||start>=size||end<start){headers.set('Content-Range','bytes */'+size);headers.set('Content-Length','0');return new Response(null,{status:416,headers})}
+  headers.set('Content-Range',`bytes ${start}-${end}/${size}`);headers.set('Content-Length',String(end-start+1));
+  return new Response(c.req.method==='HEAD'?null:bytes.slice(start,end+1),{status:206,headers});
+ }
+ return new Response(c.req.method==='HEAD'?null:bytes,{headers});
+})
 app.get('/api/health',c=>c.json({ok:true,service:'the-good-morning'}))
 app.get('/admin',async c=>{c.header('Cache-Control','no-store');return render(c,'관리자 콘텐츠 스튜디오',pages.adminPage(await isAdmin(c),!!c.env.ADMIN_PASSWORD))})
 app.post('/api/admin/login',async c=>{

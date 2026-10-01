@@ -2,21 +2,78 @@
 const $=(s,r=document)=>r.querySelector(s),$$=(s,r=document)=>[...r.querySelectorAll(s)];
 const safe=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 let toastTimer;function toast(text){const t=$('#toast');t.textContent=text;t.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove('show'),3500)}
-const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
-if(!reduced&&'IntersectionObserver'in window){document.documentElement.classList.add('js-motion');const io=new IntersectionObserver(items=>items.forEach(i=>{if(i.isIntersecting){i.target.classList.add('visible');io.unobserve(i.target)}}),{threshold:.08});$$('.reveal').forEach(e=>io.observe(e))}
+const motionPreference=matchMedia('(prefers-reduced-motion: reduce)'),root=document.documentElement;
+const reduced=motionPreference.matches;
+const siteMotionButton=$('#site-motion-toggle');let sitePaused=false;
+try{sitePaused=sessionStorage.getItem('gm_motion')==='off'}catch{}
+const motionAllowed=()=>!motionPreference.matches&&!navigator.connection?.saveData&&!sitePaused;
+function syncSiteMotion(){
+ const allowed=motionAllowed();root.classList.toggle('motion-enabled',allowed);root.classList.toggle('motion-off',!allowed);
+ if(siteMotionButton){siteMotionButton.hidden=false;siteMotionButton.disabled=motionPreference.matches||!!navigator.connection?.saveData;siteMotionButton.setAttribute('aria-pressed',String(!allowed));siteMotionButton.setAttribute('aria-label',allowed?'사이트 전체 모션 끄기':'사이트 전체 모션 켜기');siteMotionButton.lastElementChild.textContent=allowed?'모션 ON':'모션 OFF'}
+ if(!allowed)$$('.type-ready,.lift-ready').forEach(el=>el.classList.add('type-visible','lift-visible'));
+ document.dispatchEvent(new Event('site-motion-change'));
+}
+siteMotionButton?.addEventListener('click',()=>{sitePaused=!sitePaused;try{sessionStorage.setItem('gm_motion',sitePaused?'off':'on')}catch{}syncSiteMotion()});
+motionPreference.addEventListener('change',syncSiteMotion);navigator.connection?.addEventListener?.('change',syncSiteMotion);
+// Retain the original heading structure and accessible name; only visual glyphs are split.
+if(!location.pathname.startsWith('/admin')){
+ $$('#main h1,#main h2,.closing-inner h2').forEach(heading=>{
+  if(heading.querySelector('button,input,a'))return;
+  const copy=heading.cloneNode(true);$$('br',copy).forEach(br=>br.replaceWith(' '));
+  heading.setAttribute('aria-label',heading.getAttribute('aria-label')||copy.textContent.replace(/\s+/g,' ').trim());
+  const walker=document.createTreeWalker(heading,NodeFilter.SHOW_TEXT),nodes=[];let node,index=0;
+  while(node=walker.nextNode())if(node.textContent.trim())nodes.push(node);
+  nodes.forEach(text=>{const fragment=document.createDocumentFragment();text.textContent.split(/(\s+)/).forEach(word=>{
+   if(!word.trim()){fragment.append(document.createTextNode(word));return}
+   const group=document.createElement('span');group.className='kinetic-word';group.setAttribute('aria-hidden','true');
+   for(const character of word){const glyph=document.createElement('span');glyph.className='kinetic-char';glyph.textContent=character;glyph.style.setProperty('--char-index',String(Math.min(index++,40)));group.append(glyph)}fragment.append(group)
+  });text.replaceWith(fragment)});heading.classList.add('type-ready');
+ });
+ $$('.strength-card,.specialty-card,.doctor-card,.video-card,.info-card,.philosophy-story,.section-title-row>p,.mission-story-layout figure,.clinic-story-photo').forEach((el,i)=>{el.classList.add('lift-ready');el.style.setProperty('--lift-delay',(i%3)*70+'ms');if(el.matches('figure,.clinic-story-photo'))el.classList.add('image-reveal')});
+ if('IntersectionObserver'in window){const reveal=new IntersectionObserver(entries=>entries.forEach(({target,isIntersecting})=>{if(isIntersecting){target.classList.add('type-visible','lift-visible');reveal.unobserve(target)}}),{threshold:.06});$$('.type-ready,.lift-ready').forEach(el=>reveal.observe(el))}
+ else $$('.type-ready,.lift-ready').forEach(el=>el.classList.add('type-visible','lift-visible'));
+}
+syncSiteMotion();
+// Scroll work is batched once per animation frame, never scroll-jacked.
+let scrollQueued=false;const movingPhotos=$$('.philosophy-portrait,.clinic-story-photo'),manifesto=$('.philosophy-manifesto'),manifestoGlyphs=manifesto?$$('.kinetic-char',manifesto):[];
+function updateScrollMotion(){
+ scrollQueued=false;const available=document.documentElement.scrollHeight-innerHeight;
+ root.style.setProperty('--reading-progress',String(available>0?scrollY/available:0));
+ if(!motionAllowed())return;
+ const heroElement=$('#hero-section');if(heroElement){const r=heroElement.getBoundingClientRect();heroElement.style.setProperty('--hero-exit',String(Math.min(1,Math.max(0,-r.top/r.height))))}
+ const ribbon=$('.kinetic-ribbon');if(ribbon){const r=ribbon.getBoundingClientRect();if(r.bottom>0&&r.top<innerHeight)ribbon.style.setProperty('--ribbon-shift',String(Math.max(0,(innerHeight-r.top)*.22)))}
+ movingPhotos.forEach(el=>{const r=el.getBoundingClientRect();if(r.bottom>0&&r.top<innerHeight)el.style.setProperty('--photo-shift',String(-Math.min(1,Math.max(0,(innerHeight-r.top)/(innerHeight+r.height)))*r.height*.12))});
+ if(manifesto){const parent=$('#philosophy').getBoundingClientRect(),p=Math.min(1,Math.max(0,(innerHeight*.85-parent.top)/(parent.height*.7)));manifestoGlyphs.forEach((el,i)=>el.style.setProperty('--ink-opacity',String(.4+.6*Math.min(1,Math.max(0,(p-i/manifestoGlyphs.length)*5)))))}
+ const calm=$('#sedation-story');if(calm){const r=calm.getBoundingClientRect();if(r.bottom>0&&r.top<innerHeight){const p=Math.min(1,Math.max(0,(innerHeight-r.top)/(innerHeight+r.height)));calm.style.setProperty('--breathe-shift',String((p-.5)*120));calm.style.setProperty('--sun-shift',String((1-p)*120));calm.style.setProperty('--sun-glow',String(.25+p*.75))}}
+ const closing=$('.closing-cta');if(closing){const r=closing.getBoundingClientRect();if(r.top<innerHeight)closing.style.setProperty('--closing-turn',String((innerHeight-r.top)*.06))}
+}
+function queueScrollMotion(){if(!scrollQueued){scrollQueued=true;requestAnimationFrame(updateScrollMotion)}}
+addEventListener('scroll',queueScrollMotion,{passive:true});addEventListener('resize',queueScrollMotion,{passive:true});document.addEventListener('site-motion-change',queueScrollMotion);updateScrollMotion();
+if(matchMedia('(hover:hover) and (pointer:fine)').matches)$$('.strength-card').forEach(card=>card.addEventListener('pointermove',event=>{if(!motionAllowed())return;const r=card.getBoundingClientRect();card.style.setProperty('--pointer-x',event.clientX-r.left+'px');card.style.setProperty('--pointer-y',event.clientY-r.top+'px')}));
 const menu=$('#mobile-menu'),toggle=$('.menu-toggle');function closeMenu(){menu.hidden=true;toggle.setAttribute('aria-expanded','false');toggle.setAttribute('aria-label','전체 메뉴 열기');document.body.classList.remove('locked');$('#main').inert=false}
 toggle?.addEventListener('click',()=>{if(!menu.hidden){closeMenu();return}menu.hidden=false;toggle.setAttribute('aria-expanded','true');toggle.setAttribute('aria-label','전체 메뉴 닫기');document.body.classList.add('locked');$('#main').inert=true;$('a',menu).focus()});
 document.addEventListener('keydown',e=>{if(!menu.hidden){if(e.key==='Escape'){closeMenu();toggle.focus()}if(e.key==='Tab'){const list=[toggle,...$$('a',menu)];const first=list[0],last=list.at(-1);if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus()}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus()}}}});
 $$('a',menu).forEach(a=>a.addEventListener('click',closeMenu));
 $('.back-top')?.addEventListener('click',()=>window.scrollTo({top:0,behavior:reduced?'instant':'smooth'}));
-// Hero motion is opt-out, silent and static-first. No video autoplay dependency.
+// Original user-provided film. Lazy source selection; static poster if autoplay is denied.
 const hero=$('#hero-section'),motionButton=$('#hero-motion-toggle');
 if(hero&&motionButton){
  const preference=matchMedia('(prefers-reduced-motion: reduce)');
  const connection=navigator.connection;
- let userPaused=false,inView=true;
+ const film=$('#hero-clinic-film');let userPaused=false,inView=true,playPending=false;
+ const wantsPlayback=()=>motionAllowed()&&!userPaused&&!document.hidden&&inView;
+ const syncFilm=()=>{
+  if(!film)return;
+  if(!wantsPlayback()){film.pause();return}
+  if(!film.getAttribute('src')){film.muted=true;film.src=matchMedia('(max-width:760px)').matches?film.dataset.mobile:film.dataset.desktop;film.load()}
+  if(film.paused&&!playPending){playPending=true;film.play().catch(()=>{if(wantsPlayback()){hero.classList.remove('film-playing');hero.dataset.filmState='poster'}}).finally(()=>{playPending=false;if(!wantsPlayback())film.pause()})}
+ };
+ film?.addEventListener('playing',()=>{if(!wantsPlayback()){film.pause();return}hero.classList.add('film-playing');hero.dataset.filmState='playing'});
+ film?.addEventListener('error',()=>{hero.classList.remove('film-playing');hero.dataset.filmState='poster'});
+ film?.addEventListener('timeupdate',()=>{if(!Number.isFinite(film.duration))return;hero.style.setProperty('--film-progress',String(film.currentTime/film.duration));const second=film.currentTime>=4.1;$('.film-counter',hero).textContent=second?'02 / 02':'01 / 02';$('#hero-film-caption').textContent=second?'진료에 집중할 수 있는 공간':'좋은 아침이 시작되는 공간'});
  const syncMotion=()=>{
-  const constrained=preference.matches||!!connection?.saveData;
+  const constrained=preference.matches||!!connection?.saveData||sitePaused;
+  root.classList.toggle('hero-in-view',inView);
   hero.classList.toggle('motion-ready',!constrained);
   hero.classList.toggle('motion-paused',userPaused);
   hero.classList.toggle('motion-suspended',document.hidden||!inView);
@@ -27,15 +84,17 @@ if(hero&&motionButton){
   $('span',motionButton).textContent=label;
   motionButton.setAttribute('aria-label',constrained?'기기 설정에 따라 히어로 모션을 줄였습니다':'히어로 '+label);
   hero.dataset.motionState=constrained?'reduced':userPaused?'paused':document.hidden||!inView?'suspended':'playing';
+  syncFilm();
  };
  motionButton.addEventListener('click',()=>{userPaused=!userPaused;hero.classList.add('motion-intro-finished');syncMotion()});
+ document.addEventListener('site-motion-change',syncMotion);
  preference.addEventListener('change',syncMotion);
  connection?.addEventListener?.('change',syncMotion);
  document.addEventListener('visibilitychange',syncMotion);
  if('IntersectionObserver'in window)new IntersectionObserver(entries=>{inView=entries[0].isIntersecting;syncMotion()},{threshold:0}).observe(hero);
  syncMotion();
 }
-if(!reduced&&$('#sedation-story')){const scene=$('#sedation-story');let queued=false;const update=()=>{const rect=scene.getBoundingClientRect();const p=Math.max(0,Math.min(1,(innerHeight-rect.top)/(innerHeight+rect.height*.3)));scene.style.setProperty('--sun-shift',String(Math.round((1-p)*120)));scene.style.setProperty('--sun-glow',String(.25+p*.75));queued=false};window.addEventListener('scroll',()=>{if(!queued){queued=true;requestAnimationFrame(update)}},{passive:true});update()}
+// The shared scroll scheduler also drives the sedation sunrise.
 const names={cheongnyangni:'청량리 본점',gwangmyeong:'광명사거리점'},phones={cheongnyangni:'02-969-3776',gwangmyeong:'02-6013-2828'};let branch='cheongnyangni';try{const q=new URLSearchParams(location.search).get('branch');branch=names[q]?q:(sessionStorage.getItem('gm_branch')||branch);if(!names[branch])branch='cheongnyangni'}catch{}
 function hoursStatus(){const date=new Date();const parts=new Intl.DateTimeFormat('en-US',{timeZone:'Asia/Seoul',weekday:'short',hour:'numeric',minute:'numeric',hourCycle:'h23'}).formatToParts(date);const get=t=>parts.find(p=>p.type===t)?.value;const day=get('weekday'),now=Number(get('hour'))*60+Number(get('minute'));let start=570,end=1110,lunchStart=780,lunchEnd=branch==='cheongnyangni'?(day==='Wed'?930:870):840;let closed=false;if(day==='Sat'){end=840;lunchStart=lunchEnd=0}if(day==='Sun'){if(branch==='cheongnyangni'){start=600;end=840;lunchStart=lunchEnd=0}else closed=true}if(day==='Mon'&&branch==='gwangmyeong')end=1230;const status=$('#regular-hours-status');if(status){status.textContent=closed?'정규 일정 · 휴진':now>=lunchStart&&now<lunchEnd?'정규 일정 · 점심시간':now>=start&&now<end?'정규 일정 · '+Math.floor(end/60)+':'+String(end%60).padStart(2,'0')+'까지':'정규 일정 · 진료시간 외';status.title='공휴일·임시 휴진은 반영되지 않습니다. 실제 진료 여부는 전화로 확인해 주세요.'}}
 function setBranch(id){if(!names[id])return;branch=id;try{sessionStorage.setItem('gm_branch',id)}catch{}$$('[data-branch]').forEach(b=>{const active=b.dataset.branch===id;b.classList.toggle('active',active);b.setAttribute('aria-pressed',String(active))});$$('[data-branch-panel]').forEach(p=>p.hidden=p.dataset.branchPanel!==id);$$('.branch-phone').forEach(a=>{a.href='tel:'+phones[id].replaceAll('-','');if(!a.querySelector('svg'))a.textContent=phones[id]});const select=$('#header-branch-select');if(select)select.value=id;hoursStatus()}

@@ -94,6 +94,63 @@ if(hero&&motionButton){
  if('IntersectionObserver'in window)new IntersectionObserver(entries=>{inView=entries[0].isIntersecting;syncMotion()},{threshold:0}).observe(hero);
  syncMotion();
 }
+// Content-led stories run once on entry; no request, live consultation, or diagnostic engine.
+$$('[data-story-mode]').forEach(scene=>{
+ const mode=scene.dataset.storyMode,panels=$$('[data-story-panel]',scene),selectors=$$('[data-story-select]',scene);
+ const pauseButton=$('[data-story-pause]',scene),replayButton=$('[data-story-replay]',scene),status=$('.story-playback-status',scene);
+ const transcripts=panels.map(panel=>({question:$('.typing-question',panel)?.textContent||'',answer:$('.typing-answer',panel)?.textContent||''}));
+ let active=0,elapsed=0,lastTime=0,raf=0,inView=false,paused=false,complete=false,typingPhase='',lastState='';
+ const duration=()=>mode==='talk'?1100+transcripts[active].question.length*38+transcripts[active].answer.length*23+1100:panels.length*3100;
+ function activate(index){
+  active=index;scene.dataset.storyActive=String(active);
+  panels.forEach((panel,i)=>{panel.hidden=i!==active;panel.classList.toggle('is-active',i===active)});
+  selectors.forEach((button,i)=>button.setAttribute('aria-pressed',String(i===active)));
+  $$('[data-journey-photo]',scene).forEach((photo,i)=>photo.classList.toggle('is-active',i===active));
+  const number=$('.story-step-number',scene);if(number)number.textContent=String(active+1).padStart(2,'0');
+  scene.style.setProperty('--story-progress',String((active+1)/panels.length));scene.style.setProperty('--story-turn',(active+1)*360/panels.length+'deg');
+ }
+ function render(final=false){
+  if(mode==='talk'){
+   const text=transcripts[active],q=$('.typing-question',panels[active]),a=$('.typing-answer',panels[active]);
+   const qEnd=500+text.question.length*38;
+   q.textContent=final?text.question:text.question.slice(0,Math.max(0,Math.floor((elapsed-500)/38)));
+   a.textContent=final?text.answer:text.answer.slice(0,Math.max(0,Math.floor((elapsed-qEnd-600)/23)));
+   typingPhase=final?'finished':elapsed<qEnd?'question':elapsed<qEnd+600?'listening':'answer';scene.dataset.typingPhase=typingPhase;
+  }else if(!final){const next=Math.min(panels.length-1,Math.floor(elapsed/3100));if(next!==active)activate(next)}
+  scene.dataset.storyElapsed=String(Math.floor(elapsed));
+ }
+ function state(){
+  const allowed=motionAllowed();const value=!allowed?'static':complete?'complete':paused?'paused':!inView||document.hidden?'suspended':'playing';scene.dataset.storyState=value;
+  const stateKey=value+':'+paused;if(stateKey===lastState)return value==='playing';lastState=stateKey;
+  status.textContent=({static:'모션 줄이기 적용',complete:'직접 눌러 살펴보세요',paused:'연출 일시정지',suspended:'화면에서 이어집니다',playing:'진료 안내 연출'})[value];
+  pauseButton.disabled=!allowed||complete;pauseButton.textContent=paused?'연출 재생':'연출 정지';pauseButton.setAttribute('aria-pressed',String(paused));replayButton.disabled=!allowed;
+  return value==='playing';
+ }
+ function tick(now){
+  raf=0;if(!state()){lastTime=0;return}
+  if(lastTime)elapsed+=Math.min(100,now-lastTime);lastTime=now;
+  render();if(elapsed>=duration()){complete=true;render(true);state();return}raf=requestAnimationFrame(tick);
+ }
+ function sync(){
+  if(raf){cancelAnimationFrame(raf);raf=0}lastTime=0;
+  if(!motionAllowed()){complete=true;elapsed=duration();render(true)}
+  if(state())raf=requestAnimationFrame(tick);
+ }
+ selectors.forEach(button=>button.addEventListener('click',()=>{
+  const next=Number(button.dataset.storySelect);activate(next);paused=false;
+  // Manual navigation never advances away while someone is reading a selected step.
+  if(mode==='talk'&&motionAllowed()){elapsed=0;complete=false;render()}else{complete=true;elapsed=duration();render(true)}sync();
+ }));
+ pauseButton.addEventListener('click',()=>{paused=!paused;sync()});
+ replayButton.addEventListener('click',()=>{if(!motionAllowed())return;paused=false;complete=false;elapsed=0;if(mode!=='talk')activate(0);render();sync()});
+ scene.addEventListener('keydown',event=>{const target=event.target;if(!target.matches('[data-story-select]')||!['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Home','End'].includes(event.key))return;event.preventDefault();let next=active;if(event.key==='Home')next=0;else if(event.key==='End')next=selectors.length-1;else next=(active+(['ArrowRight','ArrowDown'].includes(event.key)?1:-1)+selectors.length)%selectors.length;selectors[next].focus();selectors[next].click()});
+ scene.addEventListener('focusin',event=>{if(event.target.closest('.story-panel')&&!complete){paused=true;sync()}});
+ document.addEventListener('site-motion-change',sync);document.addEventListener('visibilitychange',sync);
+ scene.classList.add('story-enhanced');$$('.story-selectors,.story-playback',scene).forEach(el=>el.hidden=false);activate(0);
+ if('IntersectionObserver'in window)new IntersectionObserver(entries=>{inView=entries[0].isIntersecting;sync()},{threshold:.12}).observe(scene);
+ else{complete=true;render(true)}
+ sync();
+});
 // The shared scroll scheduler also drives the sedation sunrise.
 const names={cheongnyangni:'청량리 본점',gwangmyeong:'광명사거리점'},phones={cheongnyangni:'02-969-3776',gwangmyeong:'02-6013-2828'};let branch='cheongnyangni';try{const q=new URLSearchParams(location.search).get('branch');branch=names[q]?q:(sessionStorage.getItem('gm_branch')||branch);if(!names[branch])branch='cheongnyangni'}catch{}
 function hoursStatus(){const date=new Date();const parts=new Intl.DateTimeFormat('en-US',{timeZone:'Asia/Seoul',weekday:'short',hour:'numeric',minute:'numeric',hourCycle:'h23'}).formatToParts(date);const get=t=>parts.find(p=>p.type===t)?.value;const day=get('weekday'),now=Number(get('hour'))*60+Number(get('minute'));let start=570,end=1110,lunchStart=780,lunchEnd=branch==='cheongnyangni'?(day==='Wed'?930:870):840;let closed=false;if(day==='Sat'){end=840;lunchStart=lunchEnd=0}if(day==='Sun'){if(branch==='cheongnyangni'){start=600;end=840;lunchStart=lunchEnd=0}else closed=true}if(day==='Mon'&&branch==='gwangmyeong')end=1230;const status=$('#regular-hours-status');if(status){status.textContent=closed?'정규 일정 · 휴진':now>=lunchStart&&now<lunchEnd?'정규 일정 · 점심시간':now>=start&&now<end?'정규 일정 · '+Math.floor(end/60)+':'+String(end%60).padStart(2,'0')+'까지':'정규 일정 · 진료시간 외';status.title='공휴일·임시 휴진은 반영되지 않습니다. 실제 진료 여부는 전화로 확인해 주세요.'}}

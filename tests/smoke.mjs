@@ -110,12 +110,30 @@ try{
  assert.equal(await motionPage.locator('h1').getAttribute('aria-label')!==null,true)
  await motionPage.locator('.site-header .brand').click();await motionPage.waitForURL(base+'/')
  assert.equal(await motionPage.locator('#hero-clinic-film').count(),1,'native navigation remains functional')
+ // Four distinct story exhibits: typing, schematic, orbit and visit sequence.
+ assert.equal(await motionPage.locator('[data-story-mode]').count(),4)
+ const talk=motionPage.locator('#question-story');await talk.scrollIntoViewIfNeeded();await talk.locator('[data-story-replay]').click()
+ await motionPage.waitForFunction(()=>document.querySelector('#question-story').dataset.storyState==='playing')
+ await motionPage.waitForTimeout(900);const typed=await talk.locator('.is-active .typing-question').textContent();await motionPage.waitForTimeout(450);assert.notEqual(await talk.locator('.is-active .typing-question').textContent(),typed,'question actually types')
+ await talk.locator('[data-story-pause]').click();const frozen=await talk.getAttribute('data-story-elapsed');await motionPage.waitForTimeout(250);assert.equal(await talk.getAttribute('data-story-elapsed'),frozen,'local pause freezes story clock')
+ await talk.locator('[data-story-pause]').click();await motionPage.waitForTimeout(150);assert.notEqual(await talk.getAttribute('data-story-elapsed'),frozen,'local resume')
+ await motionPage.evaluate(()=>scrollTo({top:0,behavior:'instant'}));await motionPage.waitForFunction(()=>document.querySelector('#question-story').dataset.storyState==='suspended');const outside=await talk.getAttribute('data-story-elapsed');await motionPage.waitForTimeout(250);assert.equal(await talk.getAttribute('data-story-elapsed'),outside,'offscreen typing pauses')
+ await talk.scrollIntoViewIfNeeded();await talk.locator('[data-story-select="1"]').click();await motionPage.waitForFunction(()=>document.querySelector('#question-story').dataset.storyState==='complete',null,{timeout:15000});assert.match(await talk.locator('.is-active .typing-question').textContent(),/앞니 임플란트/)
+ const transcript=await talk.locator('.is-active .typing-answer').textContent();assert.equal(transcript,await talk.locator('.is-active .clinic-response .story-sr-only').textContent(),'visible answer matches accessible complete transcript')
+ for(const id of ['revision-story','sedation-sequence','visit-story']){
+  const scene=motionPage.locator('#'+id);await scene.scrollIntoViewIfNeeded();await scene.locator('[data-story-replay]').click();await motionPage.waitForFunction(id=>document.getElementById(id).dataset.storyActive==='1',id,{timeout:7000});
+  assert.equal(await scene.locator('.story-panel:visible').count(),1,id+' single visible step');await scene.locator('[data-story-select="0"]').click();await motionPage.keyboard.press('End');const last=await scene.locator('[data-story-select]').count()-1;assert.equal(await scene.getAttribute('data-story-active'),String(last),'keyboard selects final step');assert.equal(await scene.getAttribute('data-story-state'),'complete','manual selection stops auto advance');
+ }
+ await motionPage.locator('#site-motion-toggle').click();assert.equal(await motionPage.locator('[data-story-state="static"]').count(),4,'global off applies to all exhibits');await talk.locator('[data-story-select="3"]').click();assert.ok((await talk.locator('.is-active .typing-answer').textContent()).length>60,'static mode still allows complete Q&A browsing');await motionPage.locator('#site-motion-toggle').click()
+ for(const width of [320,390,768,1440]){await motionPage.setViewportSize({width,height:844});for(const id of ['question-story','revision-story','sedation-sequence','visit-story']){const scene=motionPage.locator('#'+id);await scene.scrollIntoViewIfNeeded();await scene.locator('[data-story-select]').last().click();assert.equal(await motionPage.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true,id+' selected-step overflow '+width)}}
+ console.log('PASS: four story exhibits, real typing, source transcript parity, pause/resume, offscreen suspension, automatic steps, keyboard/manual selection, global static mode and responsive selected states.')
  await motionContext.close()
  const staticContext=await browser.newContext({javaScriptEnabled:false,viewport:{width:390,height:844}})
  const staticPage=await staticContext.newPage();await staticPage.goto(base)
  assert.equal(await staticPage.locator('.hero-title-line').count(),3);assert.equal(await staticPage.locator('.hero-frame-one').evaluate(el=>getComputedStyle(el).opacity),'1')
  assert.equal(await staticPage.locator('.hero-actions .btn').getAttribute('href'),'/reservation')
  assert.equal(await staticPage.locator('#hero-motion-toggle').isVisible(),false)
+ assert.equal(await staticPage.locator('[data-story-panel]:visible').count(),15,'no-JS preserves all story content');assert.equal(await staticPage.locator('.story-selectors:visible').count(),0,'no-JS hides inactive controls')
  await staticContext.close()
  assert.equal(await page.locator('#hero-clinic-film').count(),0) // page currently on a treatment route
  const constrained=await browser.newContext({reducedMotion:'reduce'});const cp=await constrained.newPage();await cp.goto(base);assert.equal(await cp.locator('video').getAttribute('src'),null,'reduced motion does not download film');await constrained.close()

@@ -92,16 +92,35 @@ try{
  for(const width of [320,390,768,1440]){
   await motionPage.setViewportSize({width,height:844});await motionPage.goto(base,{waitUntil:'networkidle'})
   await motionPage.waitForTimeout(3100)
-  assert.equal(await motionPage.locator('video').evaluate(el=>el.currentSrc.endsWith(innerWidth<=760?'clinic-opening-mobile.mp4':'clinic-opening.mp4')),true,'responsive film source '+width)
+  assert.equal(await motionPage.locator('video').evaluate(el=>new URL(el.currentSrc).pathname.endsWith(innerWidth<=760?'clinic-opening-mobile.mp4':'clinic-opening.mp4')),true,'responsive film source '+width)
   assert.equal(await motionPage.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true,'animated hero overflow '+width)
   const bounds=await motionPage.locator('.hero-title-line>span').evaluateAll(nodes=>nodes.map(n=>({scroll:n.scrollWidth,parent:n.parentElement.clientWidth})))
   assert.ok(bounds.every(x=>x.scroll<=x.parent+1),'headline clipping '+width)
   await motionPage.screenshot({path:`test-results/hero-motion-${width}.png`})
  }
- // Seek the real MP4 to the empty treatment-room shot.
- await motionPage.locator('#hero-clinic-film').evaluate(el=>{el.currentTime=6})
- await motionPage.waitForFunction(()=>document.querySelector('.film-counter').textContent==='02 / 02')
- assert.match(await motionPage.locator('#hero-film-caption').textContent(),/진료에 집중/)
+ // Film-first hero: actual doctor footage, five selectable shots and accessible original talks.
+ assert.ok(await motionPage.locator('#hero-clinic-film').evaluate(el=>el.duration>=16&&el.duration<17),'five-shot 16-second film');
+ assert.equal(await motionPage.locator('.film-chapters button').count(),5);
+ await motionPage.locator('[data-film-chapter="3"]').click();
+ await motionPage.waitForFunction(()=>document.querySelector('.film-counter').textContent==='04 / 05');
+ assert.match(await motionPage.locator('#hero-film-caption').textContent(),/진료에 집중/);
+ await motionPage.locator('#hero-motion-toggle').click();
+ await motionPage.locator('[data-film-chapter="0"]').focus();await motionPage.keyboard.press('Enter');
+ assert.equal(await motionPage.locator('#hero-section').getAttribute('data-film-chapter'),'0');
+ assert.equal(await motionPage.locator('#hero-clinic-film').evaluate(el=>el.paused),true,'chapter selection respects pause');
+ await motionPage.locator('#hero-motion-toggle').click();
+ assert.equal(await motionPage.locator('.hero-clinic-film').evaluate(el=>getComputedStyle(el).filter),'none','footage is not darkened with a video filter');
+ assert.ok(await motionPage.locator('h1').evaluate(el=>parseFloat(getComputedStyle(el).fontSize)<=60),'headline no longer dominates film');
+ assert.equal(await motionPage.locator('#hero-section').evaluate(el=>el.nextElementSibling.id),'opening-films','original talks immediately follow opening');
+ assert.equal(await motionPage.locator('#opening-films .opening-film-card').count(),3);
+ // Mock only the third-party iframe document: test our dialog wiring, not YouTube availability.
+ await motionPage.route('https://www.youtube-nocookie.com/**',route=>route.fulfill({contentType:'text/html',body:'<p>External video player test</p>'}));
+ await motionPage.locator('#opening-films .opening-film-play').first().click();
+ assert.equal(await motionPage.locator('#video-dialog').isVisible(),true);
+ assert.match(await motionPage.locator('#video-container iframe').getAttribute('src'),/Q3w-rsppT_g/);
+ assert.equal(await motionPage.locator('#hero-clinic-film').evaluate(el=>el.paused),true,'background film stops for the selected talk');
+ await motionPage.keyboard.press('Escape');await motionPage.locator('#video-dialog').waitFor({state:'hidden'});await motionPage.locator('#video-container iframe').waitFor({state:'detached'});assert.equal(await motionPage.locator('#video-container iframe').count(),0);
+ console.log('PASS: video-first composition, 16-second doctor opening, five scene controls, three provided talks and dialog cleanup.');
  await motionPage.locator('#philosophy').scrollIntoViewIfNeeded();await motionPage.waitForTimeout(1800)
  assert.equal(await motionPage.locator('.philosophy-manifesto').evaluate(el=>el.classList.contains('type-visible')),true)
  await motionPage.screenshot({path:'test-results/editorial-philosophy-final.png'})
@@ -144,8 +163,8 @@ try{
  await motionContext.close()
  const staticContext=await browser.newContext({javaScriptEnabled:false,viewport:{width:390,height:844}})
  const staticPage=await staticContext.newPage();await staticPage.goto(base)
- assert.equal(await staticPage.locator('.hero-title-line').count(),3);assert.equal(await staticPage.locator('.hero-frame-one').evaluate(el=>getComputedStyle(el).opacity),'1')
- assert.equal(await staticPage.locator('.hero-actions .btn').getAttribute('href'),'/reservation')
+ assert.equal(await staticPage.locator('.hero-title-line').count(),2);assert.equal(await staticPage.locator('.hero-frame-one').evaluate(el=>getComputedStyle(el).opacity),'1')
+ assert.equal(await staticPage.locator('.hero-actions .btn').getAttribute('href'),'#opening-films');assert.equal(await staticPage.locator('.hero-actions a[href="/reservation"]').count(),1);assert.equal(await staticPage.locator('#opening-films a[href^="https://www.youtube.com/watch"]').count(),3)
  assert.equal(await staticPage.locator('#hero-motion-toggle').isVisible(),false)
  assert.equal(await staticPage.locator('[data-story-panel]:visible').count(),15,'no-JS preserves all story content');assert.equal(await staticPage.locator('.story-selectors:visible').count(),0,'no-JS hides inactive controls')
  assert.equal(await staticPage.locator('.physician-deck-card:visible').count(),5);assert.equal(await staticPage.locator('.language-panel:visible').count(),4);assert.equal(await staticPage.locator('.assembly-note:visible').count(),4);assert.equal(await staticPage.locator('.assembly-controls:visible,.language-range-controls:visible,.physician-deck-controls:visible').count(),0)

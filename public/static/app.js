@@ -61,16 +61,26 @@ if(hero&&motionButton){
  const preference=matchMedia('(prefers-reduced-motion: reduce)');
  const connection=navigator.connection;
  const film=$('#hero-clinic-film');let userPaused=false,inView=true,playPending=false;
- const wantsPlayback=()=>motionAllowed()&&!userPaused&&!document.hidden&&inView;
+ const chapters=$$('.film-chapters [data-film-chapter]',hero);
+ const chapterLabels=['함께 이야기하는 의료진','원장님이 직접 전하는 이야기','좋은 아침을 맞이하는 공간','진료에 집중할 수 있는 공간','진단을 위한 장비'];
+ const wantsPlayback=()=>motionAllowed()&&!userPaused&&!document.hidden&&inView&&!$('#video-dialog')?.open;
+ function updateFilmChapter(){
+  if(!film||!Number.isFinite(film.duration))return;
+  const index=Math.min(4,Math.floor(film.currentTime/3.2));
+  hero.style.setProperty('--film-progress',String(film.currentTime/film.duration));hero.dataset.filmChapter=String(index);
+  $('.film-counter',hero).textContent='0'+(index+1)+' / 05';$('#hero-film-caption').textContent=chapterLabels[index];
+  chapters.forEach((b,i)=>b.setAttribute('aria-pressed',String(i===index)));
+ }
  const syncFilm=()=>{
   if(!film)return;
   if(!wantsPlayback()){film.pause();return}
   if(!film.getAttribute('src')){film.muted=true;film.src=matchMedia('(max-width:760px)').matches?film.dataset.mobile:film.dataset.desktop;film.load()}
-  if(film.paused&&!playPending){playPending=true;film.play().catch(()=>{if(wantsPlayback()){hero.classList.remove('film-playing');hero.dataset.filmState='poster'}}).finally(()=>{playPending=false;if(!wantsPlayback())film.pause()})}
+  if(film.paused&&!playPending){playPending=true;film.play().catch(()=>{if(wantsPlayback()){hero.classList.remove('film-playing');hero.dataset.filmState='poster';$('span',motionButton).textContent='영상 재생';motionButton.setAttribute('aria-label','히어로 영상 재생')}}).finally(()=>{playPending=false;if(!wantsPlayback())film.pause()})}
  };
  film?.addEventListener('playing',()=>{if(!wantsPlayback()){film.pause();return}hero.classList.add('film-playing');hero.dataset.filmState='playing'});
  film?.addEventListener('error',()=>{hero.classList.remove('film-playing');hero.dataset.filmState='poster'});
- film?.addEventListener('timeupdate',()=>{if(!Number.isFinite(film.duration))return;hero.style.setProperty('--film-progress',String(film.currentTime/film.duration));const second=film.currentTime>=4.1;$('.film-counter',hero).textContent=second?'02 / 02':'01 / 02';$('#hero-film-caption').textContent=second?'진료에 집중할 수 있는 공간':'좋은 아침이 시작되는 공간'});
+ film?.addEventListener('timeupdate',updateFilmChapter);
+ chapters.forEach(b=>b.addEventListener('click',()=>{if(!film||!motionAllowed()||!Number.isFinite(film.duration))return;film.currentTime=Number(b.dataset.filmChapter)*3.2+.03;updateFilmChapter()}));
  const syncMotion=()=>{
   const constrained=preference.matches||!!connection?.saveData||sitePaused;
   root.classList.toggle('hero-in-view',inView);
@@ -79,14 +89,16 @@ if(hero&&motionButton){
   hero.classList.toggle('motion-suspended',document.hidden||!inView);
   motionButton.hidden=false;
   motionButton.disabled=constrained;
+  const chapterControls=$('.film-chapters',hero);if(chapterControls)chapterControls.hidden=constrained;
   motionButton.setAttribute('aria-pressed',String(userPaused||constrained));
-  const label=constrained?'모션 줄이기 적용':userPaused?'모션 재생':'모션 정지';
+  const label=constrained?'모션 줄이기 적용':userPaused?'영상 재생':'영상 정지';
   $('span',motionButton).textContent=label;
   motionButton.setAttribute('aria-label',constrained?'기기 설정에 따라 히어로 모션을 줄였습니다':'히어로 '+label);
   hero.dataset.motionState=constrained?'reduced':userPaused?'paused':document.hidden||!inView?'suspended':'playing';
   syncFilm();
  };
- motionButton.addEventListener('click',()=>{userPaused=!userPaused;hero.classList.add('motion-intro-finished');syncMotion()});
+ motionButton.addEventListener('click',()=>{if(hero.dataset.filmState==='poster'){userPaused=false;film?.load()}else userPaused=!userPaused;hero.classList.add('motion-intro-finished');syncMotion()});
+ document.addEventListener('video-dialog-change',syncMotion);
  document.addEventListener('site-motion-change',syncMotion);
  preference.addEventListener('change',syncMotion);
  connection?.addEventListener?.('change',syncMotion);
@@ -229,8 +241,8 @@ function hoursStatus(){const date=new Date();const parts=new Intl.DateTimeFormat
 function setBranch(id){if(!names[id])return;branch=id;try{sessionStorage.setItem('gm_branch',id)}catch{}$$('[data-branch]').forEach(b=>{const active=b.dataset.branch===id;b.classList.toggle('active',active);b.setAttribute('aria-pressed',String(active))});$$('[data-branch-panel]').forEach(p=>p.hidden=p.dataset.branchPanel!==id);$$('.branch-phone').forEach(a=>{a.href='tel:'+phones[id].replaceAll('-','');if(!a.querySelector('svg'))a.textContent=phones[id]});const select=$('#header-branch-select');if(select)select.value=id;hoursStatus()}
 $$('[data-branch]').forEach(b=>b.addEventListener('click',()=>setBranch(b.dataset.branch)));$('#header-branch-select')?.addEventListener('change',e=>setBranch(e.target.value));setBranch(branch);setInterval(hoursStatus,60000);
 $$('.copy-address').forEach(b=>b.addEventListener('click',async()=>{try{await navigator.clipboard.writeText(b.dataset.address);toast('주소를 복사했습니다.')}catch{toast('복사할 주소: '+b.dataset.address)}}));
-$$('dialog').forEach(dialog=>{dialog.addEventListener('keydown',e=>{if(e.key==='Escape'){e.preventDefault();dialog.close()}});$('.dialog-close',dialog)?.addEventListener('click',()=>dialog.close());dialog.addEventListener('click',e=>{if(e.target===dialog){const r=dialog.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)dialog.close()}});dialog.addEventListener('close',()=>{if(dialog.id==='video-dialog')$('#video-container').replaceChildren()})});
-$$('[data-video]').forEach(b=>b.addEventListener('click',()=>{const id=b.dataset.video;if(!/^[\w-]{11}$/.test(id))return;const frame=document.createElement('iframe');frame.src='https://www.youtube-nocookie.com/embed/'+id+'?autoplay=1&rel=0';frame.title=b.getAttribute('aria-label')||b.textContent;frame.allow='autoplay; encrypted-media; picture-in-picture';frame.allowFullscreen=true;$('#video-container').replaceChildren(frame);$('#video-dialog').showModal()}));
+$$('dialog').forEach(dialog=>{dialog.addEventListener('keydown',e=>{if(e.key==='Escape'){e.preventDefault();dialog.close()}});$('.dialog-close',dialog)?.addEventListener('click',()=>dialog.close());dialog.addEventListener('click',e=>{if(e.target===dialog){const r=dialog.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)dialog.close()}});dialog.addEventListener('close',()=>{if(dialog.id==='video-dialog'){$('#video-container').replaceChildren();document.dispatchEvent(new Event('video-dialog-change'))}})});
+$$('[data-video]').forEach(b=>b.addEventListener('click',()=>{const id=b.dataset.video;if(!/^[\w-]{11}$/.test(id))return;const frame=document.createElement('iframe');frame.src='https://www.youtube-nocookie.com/embed/'+id+'?autoplay=1&rel=0';frame.title=b.getAttribute('aria-label')||b.textContent;frame.allow='autoplay; encrypted-media; picture-in-picture';frame.allowFullscreen=true;$('#video-container').replaceChildren(frame);$('#video-dialog').showModal();document.dispatchEvent(new Event('video-dialog-change'))}));
 $$('.search-open').forEach(b=>b.addEventListener('click',()=>{$('#search-dialog').showModal();$('#site-search').focus()}));let searchTimer,searchRequest;
 $('#site-search')?.addEventListener('input',e=>{clearTimeout(searchTimer);searchRequest?.abort();const q=e.target.value.trim();if(!q){$('#search-results').replaceChildren();return}searchTimer=setTimeout(async()=>{searchRequest=new AbortController();try{const r=await fetch('/api/search?q='+encodeURIComponent(q),{signal:searchRequest.signal});if(!r.ok)throw Error();const data=await r.json();$('#search-results').innerHTML=data.results.length?data.results.map(x=>`<a class="search-result" href="${safe(x.url)}"><span>${safe(x.title)}</span><small>${safe(x.category)}</small></a>`).join(''):'<p class="subtle">검색 결과가 없습니다. 다른 검색어를 입력해 주세요.</p>'}catch(err){if(err.name!=='AbortError')$('#search-results').textContent='검색 연결이 원활하지 않습니다. 다시 시도해 주세요.'}},180)});
 let category='all';function filterTreatments(){const q=($('#treatment-search')?.value||'').trim().toLowerCase();let count=0;$$('#treatment-list [data-category]').forEach(c=>{c.hidden=!((category==='all'||c.dataset.category===category)&&c.dataset.search.toLowerCase().includes(q));if(!c.hidden)count++});if($('#treatment-empty'))$('#treatment-empty').hidden=count>0}

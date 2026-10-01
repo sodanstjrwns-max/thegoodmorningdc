@@ -61,7 +61,7 @@ if(hero&&motionButton){
  const film=$('#hero-clinic-film'),prompt=$('#hero-playback-prompt'),playButton=$('#hero-play-button'),status=$('#hero-playback-status');
  let userPaused=false,explicitPlayback=false,inView=true,playPending=false,blocked=false,issue='',attempt=0,slowTimer;
  const chapters=$$('.film-chapters [data-film-chapter]',hero);
- const chapterLabels=['함께 이야기하는 의료진','원장님이 직접 전하는 이야기','좋은 아침을 맞이하는 공간','진료에 집중할 수 있는 공간','진단을 위한 장비'];
+ const chapterLabels=['함께 이야기하는 의료진','함께 살펴보는 두 원장님','좋은 아침을 맞이하는 공간','진료에 집중할 수 있는 공간'];
  const playbackAllowed=()=>explicitPlayback||motionAllowed();
  const suspended=()=>document.hidden||!inView||!!$('#video-dialog')?.open;
  const wantsPlayback=()=>playbackAllowed()&&!userPaused&&!suspended();
@@ -80,9 +80,9 @@ if(hero&&motionButton){
  }
  function updateFilmChapter(){
   if(!film||!Number.isFinite(film.duration))return;
-  const index=Math.min(4,Math.floor(film.currentTime/3.2));
+  const index=Math.min(chapters.length-1,Math.floor(film.currentTime/4));
   hero.style.setProperty('--film-progress',String(film.currentTime/film.duration));hero.dataset.filmChapter=String(index);
-  $('.film-counter',hero).textContent='0'+(index+1)+' / 05';$('#hero-film-caption').textContent=chapterLabels[index];
+  $('.film-counter',hero).textContent='0'+(index+1)+' / 04';$('#hero-film-caption').textContent=chapterLabels[index];
   chapters.forEach((b,i)=>b.setAttribute('aria-pressed',String(i===index)));
  }
  function syncFilm(){
@@ -110,7 +110,7 @@ if(hero&&motionButton){
  film?.addEventListener('pause',paintPlayback);
  film?.addEventListener('error',()=>{blocked=true;issue='network';playPending=false;clearTimeout(slowTimer);hero.classList.remove('film-playing');hero.dataset.filmState='poster';paintPlayback()});
  film?.addEventListener('timeupdate',updateFilmChapter);
- chapters.forEach(b=>b.addEventListener('click',()=>{if(!film||!Number.isFinite(film.duration))return;film.currentTime=Number(b.dataset.filmChapter)*3.2+.03;updateFilmChapter()}));
+ chapters.forEach(b=>b.addEventListener('click',()=>{if(!film||!Number.isFinite(film.duration))return;film.currentTime=Number(b.dataset.filmChapter)*4+.03;updateFilmChapter()}));
  playButton?.addEventListener('click',directPlay);
  motionButton.addEventListener('click',()=>{if(!film?.paused&&!blocked){userPaused=true;hero.classList.add('motion-intro-finished');syncMotion()}else directPlay()});
  document.addEventListener('video-dialog-change',syncMotion);

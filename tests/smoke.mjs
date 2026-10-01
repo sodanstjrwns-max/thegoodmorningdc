@@ -110,11 +110,11 @@ try{
   assert.ok(bounds.every(x=>x.scroll<=x.parent+1),'headline clipping '+width)
   await motionPage.screenshot({path:`test-results/hero-motion-${width}.png`})
  }
- // Film-first hero: actual doctor footage, five selectable shots and accessible original talks.
- assert.ok(await motionPage.locator('#hero-clinic-film').evaluate(el=>el.duration>=16&&el.duration<17),'five-shot 16-second film');
- assert.equal(await motionPage.locator('.film-chapters button').count(),5);
+ // Film-first hero: actual doctor footage, four caption-free selected segments and accessible original talks.
+ assert.ok(await motionPage.locator('#hero-clinic-film').evaluate(el=>el.duration>=16&&el.duration<17),'four-segment 16-second film');
+ assert.equal(await motionPage.locator('.film-chapters button').count(),4);
  await motionPage.locator('[data-film-chapter="3"]').click();
- await motionPage.waitForFunction(()=>document.querySelector('.film-counter').textContent==='04 / 05');
+ await motionPage.waitForFunction(()=>document.querySelector('.film-counter').textContent==='04 / 04');
  assert.match(await motionPage.locator('#hero-film-caption').textContent(),/진료에 집중/);
  await motionPage.locator('#hero-motion-toggle').click();
  await motionPage.locator('[data-film-chapter="0"]').focus();await motionPage.keyboard.press('Enter');
@@ -132,7 +132,7 @@ try{
  assert.match(await motionPage.locator('#video-container iframe').getAttribute('src'),/Q3w-rsppT_g/);
  assert.equal(await motionPage.locator('#hero-clinic-film').evaluate(el=>el.paused),true,'background film stops for the selected talk');
  await motionPage.keyboard.press('Escape');await motionPage.locator('#video-dialog').waitFor({state:'hidden'});await motionPage.locator('#video-container iframe').waitFor({state:'detached'});assert.equal(await motionPage.locator('#video-container iframe').count(),0);
- console.log('PASS: video-first composition, 16-second doctor opening, five scene controls, three provided talks and dialog cleanup.');
+ console.log('PASS: video-first composition, 16-second doctor opening, four scene controls, three provided talks and dialog cleanup.');
  await motionPage.locator('#philosophy').scrollIntoViewIfNeeded();await motionPage.waitForTimeout(1800)
  assert.equal(await motionPage.locator('.philosophy-manifesto').evaluate(el=>el.classList.contains('type-visible')),true)
  await motionPage.screenshot({path:'test-results/editorial-philosophy-final.png'})

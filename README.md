@@ -149,7 +149,7 @@ npm run test:all
 ```
 - `npm test`: 60경로·31진료·285FAQ/schema 일치·320~1440 폭·영상 Range와 디코딩·수동재생·7인터랙션·기존 게시판 보안.
 - `npm run test:studio`: 요청 격리·RSS parser/SSRF·전체 약력·44검토 초안·비공개 수가·새 CMS CRUD·초안/공개 분리·revision 충돌·이력·미리보기·연결 삭제 보호·XSS·미디어 권한·새 검색/sitemap·메인 변경·모바일 폼·휴진 예외·실제 공식 RSS.
-- 2026-10-06 최종 `npm run test:all` 전체 통과. 60공개 경로·기존 영상/모션·새 CMS·실제 RSS를 연속 검증했으며 브라우저 오류 0개. 테스트 임시 공개 데이터는 정리되어, D1에는 44개 비공개 검토 초안만 남아 있습니다.
+- 2026-10-06 `npm run test:all` 1회 전체 통과: 60공개 경로·기존 영상/모션·새 CMS·실제 RSS 연속 검증, 당시 브라우저 오류 0개. 이후 개발 도구 sharp를 0.35.5로 보안 패치하고 반복한 검사에서는 smoke 마지막 브라우저 오류 검사에 `Transition was aborted because of invalid state. ViewTransition opt-in disabled` 1건이 수집되어 실패했습니다. 그 반복 실행의 studio 단계는 실행되지 않았습니다. 주요 기능 검사는 통과했지만, 간헐적인 native View Transition 중단의 원인·안정성 확인은 남아 있습니다. 개발 의존성 변경이 원인이라고 확정하지 않습니다. 테스트 임시 공개 데이터는 정리되어, D1에는 44개 비공개 검토 초안만 남아 있습니다.
 - 검증은 Playwright Chromium 및 모바일/touch emulation입니다. 실제 iPhone/Safari·인앱 브라우저 검수로 주장하지 않습니다.
 - npm audit: 런타임/개발 의존성 취약점 0개 확인. Worker 빌드 약380KB, gzip 약118KB.
 

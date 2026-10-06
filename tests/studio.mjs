@@ -73,14 +73,25 @@ try{
  // Browser tests: branch-linked calls/actions, index+query intersection and form editing.
  await page.goto(base+'/',{waitUntil:'networkidle'});await page.locator('#header-branch-select').selectOption('gwangmyeong');assert.match(await page.locator('.header-phone').getAttribute('href'),/0260132828/);assert.match(await page.locator('.mobile-bottom .branch-kakao').getAttribute('href'),/_XGQYn/);assert.match(await page.locator('.mobile-bottom .branch-booking').getAttribute('href'),/1551337/)
  await page.goto(base+'/encyclopedia');await page.locator('[data-initial="ㅊ"]').click();await page.locator('#glossary-search').fill('차폐막');assert.equal(await page.locator('.term-card:visible').count(),1);await page.locator('[data-initial="ㄱ"]').click();assert.deepEqual(await page.locator('.term-card:visible').evaluateAll(es=>es.map(e=>e.dataset.term)),['골유도재생술'])
- await page.goto(base+'/admin');await page.locator('[data-kind="doctor"]').waitFor();await page.locator('[data-kind="doctor"]').click();await page.locator('[data-studio-edit="kang-dowook"]').click();assert.equal(await page.locator('[data-field^="bio."]').count(),16);await page.locator('[data-field="text"]').fill('브라우저 초안 검증');await page.locator('#studio-editor button[type="submit"]').click();await page.waitForFunction(()=>document.querySelector('#studio-message').textContent.includes('초안으로 저장'));pending.add('doctor/kang-dowook')
+ await page.goto(base+'/admin');await page.locator('[data-kind="doctor"]').waitFor();await page.locator('[data-kind="doctor"]').click();await page.locator('[data-studio-edit="kang-dowook"]').click();assert.equal(await page.locator('[data-field^="bio."]').count(),16);await page.locator('[data-field="text"]').fill('브라우저 초안 검증');
+ const savePath='**/api/admin/content/doctor/kang-dowook';let releaseSave;const saveGate=new Promise(resolve=>releaseSave=resolve);
+ await page.route(savePath,async route=>{await saveGate;await route.continue()});
+ await page.locator('#studio-editor button[type="submit"]').click();
+ try{
+  assert.equal(await page.locator('[data-field="text"]').isDisabled(),true,'saving locks fields instead of discarding newer typing');
+  await page.locator('[data-kind="section"]').click();
+  assert.equal(await page.locator('[data-kind="doctor"]').getAttribute('aria-pressed'),'true','pending save cannot switch editor');
+  assert.match(await page.locator('#studio-message').textContent(),/저장이 끝난 뒤/);
+ }finally{releaseSave()}
+ await page.waitForFunction(()=>document.querySelector('#studio-message').textContent.includes('초안으로 저장'));await page.unroute(savePath);pending.add('doctor/kang-dowook')
+ assert.equal(await page.locator('[data-field="text"]').isDisabled(),false,'editing resumes after save')
  assert.doesNotMatch(await (await anon.request.get(base+'/doctors/kang-dowook')).text(),/브라우저 초안 검증/)
  await page.locator('#studio-preview').click();await page.locator('#studio-preview-panel').waitFor({state:'visible'});await page.frameLocator('#studio-preview-frame').getByText('브라우저 초안 검증',{exact:true}).waitFor();assert.equal(await page.frameLocator('#studio-preview-frame').locator('script').count(),0)
  await page.locator('#studio-close').click();await page.locator('[data-kind="operation"]').click();await page.locator('[data-studio-edit="fees-0324-review"]').click();assert.equal(await page.locator('[data-field$=".amount"]').count(),32)
  await page.setViewportSize({width:390,height:844});assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true,'CMS mobile overflow');await page.screenshot({path:'test-results/studio-fees-mobile.png'})
  await page.locator('#studio-close').click();await page.locator('[data-kind="section"]').click();await page.setViewportSize({width:1440,height:900});await page.locator('#content-studio').scrollIntoViewIfNeeded();await page.screenshot({path:'test-results/studio-sections-desktop.png'})
- const branch=await entry('branch','gwangmyeong');const date=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Seoul',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());const changed={...branch.draft,exceptions:[{date,hours:'',note:'자동검증 임시휴진'}]};await save('branch',branch.key,changed,'publish',branch.revision)
- await page.goto(base+'/?branch=gwangmyeong');assert.match(await page.locator('#regular-hours-status').textContent(),/변경 일정 · 휴진/);await remove('branch',branch.key)
+ const branch=await entry('branch','gwangmyeong');const date=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Seoul',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());const changed={...branch.draft,phone:'02-6013-2829',exceptions:[{date,hours:'',note:'자동검증 임시휴진'}]};await save('branch',branch.key,changed,'publish',branch.revision)
+ await page.goto(base+'/?branch=gwangmyeong');assert.match(await page.locator('#regular-hours-status').textContent(),/변경 일정 · 휴진/);assert.match(await page.locator('meta[name="description"]').getAttribute('content'),/02-6013-2829/);assert.equal(await page.locator('.header-phone').getAttribute('href'),'tel:0260132829');await remove('branch',branch.key)
  const refreshed=await request('channels/refresh','POST');assert.equal(refreshed.status(),200);const channels=(await refreshed.json()).channels;console.log('LIVE FEEDS:',channels.map(c=>({title:c.title,count:c.items.length,stale:c.stale})))
  assert.ok(channels.filter(c=>c.type!=='column').every(c=>c.items.length>0),'actual official feed refresh')
  await page.goto(base+'/column');assert.match(await page.locator('#main a[target="_blank"]').first().getAttribute('href'),/thegoodmorningdental.com\/blog\//)

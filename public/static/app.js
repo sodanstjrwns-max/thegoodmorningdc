@@ -3,7 +3,6 @@ const $=(s,r=document)=>r.querySelector(s),$$=(s,r=document)=>[...r.querySelecto
 const safe=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 let toastTimer;function toast(text){const t=$('#toast');t.textContent=text;t.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove('show'),3500)}
 const motionPreference=matchMedia('(prefers-reduced-motion: reduce)'),root=document.documentElement;
-const reduced=motionPreference.matches;
 const siteMotionButton=$('#site-motion-toggle');let sitePaused=false;
 try{sitePaused=sessionStorage.getItem('gm_motion')==='off'}catch{}
 const motionAllowed=()=>!motionPreference.matches&&!navigator.connection?.saveData&&!sitePaused;
@@ -34,6 +33,16 @@ if(!location.pathname.startsWith('/admin')){
  else $$('.type-ready,.lift-ready').forEach(el=>el.classList.add('type-visible','lift-visible'));
 }
 syncSiteMotion();
+// Arrival is a local visual enhancement, not a navigation lifecycle dependency.
+// It never intercepts links, fades out the current page, or hides an unloaded page.
+const entryHeading=$('.inner-page:not(.admin-page) #main > .page-heading,.inner-page:not(.admin-page) #main > .treatment-detail-hero');
+if(entryHeading){
+ const clearEntry=()=>entryHeading.classList.remove('route-enter');
+ entryHeading.addEventListener('animationend',event=>{if(event.animationName==='route-arrive')clearEntry()});
+ entryHeading.addEventListener('animationcancel',event=>{if(event.animationName==='route-arrive')clearEntry()});
+ document.addEventListener('site-motion-change',()=>{if(!motionAllowed())clearEntry()});
+ if(motionAllowed()&&!location.hash)entryHeading.classList.add('route-enter');
+}
 // Scroll work is batched once per animation frame, never scroll-jacked.
 let scrollQueued=false;const movingPhotos=$$('.philosophy-portrait,.clinic-story-photo'),manifesto=$('.philosophy-manifesto'),manifestoGlyphs=manifesto?$$('.kinetic-char',manifesto):[];
 function updateScrollMotion(){
@@ -54,7 +63,8 @@ const menu=$('#mobile-menu'),toggle=$('.menu-toggle');function closeMenu(){menu.
 toggle?.addEventListener('click',()=>{if(!menu.hidden){closeMenu();return}menu.hidden=false;toggle.setAttribute('aria-expanded','true');toggle.setAttribute('aria-label','전체 메뉴 닫기');document.body.classList.add('locked');$('#main').inert=true;$('a',menu).focus()});
 document.addEventListener('keydown',e=>{if(!menu.hidden){if(e.key==='Escape'){closeMenu();toggle.focus()}if(e.key==='Tab'){const list=[toggle,...$$('a',menu)];const first=list[0],last=list.at(-1);if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus()}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus()}}}});
 $$('a',menu).forEach(a=>a.addEventListener('click',closeMenu));
-$('.back-top')?.addEventListener('click',()=>window.scrollTo({top:0,behavior:reduced?'instant':'smooth'}));
+matchMedia('(min-width:1021px)').addEventListener('change',event=>{if(event.matches&&!menu.hidden){const hadFocus=menu.contains(document.activeElement)||document.activeElement===toggle;closeMenu();if(hadFocus)$('.site-header .brand')?.focus({preventScroll:true})}});
+$('.back-top')?.addEventListener('click',()=>window.scrollTo({top:0,behavior:motionAllowed()?'smooth':'instant'}));
 // Motion preferences prevent autoplay, never a visitor's explicit media playback.
 const hero=$('#hero-section'),motionButton=$('#hero-motion-toggle');
 if(hero&&motionButton){
@@ -265,10 +275,19 @@ if($('#checker')){const questions=[{title:'가장 불편한 증상은 무엇인�
 async function api(url,opts={}){const r=await fetch(url,{...opts,headers:{...(opts.body instanceof ArrayBuffer?{}:{'Content-Type':'application/json'}),...opts.headers}});let data;try{data=await r.json()}catch{throw Error('서버 응답을 읽지 못했습니다.')}if(!r.ok)throw Error(data.error||'요청을 처리하지 못했습니다.');return data}
 $('#admin-login')?.addEventListener('submit',async e=>{e.preventDefault();const form=e.currentTarget,b=$('button[type="submit"]',form);b.disabled=true;$('#login-error').textContent='';try{await api('/api/admin/login',{method:'POST',body:JSON.stringify({password:form.elements.password.value})});location.reload()}catch(err){$('#login-error').textContent=err.message;b.disabled=false}});
 if($('#admin-posts')){let postData=[];const form=$('#post-editor');async function loadPosts(){try{postData=(await api('/api/admin/posts')).posts;$('#admin-posts').innerHTML=postData.map(p=>`<article class="admin-post"><div><strong>${safe(p.title)}</strong><br><small>${p.type==='notice'?'공지':'건강정보'} · ${p.status==='draft'?'비공개 초안':'공개'} · ${safe(p.updated_at.slice(0,10))}</small></div>${p.status==='published'?`<a target="_blank" rel="noopener" class="text-link" href="/${p.type}/${safe(p.slug)}">보기</a>`:''}<button data-edit="${safe(p.id)}">수정</button><button data-delete="${safe(p.id)}">삭제</button></article>`).join('')||'<p class="subtle">등록된 글이 없습니다.</p>';$$('[data-edit]').forEach(b=>b.onclick=()=>openEditor(postData.find(p=>p.id===b.dataset.edit)));$$('[data-delete]').forEach(b=>b.onclick=async()=>{if(!confirm('게시물을 삭제할까요? 삭제 후 복구할 수 없습니다.'))return;try{await api('/api/admin/posts/'+b.dataset.delete,{method:'DELETE'});if(form.elements.id.value===b.dataset.delete)form.hidden=true;await loadPosts();toast('삭제했습니다.')}catch(e){toast(e.message)}})}catch(e){$('#admin-posts').textContent=e.message}}
-function openEditor(p){form.reset();for(const key of ['id','title','slug','body','type','status'])form.elements[key].value=p?.[key]||(key==='type'?'blog':key==='status'?'draft':'');form.hidden=false;$('#editor-title').textContent=p?'글 수정':'새 글 작성';$('#editor-message').textContent='';$('#editor-preview').hidden=true;form.scrollIntoView({behavior:reduced?'instant':'smooth',block:'start'})}
+function openEditor(p){form.reset();for(const key of ['id','title','slug','body','type','status'])form.elements[key].value=p?.[key]||(key==='type'?'blog':key==='status'?'draft':'');form.hidden=false;$('#editor-title').textContent=p?'글 수정':'새 글 작성';$('#editor-message').textContent='';$('#editor-preview').hidden=true;form.scrollIntoView({behavior:motionAllowed()?'smooth':'instant',block:'start'})}
 $('#new-post').onclick=()=>openEditor(null);$('#admin-logout').onclick=async()=>{try{await api('/api/admin/logout',{method:'POST'});location.reload()}catch(e){toast(e.message)}};
 form.addEventListener('submit',async e=>{e.preventDefault();const b=$('button[type="submit"]',form);b.disabled=true;try{const data=Object.fromEntries(new FormData(form));const r=await api('/api/admin/posts',{method:'POST',body:JSON.stringify(data)});form.elements.id.value=r.id;$('#editor-message').textContent=data.status==='published'?'공개 저장되었습니다.':'비공개 초안으로 저장되었습니다.';await loadPosts()}catch(e){$('#editor-message').textContent=e.message}finally{b.disabled=false}});
 $('#preview-post').onclick=async()=>{try{const r=await api('/api/admin/preview',{method:'POST',body:JSON.stringify({body:form.elements.body.value})});$('#editor-preview').innerHTML=r.html;$('#editor-preview').hidden=false}catch(e){toast(e.message)}};
 async function upload(file){if(!file)return;if(!['image/jpeg','image/png','image/webp'].includes(file.type)||file.size>5*1024*1024){toast('5MB 이하의 JPG·PNG·WebP 이미지를 선택해 주세요.');return}$('#editor-message').textContent='이미지 업로드 중…';try{const r=await api('/api/admin/upload',{method:'POST',headers:{'Content-Type':file.type},body:await file.arrayBuffer()});const area=form.elements.body;const pos=area.selectionStart;const text='\n\n![병원 안내 이미지]('+r.url+')\n\n';area.setRangeText(text,pos,pos,'end');$('#editor-message').textContent='이미지를 삽입했습니다. 대괄호 안의 설명을 수정하고 글을 저장해 주세요.'}catch(e){$('#editor-message').textContent=e.message}}
 $('#post-image').onchange=e=>upload(e.target.files[0]);const area=form.elements.body;area.addEventListener('dragover',e=>{if(e.dataTransfer.types.includes('Files'))e.preventDefault()});area.addEventListener('drop',e=>{if(e.dataTransfer.files.length){e.preventDefault();upload(e.dataTransfer.files[0])}});loadPosts()}
+// Restore current preferences after history/BFCache navigation. Never replay the
+// entrance over a restored reading position or leave the document inert.
+addEventListener('pageshow',event=>{
+ if(!event.persisted)return;
+ entryHeading?.classList.remove('route-enter');
+ closeMenu();$$('dialog[open]').forEach(dialog=>dialog.close());
+ try{sitePaused=sessionStorage.getItem('gm_motion')==='off';const saved=sessionStorage.getItem('gm_branch');if(names[saved])setBranch(saved)}catch{}
+ syncSiteMotion();queueScrollMotion();
+});
 })();

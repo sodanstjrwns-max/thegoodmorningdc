@@ -9,10 +9,16 @@
     "db:migrate:local": "wrangler d1 migrations apply webapp-production --local",
     "preview": "wrangler pages dev",
     "deploy": "npm run build && wrangler pages deploy",
-    "cf-typegen": "wrangler types --env-interface CloudflareBindings"
+    "cf-typegen": "wrangler types --env-interface CloudflareBindings",
+    "test:studio": "node tests/studio.mjs",
+    "test:all": "npm test && npm run test:studio"
   },
   "dependencies": {
+    "fast-xml-parser": "^5.11.2",
     "hono": "^4.13.8"
+  },
+  "overrides": {
+    "sharp": "0.35.5"
   },
   "devDependencies": {
     "@hono/vite-build": "^1.11.1",

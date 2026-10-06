@@ -123,16 +123,16 @@ try{
  await motionPage.locator('#hero-motion-toggle').click();
  assert.equal(await motionPage.locator('.hero-clinic-film').evaluate(el=>getComputedStyle(el).filter),'none','footage is not darkened with a video filter');
  assert.ok(await motionPage.locator('h1').evaluate(el=>parseFloat(getComputedStyle(el).fontSize)<=60),'headline no longer dominates film');
- assert.equal(await motionPage.locator('#hero-section').evaluate(el=>el.nextElementSibling.id),'opening-films','original talks immediately follow opening');
- assert.equal(await motionPage.locator('#opening-films .opening-film-card').count(),3);
+ assert.equal(await motionPage.locator('#hero-section').evaluate(el=>el.nextElementSibling.id),'care-priorities','four priority treatments immediately follow opening');
+ assert.equal(await motionPage.locator('#opening-films .opening-film-card').count(),4);
  // Mock only the third-party iframe document: test our dialog wiring, not YouTube availability.
  await motionPage.route('https://www.youtube-nocookie.com/**',route=>route.fulfill({contentType:'text/html',body:'<p>External video player test</p>'}));
  await motionPage.locator('#opening-films .opening-film-play').first().click();
  assert.equal(await motionPage.locator('#video-dialog').isVisible(),true);
- assert.match(await motionPage.locator('#video-container iframe').getAttribute('src'),/Q3w-rsppT_g/);
+ assert.match(await motionPage.locator('#video-container iframe').getAttribute('src'),/Ljh4gLCFs6Y/);
  assert.equal(await motionPage.locator('#hero-clinic-film').evaluate(el=>el.paused),true,'background film stops for the selected talk');
  await motionPage.keyboard.press('Escape');await motionPage.locator('#video-dialog').waitFor({state:'hidden'});await motionPage.locator('#video-container iframe').waitFor({state:'detached'});assert.equal(await motionPage.locator('#video-container iframe').count(),0);
- console.log('PASS: video-first composition, 16-second doctor opening, four scene controls, three provided talks and dialog cleanup.');
+ console.log('PASS: video-first composition, 16-second doctor opening, four scene controls, four priority-treatment talks and dialog cleanup.');
  await motionPage.locator('#philosophy').scrollIntoViewIfNeeded();await motionPage.waitForTimeout(1800)
  assert.equal(await motionPage.locator('.philosophy-manifesto').evaluate(el=>el.classList.contains('type-visible')),true)
  await motionPage.screenshot({path:'test-results/editorial-philosophy-final.png'})
@@ -176,7 +176,7 @@ try{
  const staticContext=await browser.newContext({javaScriptEnabled:false,viewport:{width:390,height:844}})
  const staticPage=await staticContext.newPage();await staticPage.goto(base)
  assert.equal(await staticPage.locator('.hero-title-line').count(),2);assert.equal(await staticPage.locator('.hero-frame-one').evaluate(el=>getComputedStyle(el).opacity),'1')
- assert.equal(await staticPage.locator('.hero-actions .btn').getAttribute('href'),'#opening-films');assert.equal(await staticPage.locator('.hero-actions a[href="/reservation"]').count(),1);assert.equal(await staticPage.locator('#opening-films a[href^="https://www.youtube.com/watch"]').count(),3)
+ assert.equal(await staticPage.locator('.hero-actions .btn').getAttribute('href'),'#opening-films');assert.equal(await staticPage.locator('.hero-actions a[href="/reservation"]').count(),1);assert.equal(await staticPage.locator('#opening-films a[href^="https://www.youtube.com/watch"]').count(),4)
  assert.equal(await staticPage.locator('#hero-motion-toggle').isVisible(),false)
  assert.equal(await staticPage.locator('[data-story-panel]:visible').count(),15,'no-JS preserves all story content');assert.equal(await staticPage.locator('.story-selectors:visible').count(),0,'no-JS hides inactive controls')
  assert.equal(await staticPage.locator('.physician-deck-card:visible').count(),5);assert.equal(await staticPage.locator('.language-panel:visible').count(),4);assert.equal(await staticPage.locator('.assembly-note:visible').count(),4);assert.equal(await staticPage.locator('.assembly-controls:visible,.language-range-controls:visible,.physician-deck-controls:visible').count(),0)

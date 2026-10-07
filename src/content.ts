@@ -93,7 +93,8 @@ export function validate(kind:Kind,key:string,value:any,publishing=false){
  if(kind==='site'&&(key!=='mission'||value.promises.length!==3||!value.story.length))throw Error('미션은 세 가지 약속과 개원 스토리로 구성합니다.')
  if(kind==='operation'){
   if(!['pricing','parking','accessibility','equipment','careers','legal','sedation','case','approval'].includes(value.category)||!['all',...source.branches.map(b=>b.id)].includes(value.branch))throw Error('운영정보 분류와 지점을 확인하세요.')
-  if(publishing&&(!value.verified||!value.source.trim()||!validDate(value.effectiveDate)))throw Error('공개 전 병원 확인 체크·승인 근거·적용일을 입력하세요.')
+  if(publishing&&(!value.verified||!value.source.trim()))throw Error('공개 전 확인 체크와 승인 근거를 입력하세요.')
+  if(publishing&&((value.effectiveDate&&!validDate(value.effectiveDate))||(!value.effectiveDate&&value.category!=='pricing')))throw Error('유효한 적용일을 입력하세요. 원본에 날짜가 없는 수가표만 빈칸을 허용합니다.')
   if(publishing&&['case','approval'].includes(value.category))throw Error('환자 사례와 원문 승인 자료는 현재 비공개 검토 전용입니다.')
   if(publishing&&value.category==='pricing'&&(!value.items.length||value.items.some((x:any)=>!x.name.trim()||!x.amount.trim())))throw Error('공개 수가표에 항목과 금액이 필요합니다.')
  }

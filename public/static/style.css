@@ -246,6 +246,8 @@ h3{font-weight:720;letter-spacing:-.025em}
 @media(max-width:350px){.site-header .brand strong{font-size:17px}.site-header .brand-symbol{width:27px}.site-header .header-phone{font-size:10px}.priority-grid{grid-template-columns:1fr}.priority-card p{font-size:14px}}
 
 /* Video thumbnails preserve their full composition and are bound to video IDs. */
+.pricing-panel{max-width:1000px;margin:0 auto}.pricing-panel .table-scroll{margin-top:26px}.pricing-panel caption{text-align:left;font-size:13px;color:#646c5e;padding:12px 0}.pricing-panel th,.pricing-panel td{font-size:16px;padding:18px 20px;line-height:1.6}.pricing-panel tbody th{font-weight:650}.pricing-panel tbody td[data-label="금액"]{font-weight:750;white-space:nowrap}.pricing-panel tbody tr:nth-child(even){background:#efefe6}.pricing-source{min-height:44px;border-bottom:1px solid #8c8060;font-weight:700}.pricing-panel p{font-size:15px;line-height:1.85}
+@media(max-width:600px){.pricing-panel h2{font-size:25px}.pricing-panel table{table-layout:fixed}.pricing-panel th,.pricing-panel td{font-size:14px;padding:14px 9px;overflow-wrap:anywhere}.pricing-panel tbody td[data-label="금액"]{white-space:normal}.pricing-panel thead th:first-child{width:54%}.pricing-panel p{font-size:14px}}
 .opening-film-card,.video-card{min-width:0;container-type:inline-size}
 .opening-film-play,.video-image{height:auto;aspect-ratio:16/9;isolation:isolate}
 .video-image img,.opening-film-play>img{object-fit:contain;filter:none;transform:none}

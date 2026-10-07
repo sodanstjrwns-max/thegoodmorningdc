@@ -27,9 +27,18 @@ try{
  const password=fs.readFileSync('.dev.vars','utf8').match(/ADMIN_PASSWORD="([^"]+)"/)[1]
  assert.equal((await request('login','POST',{password})).status(),200)
  let all=await entries();assert.ok(all.length>=116)
- const fee=all.find(e=>e.key==='fees-0324-review');assert.equal(fee.live,null);assert.equal(fee.draft.items.length,32)
- await save('operation',fee.key,fee.draft,'publish',fee.revision,400)
- assert.doesNotMatch(await (await anon.request.get(base+'/pricing')).text(),/보증 4년|80만원/)
+ const fee=all.find(e=>e.key==='fees-0324-review');assert.equal(fee.live.verified,true);assert.equal(fee.live.items.length,32)
+ assert.equal(all.filter(e=>e.kind==='operation'&&!e.live).length,43,'only the approved fee sheet is public')
+ await save('operation',fee.key,{...fee.draft,verified:false},'publish',fee.revision,400)
+ lib.validate('operation',fee.key,fee.live,true);assert.throws(()=>lib.validate('operation',fee.key,{...fee.live,effectiveDate:'2026-02-30'},true))
+ const sourceFee=JSON.parse(fs.readFileSync('migrations/0003_review_drafts.sql','utf8').split("VALUES('operation','fees-0324-review','")[1].split("',NULL,1,")[0].replaceAll("''","'"));
+ assert.deepEqual(fee.live.items.map(({name,amount,unit})=>({name,amount,unit})),sourceFee.items.map(({name,amount,unit})=>({name,amount,unit})))
+ const priceHtml=await (await anon.request.get(base+'/pricing')).text();assert.match(priceHtml,/보증 4년/);assert.match(priceHtml,/80만원/);assert.doesNotMatch(priceHtml,/비공개 대조 초안|확정되지 않은 금액을 표시하지 않습니다/)
+ const pdf=await anon.request.get(base+'/static/fees-0324.pdf');assert.equal(pdf.status(),200);assert.deepEqual(await pdf.body(),fs.readFileSync('.sources/fees-0324.pdf'))
+ const publicPrice=await anon.newPage();publicPrice.on('pageerror',e=>errors.push(e.message));await publicPrice.goto(base+'/pricing');
+ assert.deepEqual(await publicPrice.locator('[data-operation-key="fees-0324-review"] tbody tr').evaluateAll(rows=>rows.map(r=>({name:r.querySelector('th').textContent,amount:r.querySelector('td').textContent}))),sourceFee.items.map(({name,amount})=>({name,amount})))
+ for(const width of [320,390,600,768,1440]){await publicPrice.setViewportSize({width,height:844});assert.equal(await publicPrice.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true,'fee table overflow '+width)}
+ await publicPrice.setViewportSize({width:390,height:844});await publicPrice.screenshot({path:'test-results/public-pricing-mobile.png',fullPage:true});await publicPrice.close()
  const unauthorized=await context.request.post(base+'/api/admin/content/faq/test-origin',{headers:{Origin:'https://evil.example'},data:{}});assert.equal(unauthorized.status(),403)
  const doc=structuredClone(all.find(e=>e.kind==='doctor').draft);doc.slug='studio-test-doctor';doc.name='검증원장 <script>window.pwned=1</script>';doc.role='일반의';doc.doubleBoard=false;doc.bio=['원본 약력 검증'];doc.areas=['sedation']
  await save('doctor',doc.slug,doc)
@@ -97,7 +106,7 @@ try{
  await page.goto(base+'/column');assert.match(await page.locator('#main a[target="_blank"]').first().getAttribute('href'),/thegoodmorningdental.com\/blog\//)
  for(const width of [320,390,768,1024,1280,1440]){await page.setViewportSize({width,height:900});for(const path of ['/','/visiting','/column','/tour','/directions']){await page.goto(base+path);assert.equal(await page.locator('#header-branch-select').isVisible(),true);assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true,path+' overflow '+width)}}
  assert.deepEqual(errors,[])
- console.log('PASS: request isolation, parser/SSRF guards, 44 private review drafts, 32 unpublished fees, full bios, CMS drafts/publish/CAS/history/preview, reference safety, XSS, R2 privacy, new routes/search/schema, sections, mobile editor, branch exceptions, official feeds and source column.')
+ console.log('PASS: request isolation, parser/SSRF guards, 43 private review drafts, 32 publicly accessible source-matched fees and original PDF, full bios, CMS drafts/publish/CAS/history/preview, reference safety, XSS, R2 privacy, new routes/search/schema, sections, mobile editor, branch exceptions, official feeds and source column.')
 }finally{
  // Delete dependants before their physician. Restore baseline overrides, keep review drafts.
  const order=[...pending].sort((a,b)=>(a.startsWith('treatment/')?-1:0)-(b.startsWith('treatment/')?-1:0))

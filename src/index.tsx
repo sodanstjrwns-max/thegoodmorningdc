@@ -44,7 +44,7 @@ app.get('/video',async c=>render(c,'원장 설명 영상',views(c).videoPage()+v
 app.get('/faq',c=>render(c,'자주 묻는 질문',views(c).faqPage(),[{'@context':'https://schema.org','@type':'FAQPage',mainEntity:model(c).allFaq.map(([q,a])=>({'@type':'Question',name:q,acceptedAnswer:{'@type':'Answer',text:a}}))}]))
 app.get('/symptom-checker',c=>render(c,'증상별 진료 정보 찾기',views(c).checkerPage()))
 app.get('/cases',c=>render(c,'치료사례 공개 안내',views(c).casesPage()))
-app.get('/pricing',c=>render(c,'비급여 진료비 확인 안내',(model(c).operations.some(o=>o.category==='pricing'&&o.verified)?heading('TREATMENT FEES','비급여 진료비 안내','지점과 적용일, 단위·비고를 확인해 주세요.')+`<section class="content-section"><div class="wrap">${views(c).operationPanels('pricing')}</div></section>`:views(c).pricingPage())))
+app.get('/pricing',c=>render(c,'비급여 진료비 확인 안내',(model(c).operations.some(o=>o.category==='pricing'&&o.verified)?heading('TREATMENT FEES','비급여 진료비 안내','치료 항목별 금액을 확인하실 수 있습니다. 정확한 치료 계획과 총비용은 진료 후 안내합니다.')+`<section class="content-section"><div class="wrap">${views(c).operationPanels('pricing')}</div></section>`:views(c).pricingPage())))
 app.get('/careers',c=>render(c,'채용 문의 안내',views(c).careersPage()+`<section class="content-section"><div class="wrap">${views(c).operationPanels('careers')}</div></section>`))
 app.get('/privacy',c=>render(c,'개인정보 안내',views(c).legalPage()+`<section class="content-section"><div class="wrap">${views(c).operationPanels('legal')}</div></section>`))
 app.get('/terms',c=>render(c,'홈페이지 이용 안내',views(c).legalPage(false)))

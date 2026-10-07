@@ -17,6 +17,28 @@ try{
  await page.goto(base+'/faq');await page.locator('summary').first().click();assert.equal(await page.locator('details').first().getAttribute('open'),'')
  await page.goto(base+'/symptom-checker');for(const n of [2,1,0,3])await page.locator(`[data-answer="${n}"]`).click();assert.match(await page.locator('#checker-result').textContent(),/119/);await page.locator('#checker-restart').click();assert.equal(await page.locator('[data-answer]').count(),6)
  await page.goto(base+'/encyclopedia');await page.locator('#glossary-search').fill('차폐막');assert.ok(await page.locator('.term-card:visible').count()>0)
+ // Video IDs, safe thumbnail mapping and mobile usability must stay in sync.
+ const videoIds=['Ljh4gLCFs6Y','xW7k824_a_o','DQdEDnEaN4c','59WYhK9pWe0','f3C458akJog','Q3w-rsppT_g'];
+ for(const path of ['/','/video','/contents']){
+  await page.goto(base+path);await loadImages();
+  const mapping=await page.locator('.opening-film-play,.video-image').evaluateAll(buttons=>buttons.map(b=>({id:b.dataset.video,thumb:b.querySelector('[data-video-thumbnail]')?.dataset.videoThumbnail,src:b.querySelector('img')?.getAttribute('src')})));
+  assert.ok(mapping.length>0);
+  for(const card of mapping){assert.equal(card.thumb,card.id,path+' thumbnail must match playable video');if(card.src)assert.equal(card.src,'/static/images/video-'+card.id+'.webp')}
+ }
+ for(const id of videoIds.slice(0,4))assert.equal((await context.request.get(base+'/static/images/video-'+id+'.webp')).status(),404,'patient clinical thumbnail must not be public');
+ for(const width of [320,360,390,430,600,601,760,768,844,1024,1440]){
+  await page.setViewportSize({width,height:844});await page.goto(base);await loadImages();
+  assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true,'mobile overflow '+width);
+  const cards=await page.locator('.opening-film-card').evaluateAll(nodes=>nodes.map(n=>{const image=n.querySelector('.opening-film-play').getBoundingClientRect(),title=n.querySelector('h3 button').getBoundingClientRect(),link=n.querySelector('.opening-youtube-link').getBoundingClientRect();return {imageWidth:image.width,ratio:image.width/image.height,titleHeight:title.height,linkHeight:link.height,stacked:title.top>=image.bottom}}));
+  for(const card of cards){assert.ok(Math.abs(card.ratio-16/9)<.04);assert.ok(card.titleHeight>=44);assert.ok(card.linkHeight>=44);if(width<=600){assert.ok(card.imageWidth>=width-45);assert.equal(card.stacked,true)}}
+  if(width<=760){const rect=await page.locator('#regular-hours-status').boundingBox();assert.ok(rect.x+rect.width<=width);assert.ok((await page.locator('.menu-toggle').boundingBox()).width>=44)}
+ }
+ await page.setViewportSize({width:390,height:844});await page.goto(base+'/video');await loadImages();
+ assert.equal(await page.locator('.video-card').count(),6);
+ for(const id of videoIds){await page.locator(`.video-image[data-video="${id}"]`).click();assert.match(await page.locator('#video-container iframe').getAttribute('src'),new RegExp('/embed/'+id.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'\\?'));await page.locator('#video-dialog .dialog-close').click();await page.locator('#video-container iframe').waitFor({state:'detached'});assert.equal(await page.locator('#video-container iframe').count(),0)}
+ await page.locator('.menu-toggle').click();await page.locator('#mobile-search-open').click();await page.locator('#site-search').fill('수면');await page.waitForSelector('.search-result');assert.equal(await page.locator('#site-search').evaluate(e=>getComputedStyle(e).fontSize),'16px');await page.locator('#search-dialog .dialog-close').click();await page.locator('.menu-toggle').click();assert.equal(await page.locator('body').evaluate(e=>e.classList.contains('locked')),false);
+ await page.setViewportSize({width:1440,height:1000});
+ console.log('PASS: six ID-matched video covers, clinical-photo exclusion, 11 responsive widths, 16:9 uncropped thumbnails, 44px controls, mobile search and all six player mappings.');
  // Source-content regression: every public route, exact FAQ/schema parity, and original main structure.
  const sitemap=await (await context.request.get(base+'/sitemap.xml')).text()
  const urls=[...sitemap.matchAll(/<loc>(.*?)<\/loc>/g)].map(x=>x[1])

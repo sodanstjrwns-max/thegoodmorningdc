@@ -179,12 +179,12 @@ export const doctors = [
  {slug:'shin-hyunsook',name:'신현숙',role:'원장 · 미국·한국 치과의사 면허',image:'portrait-2',label:'GENERAL DENTISTRY',text:'익숙하지 않은 치료도 이해하기 쉽게.',bio:["대원외국어고등학교 졸업", "연세대학교 학사 졸업", "연세대학교 석사 졸업", "미국 뉴욕대학교 치과대학원 졸업", "미국 뉴욕 Wyckoff Heights Medical Center GPR 수련의", "미국/한국 치과의사 면허 보유", "미국치과의사회 회원 (American Dental Association)", "대한치과의사협회 회원 (Korean Dental Association)", "오스템 임플란트 연수 수료", "인비절라인 공인 치과의사 (Invisalign Certified)", "前미국 뉴저지 Family Smiles and ChildSmiles 치과병원 원장", "前미국 뉴저지 Hello Dental 치과병원 원장", "前강남하나로치과", "前굿모닝뉴욕치과"],areas:['cavity','whitening','resin','root-canal']}
 ]
 export const videos = [
- {id:'Ljh4gLCFs6Y',title:'수면치료, 궁금했던 이야기를 들어보세요',category:'수면치료',image:'space-37'},
- {id:'xW7k824_a_o',title:'앞니 치료에서 함께 살펴야 할 것들',category:'앞니 치료',image:'space-34'},
- {id:'DQdEDnEaN4c',title:'임플란트 재수술과 고난도 뼈이식',category:'임플란트',image:'space-43'},
- {id:'59WYhK9pWe0',title:'상악동 염증과 치과 치료',category:'상악동',image:'space-33'},
- {id:'f3C458akJog',title:'장애인 환자의 치과 치료 이야기',category:'장애인 진료',image:'space-49'},
- {id:'Q3w-rsppT_g',title:'임플란트 비용이 달라지는 이유',category:'치료 정보',image:'space-28'}
+ {id:'Ljh4gLCFs6Y',title:'수면치료, 궁금했던 이야기를 들어보세요',category:'수면치료',image:''},
+ {id:'xW7k824_a_o',title:'앞니 치료에서 함께 살펴야 할 것들',category:'앞니 치료',image:''},
+ {id:'DQdEDnEaN4c',title:'임플란트 재수술과 고난도 뼈이식',category:'임플란트',image:''},
+ {id:'59WYhK9pWe0',title:'상악동 염증과 치과 치료',category:'상악동',image:''},
+ {id:'f3C458akJog',title:'장애인 환자의 치과 치료 이야기',category:'장애인 진료',image:''},
+ {id:'Q3w-rsppT_g',title:'임플란트 비용이 달라지는 이유',category:'치료 정보',image:''}
 ]
 export const generalFaq:[string,string][] = [
  ['처음 방문할 때 무엇을 준비하면 되나요?','신분증, 복용 약 목록이나 처방전, 이전 치료 기록이 있다면 준비해 주세요. 진정 치료는 사전 평가와 별도 준비가 필요하므로 예약 시 먼저 말씀해 주세요.'],

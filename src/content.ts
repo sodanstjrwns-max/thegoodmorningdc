@@ -33,7 +33,7 @@ export const baseline=(kind:Kind,key:string)=>(defaults[kind] as any[]).find(x=>
 export const templates:Record<Kind,any>={
  treatment:{slug:'',name:'',group:0,tag:'',description:'',symptoms:[''],details:[''],steps:[''],risk:'',doctor:'kang-dowook',faq:[['','']],sections:[{title:'',paragraphs:['']}],strengths:[''],related:[''],sourceLines:''},
  doctor:{slug:'',name:'',role:'',image:'portrait-0',label:'MEDICAL TEAM',text:'',bio:[''],areas:[''],copySource:'홈페이지 소개 문구 · 원장 직접 인용 아님',doubleBoard:false,schedule:'근무 지점과 진료 요일 확인 필요'},
- video:{key:'',id:'',title:'',category:'',image:'space-37',order:10},
+ video:{key:'',id:'',title:'',category:'',image:'',order:10},
  faq:{key:'',question:'',answer:'',order:10},
  section:{key:'',title:'',body:'',enabled:true,order:10},
  branch:baseBranches[0],channel:initialChannels[0],site:defaults.site[0],

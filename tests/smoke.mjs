@@ -63,7 +63,7 @@ try{
  const careUrls=urls.filter(u=>new URL(u).pathname.startsWith('/treatments/'))
  for(const path of ['/faq',...careUrls.map(u=>new URL(u).pathname)]){
   await page.goto(base+path)
-  const visible=await page.locator('details').evaluateAll(nodes=>nodes.map(n=>({q:[...n.querySelector('summary').childNodes].filter(x=>x.nodeType===3).map(x=>x.textContent).join('').trim(),a:n.querySelector('.faq-answer').textContent})))
+  const visible=await page.locator('.faq-list details').evaluateAll(nodes=>nodes.map(n=>({q:[...n.querySelector('summary').childNodes].filter(x=>x.nodeType===3).map(x=>x.textContent).join('').trim(),a:n.querySelector('.faq-answer').textContent})))
   const structured=await page.locator('script[type="application/ld+json"]').evaluate(n=>JSON.parse(n.textContent).find(x=>x['@type']==='FAQPage').mainEntity.map(x=>({q:x.name,a:x.acceptedAnswer.text})))
   assert.deepEqual(visible,structured,path+' FAQ/schema mismatch')
   await page.setViewportSize({width:320,height:844})

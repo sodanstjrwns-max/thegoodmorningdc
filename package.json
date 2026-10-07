@@ -12,7 +12,8 @@
     "cf-typegen": "wrangler types --env-interface CloudflareBindings",
     "test:studio": "node tests/studio.mjs",
     "test:navigation": "node tests/navigation.mjs",
-    "test:all": "npm run test:navigation && npm test && npm run test:studio"
+    "test:seo": "node tests/seo-mobile.mjs",
+    "test:all": "npm run test:navigation && npm test && npm run test:studio && npm run test:seo"
   },
   "dependencies": {
     "fast-xml-parser": "^5.11.2",

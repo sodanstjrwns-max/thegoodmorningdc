@@ -23,8 +23,12 @@ export const defaults = {
  branch:baseBranches,
  channel:initialChannels,
  site:[{key:'mission',story:source.missionStory,promises:source.missionPromises}],
+ showcase:[] as Showcase[],
+ vacancy:[] as Vacancy[],
  operation:[] as Operation[]
 }
+export type Showcase={key:string;category:string;title:string;treatment:string;body:string;beforeImage:string;afterImage:string;beforeDate:string;afterDate:string;caption:string;risks:string;consentConfirmed:boolean;consentRef:string;anonymized:boolean;medicalReviewed:boolean;reviewer:string;reviewedOn:string;sourceUrl:string}
+export type Vacancy={key:string;title:string;branch:string;role:string;employmentType:string;schedule:string;salary:string;qualifications:string;benefits:string;body:string;deadline:string;accepting:boolean;verified:boolean;source:string}
 export type Operation = {key:string;category:string;branch:string;title:string;body:string;source:string;verified:boolean;effectiveDate:string;items:{name:string;amount:string;unit:string;note:string}[]}
 export type Kind = keyof typeof defaults
 export const kinds=Object.keys(defaults) as Kind[]
@@ -37,6 +41,8 @@ export const templates:Record<Kind,any>={
  faq:{key:'',question:'',answer:'',order:10},
  section:{key:'',title:'',body:'',enabled:true,order:10},
  branch:baseBranches[0],channel:initialChannels[0],site:defaults.site[0],
+ showcase:{key:'',category:'case',title:'',treatment:'',body:'',beforeImage:'',afterImage:'',beforeDate:'',afterDate:'',caption:'',risks:'치료 결과와 회복 기간은 개인에 따라 다릅니다.',consentConfirmed:false,consentRef:'',anonymized:false,medicalReviewed:false,reviewer:'',reviewedOn:'',sourceUrl:''},
+ vacancy:{key:'',title:'',branch:'cheongnyangni',role:'',employmentType:'',schedule:'',salary:'',qualifications:'',benefits:'',body:'',deadline:'',accepting:false,verified:false,source:''},
  operation:{key:'',category:'parking',branch:'cheongnyangni',title:'',body:'',source:'',verified:false,effectiveDate:'',items:[{name:'',amount:'',unit:'',note:''}]}
 }
 // Explicit shape descriptions also drive the form editor. No HTML or executable config.
@@ -48,6 +54,8 @@ export const shapes:Record<Kind,Shape>={
  video:{key:T,id:T,title:T,category:T,image:T,order:N},faq:{key:T,question:T,answer:T,order:N},section:{key:T,title:T,body:T,enabled:B,order:N},
  branch:{id:T,name:T,phone:T,address:T,station:T,hours:[[T]],note:T,booking:T,kakao:T,parking:T,accessibility:T,schedule:[T],exceptions:[{date:T,hours:T,note:T}]},
  channel:{key:T,title:T,branch:T,type:T,url:T,feedId:T,source:T,enabled:B},site:{key:T,story:[T],promises:[{title:T,text:T}]},
+ showcase:{key:T,category:T,title:T,treatment:T,body:T,beforeImage:T,afterImage:T,beforeDate:T,afterDate:T,caption:T,risks:T,consentConfirmed:B,consentRef:T,anonymized:B,medicalReviewed:B,reviewer:T,reviewedOn:T,sourceUrl:T},
+ vacancy:{key:T,title:T,branch:T,role:T,employmentType:T,schedule:T,salary:T,qualifications:T,benefits:T,body:T,deadline:T,accepting:B,verified:B,source:T},
  operation:{key:T,category:T,branch:T,title:T,body:T,source:T,verified:B,effectiveDate:T,items:[{name:T,amount:T,unit:T,note:T}]}
 }
 export function safeUrl(value:string,hosts?:string[]){try{const u=new URL(value);return u.protocol==='https:'&&!u.username&&!u.password&&!u.port&&(!hosts||hosts.includes(u.hostname))}catch{return false}}
@@ -91,6 +99,20 @@ export function validate(kind:Kind,key:string,value:any,publishing=false){
   if(value.type==='youtube'&&!/^UC[\w-]{22}$/.test(value.feedId))throw Error('YouTube 채널 ID를 확인하세요.')
  }
  if(kind==='site'&&(key!=='mission'||value.promises.length!==3||!value.story.length))throw Error('미션은 세 가지 약속과 개원 스토리로 구성합니다.')
+ if(kind==='showcase'){
+  if(!['case','review'].includes(value.category)||!value.title.trim()||!value.body.trim())throw Error('사례/후기 분류·제목·본문을 입력하세요.')
+  for(const field of ['beforeImage','afterImage'])if(value[field]&&!/^\/media\/[a-f0-9-]+\.(png|jpg|webp)$/.test(value[field]))throw Error('사례 이미지는 비식별 처리한 업로드 파일만 사용할 수 있습니다.')
+  if(value.sourceUrl&&!safeUrl(value.sourceUrl))throw Error('출처 URL을 확인하세요.')
+  if(publishing){
+   if(!value.consentConfirmed||!value.consentRef.trim()||!value.anonymized||!value.medicalReviewed||!value.reviewer.trim()||!validDate(value.reviewedOn)||!value.risks.trim())throw Error('공개 동의 관리번호·비식별 확인·의료진 검토자/검토일·주의사항이 필요합니다. 동의서나 환자 이름은 입력하지 마세요.')
+   if(value.category==='case'&&(!value.beforeImage||!value.afterImage||!validDate(value.beforeDate)||!validDate(value.afterDate)||value.beforeDate>value.afterDate||!value.caption.trim()))throw Error('전후 사진·촬영일·촬영 조건 및 치료 기간 설명을 확인하세요.')
+  }
+ }
+ if(kind==='vacancy'){
+  if(!['all',...source.branches.map(b=>b.id)].includes(value.branch)||!value.title.trim()||!value.role.trim())throw Error('채용 제목·직무·지점을 확인하세요.')
+  if(value.deadline&&!validDate(value.deadline))throw Error('지원 마감일을 확인하세요.')
+  if(publishing&&(!value.verified||!value.source.trim()||!value.employmentType.trim()||!value.schedule.trim()||!value.salary.trim()||!value.qualifications.trim()||!value.body.trim()))throw Error('확인된 고용형태·근무시간·급여·자격·내용 및 근거를 입력하세요.')
+ }
  if(kind==='operation'){
   if(!['pricing','parking','accessibility','equipment','careers','legal','sedation','case','approval'].includes(value.category)||!['all',...source.branches.map(b=>b.id)].includes(value.branch))throw Error('운영정보 분류와 지점을 확인하세요.')
   if(publishing&&(!value.verified||!value.source.trim()))throw Error('공개 전 확인 체크와 승인 근거를 입력하세요.')
@@ -105,11 +127,12 @@ export function assemble(rows:any[]=[]){
  for(const row of rows){if(!row.live_json||!kinds.includes(row.kind))continue;const value=JSON.parse(row.live_json);const a=sets[row.kind];const i=a.findIndex(x=>keyOf(row.kind,x)===row.key);if(i<0)a.push(value);else a[i]=value}
  const sort=(a:any[])=>a.sort((x,y)=>(x.order||0)-(y.order||0))
  const generalFaq=sort(sets.faq).map(x=>[x.question,x.answer] as [string,string]);const treatments=sets.treatment as source.Treatment[]
- return {treatments,doctors:sets.doctor as typeof baseDoctors,videos:sort(sets.video) as typeof defaults.video,branches:sets.branch as typeof baseBranches,generalFaq,allFaq:[...generalFaq,...treatments.flatMap(t=>t.faq)],sections:sort(sets.section) as typeof defaults.section,channels:sets.channel as typeof initialChannels,operations:sets.operation as Operation[],missionStory:sets.site[0].story as string[],missionPromises:sets.site[0].promises as typeof source.missionPromises}
+ return {treatments,doctors:sets.doctor as typeof baseDoctors,videos:sort(sets.video) as typeof defaults.video,branches:sets.branch as typeof baseBranches,generalFaq,allFaq:[...generalFaq,...treatments.flatMap(t=>t.faq)],sections:sort(sets.section) as typeof defaults.section,channels:sets.channel as typeof initialChannels,operations:sets.operation as Operation[],showcases:sets.showcase as Showcase[],vacancies:sets.vacancy as Vacancy[],missionStory:sets.site[0].story as string[],missionPromises:sets.site[0].promises as typeof source.missionPromises}
 }
 export async function loadContent(db:any){if(!db)return assemble();const r=await db.prepare('SELECT kind,key,live_json FROM content_entries WHERE live_json IS NOT NULL').all();return assemble(r.results||[])}
 export function validateReferences(content:Content){
  const ts=new Set(content.treatments.map(t=>t.slug)),ds=new Set(content.doctors.map(d=>d.slug))
  for(const t of content.treatments)if(!ds.has(t.doctor)||t.related.some(s=>!ts.has(s)))throw Error('담당 의료진 또는 관련 진료가 아직 공개되지 않았습니다.')
+ for(const s of content.showcases)if(s.treatment&&!ts.has(s.treatment))throw Error('사례의 관련 진료가 공개되지 않았습니다.')
  for(const d of content.doctors)if(d.areas.some(s=>!ts.has(s)))throw Error('의료진의 관련 진료가 아직 공개되지 않았습니다.')
 }

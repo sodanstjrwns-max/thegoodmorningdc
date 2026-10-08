@@ -9,16 +9,32 @@ import {createPages} from './pages'
 import { glossary } from './glossary'
 import {studio} from './studio'
 import {channelListing} from './channels'
+import {locales,localizeHTML,translate,localPath,type Locale} from './locales'
+import {publicRequests,adminRequests} from './requests'
+import {casesView,careersView,requestForm,requestAdminPanel,approvedShowcase} from './services'
 import {siteOrigin,launchIndexable,privatePath,pageDescription,pageSchemas,llmIndex} from './seo'
 
 type Env = { DB:any; R2:any; ASSETS?:{fetch:(request:Request)=>Promise<Response>}; ADMIN_PASSWORD?:string; PUBLIC_SITE_URL?:string }
 const app = new Hono<{Bindings:Env;Variables:{content:Content}}>()
-app.use('*', secureHeaders({referrerPolicy:'strict-origin-when-cross-origin',xFrameOptions:'DENY',contentSecurityPolicy:{defaultSrc:["'self'"],scriptSrc:["'self'"],styleSrc:["'self'","'unsafe-inline'",'https://fonts.googleapis.com'],fontSrc:["'self'",'https://fonts.gstatic.com'],imgSrc:["'self'",'data:'],connectSrc:["'self'"],frameSrc:["'self'",'https://www.youtube-nocookie.com'],objectSrc:["'none'"],baseUri:["'self'"],formAction:["'self'"],frameAncestors:["'none'"]}}))
+app.use('*', secureHeaders({referrerPolicy:'strict-origin-when-cross-origin',xFrameOptions:'DENY',contentSecurityPolicy:{defaultSrc:["'self'"],scriptSrc:["'self'"],styleSrc:["'self'","'unsafe-inline'",'https://fonts.googleapis.com'],fontSrc:["'self'",'https://fonts.gstatic.com'],imgSrc:["'self'",'data:'],connectSrc:["'self'"],frameSrc:["'self'",'https://www.youtube-nocookie.com','https://www.google.com'],objectSrc:["'none'"],baseUri:["'self'"],formAction:["'self'"],frameAncestors:["'none'"]}}))
 app.use('/static/*',serveStatic({root:'./public'}))
 app.use('/api/*',bodyLimit({maxSize:5*1024*1024,onError:c=>c.json({error:'요청 크기가 너무 큽니다. 최대 5MB까지 허용됩니다.'},413)}))
 app.use('/api/admin/*',async(c,next)=>{c.header('Cache-Control','no-store');if(!['GET','HEAD'].includes(c.req.method)){const origin=c.req.header('Origin');if(origin!==new URL(c.req.url).origin)return c.json({error:'허용되지 않은 요청입니다.'},403)}await next()})
 app.use('*',async(c,next)=>{await next();if(!launchIndexable(c.env.PUBLIC_SITE_URL,c.req.url)||privatePath(new URL(c.req.url).pathname)||c.res.status>=400)c.header('X-Robots-Tag','noindex, nofollow')})
 app.use('*',async(c,next)=>{const p=new URL(c.req.url).pathname;if(p.length>1&&p.endsWith('/'))return c.redirect(p.slice(0,-1)+new URL(c.req.url).search,301);await next()})
+app.use('*',async(c,next)=>{
+ const url=new URL(c.req.url),match=/^\/(en|ja|zh)(\/.*)?$/.exec(url.pathname)
+ if(!match)return next()
+ const locale=match[1] as Locale,path=match[2]||'/'
+ if(!locales.includes(locale))return c.notFound()
+ if(/^\/(?:api|admin|static|media|films|en|ja|zh)(?:\/|$)/.test(path)||/\.(?:xml|txt)$/.test(path))return c.notFound()
+ const source=new URL(url);source.pathname=path
+ const response=await app.fetch(new Request(source,{method:c.req.method,headers:c.req.raw.headers}),c.env,c.executionCtx)
+ const headers=new Headers(response.headers),location=headers.get('Location')
+ if(location?.startsWith('/'))headers.set('Location',localPath(location,locale))
+ if(!(headers.get('Content-Type')||'').includes('text/html'))return new Response(response.body,{status:response.status,headers})
+ headers.delete('Content-Length');return new Response(localizeHTML(await response.text(),locale,path,siteOrigin(c.env.PUBLIC_SITE_URL,c.req.url)),{status:response.status,headers})
+})
 const hash=async(s:string)=>Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s)))).map(b=>b.toString(16).padStart(2,'0')).join('')
 const random=()=>crypto.randomUUID()+crypto.randomUUID()
 async function isAdmin(c:any){const token=getCookie(c,'gm_session');if(!token||!c.env.DB)return false;const row=await c.env.DB.prepare('SELECT token_hash FROM admin_sessions WHERE token_hash=? AND expires_at>?').bind(await hash(token),Date.now()).first();return !!row}
@@ -44,19 +60,19 @@ app.get('/contents',c=>render(c,'치과 영상·건강정보·백과사전',view
 app.get('/video',async c=>render(c,'원장 설명 영상',views(c).videoPage()+views(c).channelPanel(await feeds(c),'youtube')))
 app.get('/faq',c=>render(c,'자주 묻는 질문',views(c).faqPage(),[{'@context':'https://schema.org','@type':'FAQPage',mainEntity:model(c).allFaq.map(([q,a])=>({'@type':'Question',name:q,acceptedAnswer:{'@type':'Answer',text:a}}))}]))
 app.get('/symptom-checker',c=>render(c,'증상별 진료 정보 찾기',views(c).checkerPage()))
-app.get('/cases',c=>render(c,'치료사례 공개 안내',views(c).casesPage()))
+app.get('/cases',c=>render(c,'치료사례와 환자 경험',casesView(model(c))))
 app.get('/pricing',c=>render(c,'비급여 진료비 확인 안내',(model(c).operations.some(o=>o.category==='pricing'&&o.verified)?heading('TREATMENT FEES','비급여 진료비 안내','치료 항목별 금액을 확인하실 수 있습니다. 정확한 치료 계획과 총비용은 진료 후 안내합니다.')+`<section class="content-section"><div class="wrap">${views(c).operationPanels('pricing')}</div></section>`:views(c).pricingPage())))
-app.get('/careers',c=>render(c,'채용 문의 안내',views(c).careersPage()+`<section class="content-section"><div class="wrap">${views(c).operationPanels('careers')}</div></section>`))
+app.get('/careers',c=>render(c,'채용 문의 안내',careersView(model(c))+`<section class="content-section"><div class="wrap">${views(c).operationPanels('careers')}</div></section>`))
 app.get('/privacy',c=>render(c,'개인정보 안내',views(c).legalPage()+`<section class="content-section"><div class="wrap">${views(c).operationPanels('legal')}</div></section>`))
 app.get('/terms',c=>render(c,'홈페이지 이용 안내',views(c).legalPage(false)))
 app.get('/column',async c=>render(c,'대표원장 칼럼 · 인블로그',views(c).columnPage(await feeds(c))))
-app.get('/visiting',c=>render(c,'해외·타지역 환자 내원 안내',views(c).visitingPage()))
+app.get('/visiting',c=>render(c,'해외·타지역 환자 내원 안내',views(c).visitingPage()+requestForm('interpretation',model(c))))
 app.get('/encyclopedia',c=>render(c,'치과 백과사전',heading('DENTAL DICTIONARY','치과에서 들은 그 말,<br>무슨 뜻일까요?',`${glossary.length}개 용어를 쉬운 말로 풀었습니다. 정확한 적용은 진료 시 확인해 주세요.`)+`<section class="content-section"><div class="wrap"><nav class="glossary-index" aria-label="가나다 색인">${['전체','ㄱ','ㄴ','ㄷ','ㄹ','ㅁ','ㅂ','ㅅ','ㅇ','ㅈ','ㅊ','ㅋ','ㅌ','ㅍ','ㅎ','기타'].map((v,i)=>`<button type="button" data-initial="${v}" aria-pressed="${i===0}">${v}</button>`).join('')}</nav><div class="filter-bar"><input id="glossary-search" type="search" aria-label="용어 검색" placeholder="용어 또는 설명 검색" style="margin-left:0;width:100%"></div><div class="content-grid" id="glossary-list">${glossary.map(t=>`<article class="term-card" data-term="${esc(t.term)}" data-search="${esc(t.term+' '+t.description)}"><h3>${t.term}</h3><p>${t.description}</p><a href="/treatments/${t.slug}">관련 진료 보기 ${icon('arrow')}</a></article>`).join('')}</div><p id="glossary-empty" hidden>검색 결과가 없습니다. 다른 용어를 입력해 주세요.</p></div></section>`))
 for(const type of ['blog','notice']){
  app.get('/'+type,async c=>render(c,type==='notice'?'병원 소식':'치과 건강정보',views(c).postList(await posts(c,type),type==='notice')+(type==='blog'?views(c).channelPanel(await feeds(c),'naver'):'')))
  app.get('/'+type+'/:slug',async c=>{const p=await c.env.DB?.prepare('SELECT * FROM posts WHERE slug=? AND type=? AND status=?').bind(c.req.param('slug'),type,'published').first();if(!p)return render(c,'페이지를 찾을 수 없습니다',views(c).notFound(),[],404);return render(c,p.title,views(c).postPage(p),[{'@context':'https://schema.org','@type':'Article',headline:p.title,datePublished:p.created_at,dateModified:p.updated_at,author:{'@type':'Organization',name:'더굿모닝치과',url:siteOrigin(c.env.PUBLIC_SITE_URL,c.req.url)+'/'},mainEntityOfPage:siteOrigin(c.env.PUBLIC_SITE_URL,c.req.url)+'/'+type+'/'+p.slug}],200,p.body.replace(/!\[[^\]]*\]\([^)]*\)/g,'').replace(/^#+\s*/gm,'').slice(0,180))})
 }
-app.get('/api/search',async c=>{const q=(c.req.query('q')||'').trim().toLowerCase().slice(0,100);const items=[...model(c).generalFaq.map(([question,answer])=>({title:question,category:'자주 묻는 질문',url:'/faq',keywords:answer})),...model(c).videos.map(v=>({title:v.title,category:'설명 영상',url:'/video',keywords:v.category})),...(await posts(c,'blog')).map((p:any)=>({title:p.title,category:'건강정보',url:'/blog/'+p.slug,keywords:''})),...model(c).treatments.map(t=>({title:t.name,category:'진료 안내',url:'/treatments/'+t.slug,keywords:[t.description,...t.symptoms,...t.sections.map(s=>s.title),...t.faq.map(([q])=>q)].join(' ')})),...model(c).doctors.map(d=>({title:d.name+' 원장',category:'의료진',url:'/doctors/'+d.slug,keywords:d.role})),...glossary.map(t=>({title:t.term,category:'치과 용어 · 관련 진료',url:'/treatments/'+t.slug,keywords:t.description})),{title:'오시는 길 · 진료시간',category:'병원 안내',url:'/directions',keywords:'위치 청량리 광명 전화 주차 일요일 시간'},{title:'비급여 수가표',category:'진료비 안내',url:'/pricing',keywords:'가격 금액 비용 수가 비급여 보험'},{title:'해외·타지역 내원 준비',category:'내원 안내',url:'/visiting',keywords:'해외 외국 타지역 여행 준비'},{title:'상담 예약',category:'내원 안내',url:'/reservation',keywords:'예약 전화 상담'}];return c.json({results:q?items.filter(t=>(t.title+' '+t.keywords).toLowerCase().includes(q)).slice(0,15):[]})})
+app.get('/api/search',async c=>{const q=(c.req.query('q')||'').trim().toLowerCase().slice(0,100);const items=[...model(c).generalFaq.map(([question,answer])=>({title:question,category:'자주 묻는 질문',url:'/faq',keywords:answer})),...model(c).videos.map(v=>({title:v.title,category:'설명 영상',url:'/video',keywords:v.category})),...(await posts(c,'blog')).map((p:any)=>({title:p.title,category:'건강정보',url:'/blog/'+p.slug,keywords:''})),...model(c).treatments.map(t=>({title:t.name,category:'진료 안내',url:'/treatments/'+t.slug,keywords:[t.description,...t.symptoms,...t.sections.map(s=>s.title),...t.faq.map(([q])=>q)].join(' ')})),...model(c).doctors.map(d=>({title:d.name+' 원장',category:'의료진',url:'/doctors/'+d.slug,keywords:d.role})),...glossary.map(t=>({title:t.term,category:'치과 용어 · 관련 진료',url:'/treatments/'+t.slug,keywords:t.description})),{title:'오시는 길 · 진료시간',category:'병원 안내',url:'/directions',keywords:'위치 청량리 광명 전화 주차 일요일 시간'},{title:'비급여 수가표',category:'진료비 안내',url:'/pricing',keywords:'가격 금액 비용 수가 비급여 보험'},{title:'해외·타지역 내원 준비',category:'내원 안내',url:'/visiting',keywords:'해외 외국 타지역 여행 준비'},{title:'상담 예약',category:'내원 안내',url:'/reservation',keywords:'예약 전화 상담'}];const language=c.req.query('lang') as Locale;const localized=locales.includes(language)?items.map(i=>({...i,title:translate(i.title,language),category:translate(i.category,language),url:localPath(i.url,language),keywords:i.keywords+' '+translate(i.keywords,language)})):items;return c.json({results:q?localized.filter(t=>(t.title+' '+t.keywords).toLowerCase().includes(q)).slice(0,15):[]})})
 // The preview asset server ignores Range. Serve the two public films with correct
 // byte ranges so Safari/iOS can probe and seek them. No arbitrary file/proxy access.
 app.get('/films/:file',async c=>{
@@ -82,8 +98,9 @@ app.get('/films/:file',async c=>{
  }
  return new Response(c.req.method==='HEAD'?null:bytes,{headers});
 })
+app.route('/api/requests',publicRequests)
 app.get('/api/health',c=>c.json({ok:true,service:'the-good-morning'}))
-app.get('/admin',async c=>{c.header('Cache-Control','no-store');return render(c,'관리자 콘텐츠 스튜디오',views(c).adminPage(await isAdmin(c),!!c.env.ADMIN_PASSWORD))})
+app.get('/admin',async c=>{c.header('Cache-Control','no-store');return render(c,'관리자 콘텐츠 스튜디오',views(c).adminPage(await isAdmin(c),!!c.env.ADMIN_PASSWORD)+(await isAdmin(c)?requestAdminPanel():''))})
 app.post('/api/admin/login',async c=>{
  if(!c.env.ADMIN_PASSWORD||!c.env.DB)return c.json({error:'관리자 설정이 필요합니다.'},503)
  const ip=await hash((c.req.header('cf-connecting-ip')||'local')+c.env.ADMIN_PASSWORD);const now=Date.now()
@@ -99,6 +116,7 @@ app.post('/api/admin/login',async c=>{
 })
 app.use('/api/admin/*',async(c,next)=>{if(!await isAdmin(c))return c.json({error:'관리자 로그인이 필요합니다.'},401);await next()})
 app.route('/api/admin',studio)
+app.route('/api/admin',adminRequests)
 app.post('/api/admin/logout',async c=>{const token=getCookie(c,'gm_session');if(token)await c.env.DB.prepare('DELETE FROM admin_sessions WHERE token_hash=?').bind(await hash(token)).run();deleteCookie(c,'gm_session',{path:'/'});return c.json({ok:true})})
 app.get('/api/admin/posts',async c=>{const r=await c.env.DB.prepare('SELECT * FROM posts ORDER BY updated_at DESC').all();return c.json({posts:r.results})})
 app.post('/api/admin/posts',async c=>{
@@ -119,10 +137,11 @@ app.post('/api/admin/upload',async c=>{
  if(!ext)return c.json({error:'JPG, PNG, WebP 이미지 파일만 업로드할 수 있습니다.'},400)
  const key=crypto.randomUUID()+'.'+ext;await c.env.R2.put(key,b,{httpMetadata:{contentType:type}});return c.json({url:'/media/'+key})
 })
-app.get('/media/:key',async c=>{const key=c.req.param('key');if(!/^[a-f0-9-]+\.(png|jpg|webp)$/.test(key))return c.notFound();const published=await c.env.DB?.prepare("SELECT id FROM posts WHERE status='published' AND instr(body,?)>0 LIMIT 1").bind('/media/'+key).first();const content=await loadContent(c.env.DB);const path='/media/'+key;const contentRef=content.doctors.some(d=>d.image===path)||content.videos.some(v=>v.image===path)||content.operations.some(o=>o.verified&&['pricing','parking','accessibility','equipment','careers','legal','sedation'].includes(o.category)&&o.body.includes(']('+path+')'));if(!published&&!contentRef&&!await isAdmin(c))return c.notFound();const obj=await c.env.R2?.get(key);if(!obj)return c.notFound();c.header('Content-Type',obj.httpMetadata?.contentType||'application/octet-stream');c.header('Cache-Control','private, no-store');return c.body(obj.body)})
+app.get('/media/:key',async c=>{const key=c.req.param('key');if(!/^[a-f0-9-]+\.(png|jpg|webp)$/.test(key))return c.notFound();const published=await c.env.DB?.prepare("SELECT id FROM posts WHERE status='published' AND instr(body,?)>0 LIMIT 1").bind('/media/'+key).first();const content=await loadContent(c.env.DB);const path='/media/'+key;const contentRef=content.doctors.some(d=>d.image===path)||content.videos.some(v=>v.image===path)||content.operations.some(o=>o.verified&&['pricing','parking','accessibility','equipment','careers','legal','sedation'].includes(o.category)&&o.body.includes(']('+path+')'));const caseRef=content.showcases.some(s=>approvedShowcase(s)&&s.category==='case'&&(s.beforeImage===path||s.afterImage===path));if(!published&&!contentRef&&!caseRef&&!await isAdmin(c))return c.notFound();const obj=await c.env.R2?.get(key);if(!obj)return c.notFound();c.header('Content-Type',obj.httpMetadata?.contentType||'application/octet-stream');c.header('Cache-Control','private, no-store');return c.body(obj.body)})
 const basePaths=['/','/treatments','/doctors','/mission','/tour','/directions','/reservation','/contents','/video','/faq','/symptom-checker','/cases','/pricing','/careers','/privacy','/terms','/blog','/notice','/encyclopedia','/visiting','/column']
 app.get('/sitemap.xml',async c=>{const origin=siteOrigin(c.env.PUBLIC_SITE_URL,c.req.url);const dated=[...(await posts(c,'blog')).map((p:any)=>({path:'/blog/'+p.slug,date:p.updated_at})),...(await posts(c,'notice')).map((p:any)=>({path:'/notice/'+p.slug,date:p.updated_at}))];const dates=new Map(dated.filter(p=>Number.isFinite(Date.parse(p.date))).map(p=>[p.path,new Date(p.date).toISOString()]));const list=[...new Set([...basePaths,...model(c).treatments.map(t=>'/treatments/'+t.slug),...model(c).doctors.map(d=>'/doctors/'+d.slug),...dated.map(p=>p.path)])];c.header('Content-Type','application/xml');return c.body('<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'+list.map(p=>'<url><loc>'+esc(origin+p)+'</loc>'+(dates.has(p)?'<lastmod>'+dates.get(p)+'</lastmod>':'')+'</url>').join('')+'</urlset>')})
-app.get('/robots.txt',c=>c.text(launchIndexable(c.env.PUBLIC_SITE_URL,c.req.url)?`User-agent: *\nAllow: /\nDisallow: /admin\nDisallow: /api/\nSitemap: ${siteOrigin(c.env.PUBLIC_SITE_URL,c.req.url)}/sitemap.xml`:'User-agent: *\nDisallow: /\n# Preview: indexing intentionally disabled.'))
+app.get('/sitemap-languages.xml',async c=>{const origin=siteOrigin(c.env.PUBLIC_SITE_URL,c.req.url),paths=[...basePaths,...model(c).treatments.map(t=>'/treatments/'+t.slug),...model(c).doctors.map(d=>'/doctors/'+d.slug),...(await posts(c,'blog')).map((p:any)=>'/blog/'+p.slug),...(await posts(c,'notice')).map((p:any)=>'/notice/'+p.slug)];c.header('Content-Type','application/xml');return c.body('<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'+locales.flatMap(l=>[...new Set(paths)].map(p=>'<url><loc>'+esc(origin+localPath(p,l))+'</loc></url>')).join('')+'</urlset>')})
+app.get('/robots.txt',c=>c.text(launchIndexable(c.env.PUBLIC_SITE_URL,c.req.url)?`User-agent: *\nAllow: /\nDisallow: /admin\nDisallow: /api/\nSitemap: ${siteOrigin(c.env.PUBLIC_SITE_URL,c.req.url)}/sitemap.xml\nSitemap: ${siteOrigin(c.env.PUBLIC_SITE_URL,c.req.url)}/sitemap-languages.xml`:'User-agent: *\nDisallow: /\n# Preview: indexing intentionally disabled.'))
 app.get('/llms.txt',c=>c.text(llmIndex(model(c),siteOrigin(c.env.PUBLIC_SITE_URL,c.req.url),!launchIndexable(c.env.PUBLIC_SITE_URL,c.req.url))))
 app.get('/feed.xml',async c=>{const origin=siteOrigin(c.env.PUBLIC_SITE_URL,c.req.url);const list=await posts(c,'blog');c.header('Content-Type','application/xml');return c.body(`<?xml version="1.0" encoding="UTF-8"?><rss version="2.0"><channel><title>더굿모닝 치과 건강정보</title><link>${esc(origin+'/blog')}</link><description>진료와 관리 이야기</description>${list.map((p:any)=>`<item><title>${esc(p.title)}</title><link>${esc(origin+'/blog/'+p.slug)}</link><guid>${esc(origin+'/blog/'+p.slug)}</guid><pubDate>${new Date(p.updated_at).toUTCString()}</pubDate></item>`).join('')}</channel></rss>`)})
 app.notFound(c=>render(c,'페이지를 찾을 수 없습니다',views(c).notFound(),[],404))

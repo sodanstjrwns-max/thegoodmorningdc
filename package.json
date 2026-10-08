@@ -13,7 +13,9 @@
     "test:studio": "node tests/studio.mjs",
     "test:navigation": "node tests/navigation.mjs",
     "test:seo": "node tests/seo-mobile.mjs",
-    "test:all": "npm run test:navigation && npm test && npm run test:studio && npm run test:seo"
+    "test:locales": "node tests/locales.mjs",
+    "test:services": "node tests/services.mjs",
+    "test:all": "npm run test:navigation && npm test && npm run test:studio && npm run test:seo && npm run test:services && npm run test:locales"
   },
   "dependencies": {
     "fast-xml-parser": "^5.11.2",

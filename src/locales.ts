@@ -14,7 +14,9 @@ export function languageLinks(path:string,origin:string){return ['ko',...locales
 export const languageSwitch=(path:string,current='ko')=>`<nav class="locale-switch" aria-label="Language">${[['ko','한국어'],['en','English'],['ja','日本語'],['zh','中文']].filter(([l])=>l==='ko'||locales.includes(l as Locale)).map(([l,name])=>`<a href="${l==='ko'?path:localPath(path,l)}" lang="${l}" hreflang="${l==='zh'?'zh-Hans':l}" ${l===current?'aria-current="page"':''}>${name}</a>`).join('')}</nav>`
 const notices={en:'Machine-assisted translation of the Korean source. New posts may remain in Korean. Please contact the clinic to confirm medical information, appointments and interpreter availability.',ja:'韓国語原文の機械翻訳です。新規記事は韓国語のまま表示される場合があります。医療情報・予約・通訳の手配は医院にご確認ください。',zh:'本页由韩文原文机器辅助翻译。新内容可能仍显示为韩文。医疗信息、预约及口译安排请向诊所确认。'}
 export function localizeHTML(html:string,locale:Locale,path:string,origin:string){
- const localizedUrl=origin+localPath(path,locale)
+ const canonicalMatch=html.match(/<link rel="canonical" href="([^"]*)"/)
+ let query='';try{query=new URL(decode(canonicalMatch?.[1]||'')).search}catch{}
+ const localizedUrl=origin+localPath(path,locale)+query
  // Generated HTML only. Preserve scripts as raw text; translate JSON values separately.
  const blocks=html.split(/(<script\b[^>]*>[\s\S]*?<\/script>|<style\b[^>]*>[\s\S]*?<\/style>)/gi)
  let output=blocks.map(block=>{

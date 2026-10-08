@@ -3,7 +3,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "npm run build:editor && vite build",
+    "build:editor": "esbuild src/admin-editor.ts --bundle --minify --format=iife --target=es2022 --outfile=public/static/rich-editor.js",
     "test": "node tests/smoke.mjs",
     "typecheck": "tsc --noEmit",
     "db:migrate:local": "wrangler d1 migrations apply webapp-production --local",
@@ -17,11 +18,19 @@
     "test:seo": "node tests/seo-mobile.mjs",
     "test:locales": "node tests/locales.mjs",
     "test:services": "node tests/services.mjs",
-    "test:all": "npm run test:navigation && npm test && npm run test:studio && npm run test:seo && npm run test:services && npm run test:locales"
+    "test:editorial": "node tests/editorial.mjs",
+    "test:all": "npm run test:navigation && npm test && npm run test:studio && npm run test:seo && npm run test:services && npm run test:locales && npm run test:editorial"
   },
   "dependencies": {
+    "@tiptap/core": "3.31.4",
+    "@tiptap/extension-image": "3.31.4",
+    "@tiptap/extension-placeholder": "3.31.4",
+    "@tiptap/extension-table": "3.31.4",
+    "@tiptap/markdown": "3.31.4",
+    "@tiptap/starter-kit": "3.31.4",
     "fast-xml-parser": "^5.11.2",
-    "hono": "^4.13.8"
+    "hono": "^4.13.8",
+    "marked": "18.1.0"
   },
   "overrides": {
     "sharp": "0.35.5"
@@ -30,6 +39,7 @@
     "@hono/vite-build": "^1.11.1",
     "@hono/vite-dev-server": "^0.26.1",
     "@playwright/test": "^1.63.0",
+    "esbuild": "0.28.1",
     "typescript": "^5.9.3",
     "vite": "^8.1.4",
     "wrangler": "^4.110.0"

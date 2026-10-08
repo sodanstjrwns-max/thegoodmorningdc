@@ -1,5 +1,8 @@
 # prod
 dist/
+# Rebuilt by npm run build:editor
+public/static/rich-editor.js
+public/static/rich-editor.js.LEGAL.txt
 
 # dev
 .yarn/

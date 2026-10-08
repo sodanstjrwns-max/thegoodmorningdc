@@ -1,0 +1,617 @@
+{
+  "release": "GM-HANDOFF-2026-10-08-R1",
+  "checked_at": "2026-10-08T15:48:26.803Z",
+  "application_commit": "daaa9be509f7b743154989a4de8f1d66bfa2851b",
+  "site": "https://webapp-2-9y5.pages.dev",
+  "snapshot": "https://7543d6e6.webapp-2-9y5.pages.dev",
+  "scope": "Read-only delivery preparation recheck. No new deployment, content writes, DNS changes or real-device tests.",
+  "public_routes": [
+    {
+      "path": "/",
+      "status": 200,
+      "noindex": true
+    },
+    {
+      "path": "/treatments",
+      "status": 200,
+      "noindex": true
+    },
+    {
+      "path": "/doctors",
+      "status": 200,
+      "noindex": true
+    },
+    {
+      "path": "/mission",
+      "status": 200,
+      "noindex": true
+    },
+    {
+      "path": "/tour",
+      "status": 200,
+      "noindex": true
+    },
+    {
+      "path": "/directions",
+      "status": 200,
+      "noindex": true
+    },
+    {
+      "path": "/reservation",
+      "status": 200,
+      "noindex": true
+    },
+    {
+      "path": "/contents",
+      "status": 200,
+      "noindex": true
+    },
+    {
+      "path": "/video",
+      "status": 200,
+      "noindex": true
+    },
+    {
+      "path": "/faq",
+      "status": 200,
+      "noindex": true
+    },
+    {
+      "path": "/symptom-checker",
+      "status": 200,
+      "noindex": true
+    },
+    {
+      "path": "/cases",
+      "status": 200,
+      "noindex": true
+    },
+    {
+      "path": "/pricing",
+      "status": 200,
+      "noindex": true
+    },
+    {
+      "path": "/careers",
+      "status": 200,
+      "noindex": true
+    },
+    {
+      "path": "/privacy",
+      "status": 200,
+      "noindex": true
+    },
+    {
+      "path": "/terms",
+      "status": 200,
+      "noindex": true
+    },
+    {
+      "path": "/blog",
+      "status": 200,
+      "noindex": true
+    },
+    {
+      "path": "/notice",
+      "status": 200,
+      "noindex": true
+    },
+    {
+      "path": "/encyclopedia",
+      "status": 200,
+      "noindex": true
+    },
+    {
+      "path": "/visiting",
+      "status": 200,
+      "noindex": true
+    },
+    {
+      "path": "/column",
+      "status": 200,
+      "noindex": true
+    },
+    {
+      "path": "/treatments/implant-sedation",
+      "status": 200,
+      "noindex": true
+    },
+    {
+      "path": "/treatments/implant-front",
+      "status": 200,
+      "noindex": true
+    },
+    {
+      "path": "/treatments/implant-full",
+      "status": 200,
+      "noindex": true
+    },
+    {
+      "path": "/treatments/implant-revision",
+      "status": 200,
+      "noindex": true
+    },
+    {
+      "path": "/treatments/bone-graft",
+      "status": 200,
+      "noindex": true
+    },
+    {
+      "path": "/treatments/sinus-lift",
+      "status": 200,
+      "noindex": true
+    },
+    {
+      "path": "/treatments/implant-disabled",
+      "status": 200,
+      "noindex": true
+    },
+    {
+      "path": "/treatments/implant-systemic",
+      "status": 200,
+      "noindex": true
+    },
+    {
+      "path": "/treatments/implant-denture",
+      "status": 200,
+      "noindex": true
+    },
+    {
+      "path": "/treatments/implant-oneday",
+      "status": 200,
+      "noindex": true
+    },
+    {
+      "path": "/treatments/implant-navigation",
+      "status": 200,
+      "noindex": true
+    },
+    {
+      "path": "/treatments/sedation",
+      "status": 200,
+      "noindex": true
+    },
+    {
+      "path": "/treatments/sedation-disabled",
+      "status": 200,
+      "noindex": true
+    },
+    {
+      "path": "/treatments/sedation-systemic",
+      "status": 200,
+      "noindex": true
+    },
+    {
+      "path": "/treatments/natural-tooth",
+      "status": 200,
+      "noindex": true
+    },
+    {
+      "path": "/treatments/cavity",
+      "status": 200,
+      "noindex": true
+    },
+    {
+      "path": "/treatments/resin",
+      "status": 200,
+      "noindex": true
+    },
+    {
+      "path": "/treatments/crown",
+      "status": 200,
+      "noindex": true
+    },
+    {
+      "path": "/treatments/inlay",
+      "status": 200,
+      "noindex": true
+    },
+    {
+      "path": "/treatments/root-canal",
+      "status": 200,
+      "noindex": true
+    },
+    {
+      "path": "/treatments/whitening",
+      "status": 200,
+      "noindex": true
+    },
+    {
+      "path": "/treatments/prosthesis",
+      "status": 200,
+      "noindex": true
+    },
+    {
+      "path": "/treatments/laminate",
+      "status": 200,
+      "noindex": true
+    },
+    {
+      "path": "/treatments/aesthetic-resin",
+      "status": 200,
+      "noindex": true
+    },
+    {
+      "path": "/treatments/scaling",
+      "status": 200,
+      "noindex": true
+    },
+    {
+      "path": "/treatments/gum",
+      "status": 200,
+      "noindex": true
+    },
+    {
+      "path": "/treatments/gum-contouring",
+      "status": 200,
+      "noindex": true
+    },
+    {
+      "path": "/treatments/periodontitis",
+      "status": 200,
+      "noindex": true
+    },
+    {
+      "path": "/treatments/wisdom-tooth",
+      "status": 200,
+      "noindex": true
+    },
+    {
+      "path": "/treatments/tmj",
+      "status": 200,
+      "noindex": true
+    },
+    {
+      "path": "/treatments/bruxism",
+      "status": 200,
+      "noindex": true
+    },
+    {
+      "path": "/doctors/kang-dowook",
+      "status": 200,
+      "noindex": true
+    },
+    {
+      "path": "/doctors/lee-sanghoon",
+      "status": 200,
+      "noindex": true
+    },
+    {
+      "path": "/doctors/kang-jongseung",
+      "status": 200,
+      "noindex": true
+    },
+    {
+      "path": "/doctors/lee-kyungyeon",
+      "status": 200,
+      "noindex": true
+    },
+    {
+      "path": "/doctors/shin-hyunsook",
+      "status": 200,
+      "noindex": true
+    },
+    {
+      "path": "/blog/daily-gum-care",
+      "status": 200,
+      "noindex": true
+    },
+    {
+      "path": "/blog/before-your-visit",
+      "status": 200,
+      "noindex": true
+    },
+    {
+      "path": "/notice/check-clinic-hours",
+      "status": 200,
+      "noindex": true
+    },
+    {
+      "path": "/en",
+      "status": 200,
+      "noindex": true
+    },
+    {
+      "path": "/en/treatments",
+      "status": 200,
+      "noindex": true
+    },
+    {
+      "path": "/en/doctors",
+      "status": 200,
+      "noindex": true
+    },
+    {
+      "path": "/en/mission",
+      "status": 200,
+      "noindex": true
+    },
+    {
+      "path": "/en/tour",
+      "status": 200,
+      "noindex": true
+    },
+    {
+      "path": "/en/directions",
+      "status": 200,
+      "noindex": true
+    },
+    {
+      "path": "/en/reservation",
+      "status": 200,
+      "noindex": true
+    },
+    {
+      "path": "/en/contents",
+      "status": 200,
+      "noindex": true
+    },
+    {
+      "path": "/en/video",
+      "status": 200,
+      "noindex": true
+    },
+    {
+      "path": "/en/faq",
+      "status": 200,
+      "noindex": true
+    },
+    {
+      "path": "/en/symptom-checker",
+      "status": 200,
+      "noindex": true
+    },
+    {
+      "path": "/en/cases",
+      "status": 200,
+      "noindex": true
+    },
+    {
+      "path": "/en/pricing",
+      "status": 200,
+      "noindex": true
+    },
+    {
+      "path": "/en/careers",
+      "status": 200,
+      "noindex": true
+    },
+    {
+      "path": "/en/privacy",
+      "status": 200,
+      "noindex": true
+    },
+    {
+      "path": "/en/terms",
+      "status": 200,
+      "noindex": true
+    },
+    {
+      "path": "/en/blog",
+      "status": 200,
+      "noindex": true
+    },
+    {
+      "path": "/en/notice",
+      "status": 200,
+      "noindex": true
+    },
+    {
+      "path": "/en/encyclopedia",
+      "status": 200,
+      "noindex": true
+    },
+    {
+      "path": "/en/visiting",
+      "status": 200,
+      "noindex": true
+    },
+    {
+      "path": "/en/column",
+      "status": 200,
+      "noindex": true
+    },
+    {
+      "path": "/en/treatments/implant-sedation",
+      "status": 200,
+      "noindex": true
+    },
+    {
+      "path": "/en/treatments/implant-front",
+      "status": 200,
+      "noindex": true
+    },
+    {
+      "path": "/en/treatments/implant-full",
+      "status": 200,
+      "noindex": true
+    },
+    {
+      "path": "/en/treatments/implant-revision",
+      "status": 200,
+      "noindex": true
+    },
+    {
+      "path": "/en/treatments/bone-graft",
+      "status": 200,
+      "noindex": true
+    },
+    {
+      "path": "/en/treatments/sinus-lift",
+      "status": 200,
+      "noindex": true
+    },
+    {
+      "path": "/en/treatments/implant-disabled",
+      "status": 200,
+      "noindex": true
+    },
+    {
+      "path": "/en/treatments/implant-systemic",
+      "status": 200,
+      "noindex": true
+    },
+    {
+      "path": "/en/treatments/implant-denture",
+      "status": 200,
+      "noindex": true
+    },
+    {
+      "path": "/en/treatments/implant-oneday",
+      "status": 200,
+      "noindex": true
+    },
+    {
+      "path": "/en/treatments/implant-navigation",
+      "status": 200,
+      "noindex": true
+    },
+    {
+      "path": "/en/treatments/sedation",
+      "status": 200,
+      "noindex": true
+    },
+    {
+      "path": "/en/treatments/sedation-disabled",
+      "status": 200,
+      "noindex": true
+    },
+    {
+      "path": "/en/treatments/sedation-systemic",
+      "status": 200,
+      "noindex": true
+    },
+    {
+      "path": "/en/treatments/natural-tooth",
+      "status": 200,
+      "noindex": true
+    },
+    {
+      "path": "/en/treatments/cavity",
+      "status": 200,
+      "noindex": true
+    },
+    {
+      "path": "/en/treatments/resin",
+      "status": 200,
+      "noindex": true
+    },
+    {
+      "path": "/en/treatments/crown",
+      "status": 200,
+      "noindex": true
+    },
+    {
+      "path": "/en/treatments/inlay",
+      "status": 200,
+      "noindex": true
+    },
+    {
+      "path": "/en/treatments/root-canal",
+      "status": 200,
+      "noindex": true
+    },
+    {
+      "path": "/en/treatments/whitening",
+      "status": 200,
+      "noindex": true
+    },
+    {
+      "path": "/en/treatments/prosthesis",
+      "status": 200,
+      "noindex": true
+    },
+    {
+      "path": "/en/treatments/laminate",
+      "status": 200,
+      "noindex": true
+    },
+    {
+      "path": "/en/treatments/aesthetic-resin",
+      "status": 200,
+      "noindex": true
+    },
+    {
+      "path": "/en/treatments/scaling",
+      "status": 200,
+      "noindex": true
+    },
+    {
+      "path": "/en/treatments/gum",
+      "status": 200,
+      "noindex": true
+    },
+    {
+      "path": "/en/treatments/gum-contouring",
+      "status": 200,
+      "noindex": true
+    },
+    {
+      "path": "/en/treatments/periodontitis",
+      "status": 200,
+      "noindex": true
+    },
+    {
+      "path": "/en/treatments/wisdom-tooth",
+      "status": 200,
+      "noindex": true
+    },
+    {
+      "path": "/en/treatments/tmj",
+      "status": 200,
+      "noindex": true
+    },
+    {
+      "path": "/en/treatments/bruxism",
+      "status": 200,
+      "noindex": true
+    },
+    {
+      "path": "/en/doctors/kang-dowook",
+      "status": 200,
+      "noindex": true
+    },
+    {
+      "path": "/en/doctors/lee-sanghoon",
+      "status": 200,
+      "noindex": true
+    },
+    {
+      "path": "/en/doctors/kang-jongseung",
+      "status": 200,
+      "noindex": true
+    },
+    {
+      "path": "/en/doctors/lee-kyungyeon",
+      "status": 200,
+      "noindex": true
+    },
+    {
+      "path": "/en/doctors/shin-hyunsook",
+      "status": 200,
+      "noindex": true
+    },
+    {
+      "path": "/en/blog/daily-gum-care",
+      "status": 200,
+      "noindex": true
+    },
+    {
+      "path": "/en/blog/before-your-visit",
+      "status": 200,
+      "noindex": true
+    },
+    {
+      "path": "/en/notice/check-clinic-hours",
+      "status": 200,
+      "noindex": true
+    }
+  ],
+  "fee_items": 32,
+  "fee_pdf_sha256": "37c99b12203b4fee657c40f1299c57c87a47cf6a150cc9747443a659b1adad7f",
+  "admin_anonymous_status": 401,
+  "film_range_status": 206,
+  "browser_errors": [],
+  "real_devices_tested": false,
+  "customer_acceptance": "Not recorded"
+}

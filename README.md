@@ -14,6 +14,15 @@
 - 현재 `PUBLIC_SITE_URL` 미설정으로 **검증 주소 전체 noindex 유지**. noindex는 접근 암호가 아니며 URL을 아는 사람은 공개 화면을 볼 수 있습니다.
 - 기능 구현·브라우저 검증은 의료 감수·병원 운영 사실 확인을 대신하지 않습니다.
 
+## 납품 준비 — GM-HANDOFF-2026-10-08-R1
+- 앱 기준본은 `daaa9be509f7b743154989a4de8f1d66bfa2851b`, 배포 스냅샷은 `https://7543d6e6.webapp-2-9y5.pages.dev`로 기록합니다. 이번 납품 준비에서는 앱 수정·재배포·DNS 변경·운영 데이터 쓰기를 하지 않았습니다.
+- `handoff/DELIVERY.md`: 7쪽 납품·운영 인계서 원본. PDF, 수정 가능한 Word, 단일 HTML로 생성합니다.
+- `handoff/CHECKLIST.csv`: 기술 검증/병원 확인/실기기/운영/전환/수령을 구분한 34개 항목. 담당자·확인일·승인란은 임의로 채우지 않았습니다.
+- `handoff/MESSAGE.txt`: 강도욱 원장님께 전달할 문안. 실제 발송하지 않았습니다.
+- `handoff/release-verification.json`: 납품 직전 읽기 전용 재검사. 한·영120경로200/noindex·수가32·원본PDF·관리자401·영상Range206 확인.
+- 자료 재생성: `node handoff/build.mjs` (pandoc, python-docx, Playwright 필요). 산출물은 `.sources/handoff/`에 생성되어 웹/Git에 자동 공개되지 않습니다.
+- 일반 자료 ZIP에는 비밀번호·운영 SQL·비공개 검토 콘텐츠를 포함하지 않습니다. 기술 백업과 관리자 접근정보는 각각 별도 전달합니다. 수령 및 정식 오픈 승인은 미확인입니다.
+
 ## 배포 구성 — 로컬과 운영을 분리
 | 항목 | 운영 설정 |
 |---|---|

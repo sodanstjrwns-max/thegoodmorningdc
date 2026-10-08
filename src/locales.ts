@@ -17,7 +17,7 @@ export function localizeHTML(html:string,locale:Locale,path:string,origin:string
  const localizedUrl=origin+localPath(path,locale)
  // Generated HTML only. Preserve scripts as raw text; translate JSON values separately.
  const blocks=html.split(/(<script\b[^>]*>[\s\S]*?<\/script>|<style\b[^>]*>[\s\S]*?<\/style>)/gi)
- const output=blocks.map(block=>{
+ let output=blocks.map(block=>{
   if(/^<script\b/i.test(block)){
    if(/type="application\/(?:ld\+json|json)"/.test(block))try{const open=block.indexOf('>'),close=block.lastIndexOf('</script>');const walk=(x:any):any=>typeof x==='string'?translate(x,locale):Array.isArray(x)?x.map(walk):x&&typeof x==='object'?Object.fromEntries(Object.entries(x).map(([k,v])=>[k,walk(v)])):x;const data=walk(JSON.parse(block.slice(open+1,close)));if(Array.isArray(data)&&/ld\+json/.test(block.slice(0,open))){for(const entity of data){if(['WebPage','MedicalWebPage'].includes(entity['@type'])){entity.url=localizedUrl;entity['@id']=localizedUrl+'#webpage';entity.inLanguage=locale==='zh'?'zh-Hans':locale}if(entity['@type']==='BreadcrumbList')for(const item of entity.itemListElement||[])if(item.item?.startsWith(origin+'/'))item.item=origin+localPath(item.item.slice(origin.length),locale)}}return block.slice(0,open+1)+JSON.stringify(data).replace(/</g,'\\u003c')+'</script>'}catch{return block}
    return block
@@ -28,5 +28,6 @@ export function localizeHTML(html:string,locale:Locale,path:string,origin:string
    const translated=translate(decode(token),locale);return translated===decode(token)?token:esc(translated)
   }).join('')
  }).join('')
+ if(locale==='en'&&path==='/')output=output.replace(/<h1\b[\s\S]*?<\/h1>/,'<h1 aria-label="A dental clinic that listens once more."><span class="hero-title-line hero-title-intro"><span>A dental clinic that</span></span><span class="hero-title-line hero-title-main"><span><em>listens once more.</em></span></span></h1>')
  return output.replace('<html lang="ko">',`<html lang="${locale==='zh'?'zh-Hans':locale}" data-locale="${locale}">`).replace(/<nav class="locale-switch"[\s\S]*?<\/nav>/,languageSwitch(path,locale)).replace(/<link rel="canonical" href="[^"]*">/,`<link rel="canonical" href="${esc(localizedUrl)}">`).replace(/<meta property="og:url" content="[^"]*">/,`<meta property="og:url" content="${esc(localizedUrl)}">`).replace(/<meta property="og:locale" content="[^"]*">/,`<meta property="og:locale" content="${{en:'en_US',ja:'ja_JP',zh:'zh_CN'}[locale]}">`).replace('id="main">',`id="main"><aside class="translation-notice wrap">${notices[locale]}</aside>`).replace('</body>',`<script src="/static/locale.js?v=13" defer></script></body>`)
 }

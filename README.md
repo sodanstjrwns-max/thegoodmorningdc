@@ -5,9 +5,18 @@
 - 목표: 제공 설문·제안서·사진·영상에 기반한 홈페이지와 운영 가능한 CMS.
 - Hono SSR + TypeScript + Cloudflare Pages, D1/R2, `/home/user/webapp`, `main`.
 - **샌드박스 제작 미리보기입니다. 정식 배포·기존 홈페이지 교체·도메인/DNS 변경 없음.**
-- 미리보기: https://3000-iea4n2skk8l8g2o6tat4s-dfc00ec5.sandbox.novita.ai/?v=13
+- 미리보기: https://3000-iea4n2skk8l8g2o6tat4s-dfc00ec5.sandbox.novita.ai/?v=14
 - 영어: 위 주소의 `/en`. 관리자: `/admin`. 수가표: `/pricing`.
 - 최종 작업: 2026-10-08. 아래는 구현·검증 상태이며 의료 감수나 운영 사실 확인을 대신하지 않습니다.
+
+## 펼친 메뉴·영문 첫 화면 수정 (2026-10-08, v14)
+- 원인: `.nav-item{position:relative}` 때문에 너비100%인 메가메뉴가 헤더가 아닌 약98px짜리 링크를 기준으로 펼쳐졌습니다. 배경 밖으로 글자가 넘쳐 영상과 겹쳤습니다.
+- 메가메뉴가 있는 항목만 static으로 바꾸고, 메뉴는 sticky 헤더 전체 너비를 기준으로 배치합니다. 불투명 배경·4열 최소 너비·명확한 대비·viewport 내 최대높이·내부 세로스크롤을 적용했습니다.
+- 영문은1390px 이하에서 좁은 데스크톱 메뉴 대신 전체 메뉴 버튼을 사용합니다. 기존 한국어1020px 기준은 유지합니다. Escape·키보드 진입·aria-expanded·외부 클릭·resize 잠금 해제를 보완했습니다.
+- 영문 홈 제목은 “A dental clinic that / listens once more.”로 자연스럽게 구성하고 minmax(0,…) 열과 제목 너비 제한으로 본문을 옆으로 밀지 않게 했습니다. 한국어 핵심 문구와 무자막 영상은 유지합니다.
+- `tests/navigation.mjs`에 펼친 메뉴 회귀 추가: KO/EN 데스크톱16조합, 진료31개 링크 접근, 배경 전체 너비·불투명도·열 너비·낮은 높이 스크롤·Escape·키보드·실제 링크 이동. 영문 compact6폭과 resize, 첫 화면 제목/본문 겹침 검사.
+- `npm run test:all` 전체 통과: 확장 navigation → smoke → studio → seo → services → locales. 기존92회 탐색·한국어360폭 조합·영어180폭 조합·CMS·수가·접수 검사도 유지했습니다. 브라우저 오류0건.
+- 외부 HTTPS `/en?v=14`에서도 펼친 메뉴 너비1440px, 진료31링크, 화면 내 높이 및 브라우저 오류0건을 확인했습니다. 실제 Safari/iPhone 기기 검수는 아닙니다.
 
 ## 이번 추가 구현
 ### 1. 실제 지도

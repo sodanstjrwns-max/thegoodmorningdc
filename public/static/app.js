@@ -61,9 +61,24 @@ addEventListener('scroll',queueScrollMotion,{passive:true});addEventListener('re
 if(matchMedia('(hover:hover) and (pointer:fine)').matches)$$('.strength-card').forEach(card=>card.addEventListener('pointermove',event=>{if(!motionAllowed())return;const r=card.getBoundingClientRect();card.style.setProperty('--pointer-x',event.clientX-r.left+'px');card.style.setProperty('--pointer-y',event.clientY-r.top+'px')}));
 const menu=$('#mobile-menu'),toggle=$('.menu-toggle');function closeMenu(){menu.hidden=true;toggle.setAttribute('aria-expanded','false');toggle.setAttribute('aria-label','전체 메뉴 열기');document.body.classList.remove('locked');$('#main').inert=false}
 toggle?.addEventListener('click',()=>{if(!menu.hidden){closeMenu();return}menu.hidden=false;toggle.setAttribute('aria-expanded','true');toggle.setAttribute('aria-label','전체 메뉴 닫기');document.body.classList.add('locked');$('#main').inert=true;$('a',menu).focus()});
-document.addEventListener('keydown',e=>{if(!menu.hidden){if(e.key==='Escape'){closeMenu();toggle.focus()}if(e.key==='Tab'){const list=[toggle,...$$('a',menu)];const first=list[0],last=list.at(-1);if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus()}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus()}}}});
+document.addEventListener('keydown',e=>{if(!menu.hidden){if(e.key==='Escape'){closeMenu();toggle.focus()}if(e.key==='Tab'){const list=[toggle,...$$('a,button:not([disabled])',menu)];const first=list[0],last=list.at(-1);if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus()}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus()}}}});
 $$('a',menu).forEach(a=>a.addEventListener('click',closeMenu));
-matchMedia('(min-width:1021px)').addEventListener('change',event=>{if(event.matches&&!menu.hidden){const hadFocus=menu.contains(document.activeElement)||document.activeElement===toggle;closeMenu();if(hadFocus)$('.site-header .brand')?.focus({preventScroll:true})}});
+const desktopNavigation=matchMedia(root.lang==='en'?'(min-width:1391px)':'(min-width:1021px)');
+desktopNavigation.addEventListener('change',event=>{if(event.matches&&!menu.hidden){const hadFocus=menu.contains(document.activeElement)||document.activeElement===toggle;closeMenu();if(hadFocus)$('.site-header .brand')?.focus({preventScroll:true})}});
+// Desktop disclosure stays inside the header-sized panel, with Escape and focus support.
+$$('.desktop-nav .nav-item').forEach(item=>{
+ const trigger=$(':scope > a[aria-controls]',item);if(!trigger)return;
+ const panel=document.getElementById(trigger.getAttribute('aria-controls'));
+ const set=expanded=>trigger.setAttribute('aria-expanded',String(expanded));
+ const open=()=>{if(!desktopNavigation.matches)return;item.classList.remove('menu-dismissed');set(true)};
+ const dismiss=()=>{item.classList.add('menu-dismissed');set(false)};
+ item.addEventListener('pointerenter',open);item.addEventListener('focusin',open);
+ item.addEventListener('pointerleave',()=>{if(!item.contains(document.activeElement))set(false)});
+ item.addEventListener('focusout',()=>queueMicrotask(()=>{if(!item.matches(':hover')&&!item.contains(document.activeElement))set(false)}));
+ item.addEventListener('keydown',e=>{if(e.key==='Escape'){e.preventDefault();trigger.focus({preventScroll:true});dismiss()}if(e.key==='ArrowDown'&&e.target===trigger){e.preventDefault();open();$('a',panel)?.focus()}});
+ document.addEventListener('pointerdown',e=>{if(!item.contains(e.target))dismiss()});
+ desktopNavigation.addEventListener('change',()=>{dismiss()});
+});
 $('.back-top')?.addEventListener('click',()=>window.scrollTo({top:0,behavior:motionAllowed()?'smooth':'instant'}));
 // Motion preferences prevent autoplay, never a visitor's explicit media playback.
 const hero=$('#hero-section'),motionButton=$('#hero-motion-toggle');

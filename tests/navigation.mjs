@@ -58,6 +58,28 @@ try{
   assert.equal(await p.locator('.route-enter').count(),0)
   await context.close()
  }
+ // Open-state regressions: document overflow alone misses a 98px panel with overflowing text.
+ const desktop=await browser.newContext({reducedMotion:'reduce'}),dp=await desktop.newPage();dp.on('pageerror',e=>errors.push({mode:'desktop-menu',message:e.message}));let menuChecks=0
+ for(const [path,widths] of [['/',[1024,1200,1440,1920]],['/en',[1391,1440,1680,1920]]]){
+  for(const width of widths)for(const height of [480,900]){
+   await dp.setViewportSize({width,height});await dp.goto(base+path,{waitUntil:'networkidle'});
+   const trigger=dp.locator('.nav-item-mega > a'),panel=dp.locator('.mega-menu');await trigger.hover();await panel.waitFor({state:'visible'});
+   assert.equal(await trigger.getAttribute('aria-expanded'),'true');
+   const geometry=await panel.evaluate(el=>{const r=el.getBoundingClientRect(),header=document.querySelector('.site-header').getBoundingClientRect(),s=getComputedStyle(el);return {left:r.left,right:r.right,width:r.width,top:r.top,bottom:r.bottom,header:header.bottom,bg:s.backgroundColor,overflow:s.overflowY,scroll:el.scrollWidth,client:el.clientWidth,columns:[...el.querySelectorAll('.mega-columns>div')].map(c=>c.getBoundingClientRect().width)}});
+   assert.ok(geometry.left>=0&&geometry.right<=width+1&&geometry.width>=width-1,JSON.stringify(geometry));assert.ok(geometry.top>=geometry.header-2&&geometry.bottom<=height,JSON.stringify(geometry));assert.equal(geometry.bg,'rgb(248, 247, 242)');assert.equal(geometry.overflow,'auto');assert.ok(geometry.scroll<=geometry.client+1);assert.ok(geometry.columns.every(w=>w>=190));
+   assert.equal(await panel.locator('.mega-columns a').count(),31);
+   const last=panel.locator('.mega-columns a').last();await last.focus();const rect=await last.boundingBox();assert.ok(rect.y>=geometry.top&&rect.y+rect.height<=height);assert.equal(await last.evaluate(el=>{const r=el.getBoundingClientRect();return el.contains(document.elementFromPoint(r.x+r.width/2,r.y+r.height/2))}),true);
+   await last.press('Escape');assert.equal(await trigger.getAttribute('aria-expanded'),'false');assert.equal(await panel.isVisible(),false);await trigger.press('ArrowDown');assert.equal(await panel.isVisible(),true);
+   if(width===1440&&height===900)await dp.screenshot({path:'test-results/open-menu-'+(path==='/'?'ko':'en')+'.png'});
+   const target=await last.getAttribute('href');await last.click();await dp.waitForURL(base+target);menuChecks++;
+  }
+ }
+ for(const width of [320,390,768,1024,1280,1390]){
+  await dp.setViewportSize({width,height:844});await dp.goto(base+'/en',{waitUntil:'networkidle'});assert.equal(await dp.locator('.desktop-nav').isVisible(),false);await dp.locator('.menu-toggle').click();const bounds=await dp.locator('#mobile-menu').boundingBox(),header=await dp.locator('.site-header').boundingBox();assert.ok(bounds.y>=header.y+header.height-1);assert.ok(bounds.x>=0&&bounds.width<=width);await dp.locator('#mobile-search-open').focus();await dp.keyboard.press('Escape');assert.equal(await dp.locator('#mobile-menu').isVisible(),false);assert.equal(await dp.locator('#main').evaluate(e=>e.inert),false);
+  const overlap=await dp.locator('.hero-copy').evaluate(el=>{const a=el.querySelector('h1').getBoundingClientRect(),b=el.querySelector('p').getBoundingClientRect();return Math.min(a.right,b.right)>Math.max(a.left,b.left)&&Math.min(a.bottom,b.bottom)>Math.max(a.top,b.top)});assert.equal(overlap,false,'English hero overlap '+width);
+ }
+ await dp.setViewportSize({width:1280,height:800});await dp.locator('.menu-toggle').click();await dp.setViewportSize({width:1440,height:900});await dp.waitForFunction(()=>!document.querySelector('#main').inert);assert.equal(await dp.locator('#mobile-menu').isVisible(),false);await desktop.close();
+ console.log(`PASS: ${menuChecks} opened KO/EN desktop panels, 31 reachable links, opaque viewport-wide backgrounds, short-height scrolling, Escape/keyboard navigation; six English compact widths and resize cleanup.`)
  const staticContext=await browser.newContext({javaScriptEnabled:false,viewport:{width:390,height:844}})
  const p=await staticContext.newPage();await p.goto(base+'/mission');assert.equal(await p.locator('.page-heading').evaluate(el=>getComputedStyle(el).opacity),'1');assert.equal(await p.locator('h1').isVisible(),true)
  await p.locator('.site-header .brand').click();await p.waitForURL(base+'/');await staticContext.close()

@@ -29,7 +29,9 @@
 - 편집기 번들 약502KB(비압축)는 관리자에서만 로드. 환자용 페이지에는 해당 번들 없음. Worker 약910KB/gzip290KB. 전용 CSS/읽기 스크립트는 해당 게시판에서만 로드합니다.
 - DB schema 변경 없이 기존 content_entries/content_history를 재사용합니다. 운영 DB에 로컬 QA 콘텐츠를 이전하지 않습니다. 새 column kind와 기존 showcase 확장필드는 기본값을 합성해 이전 자료 호환을 유지합니다.
 - 검증: 기존 전체 회귀 통과. 추가 `npm run test:editorial`: 로컬 공개/철회·미디어 권한·실제 시각 편집/마크다운/표·이미지1600px·대체텍스트 대화상자·서버 자동저장/실패복구·목차/schema·페이지네이션·신규14화면폭 통과. 최종 영어180폭/한국어360폭 재검사·TypeScript/build·npm audit 통과.
-- 운영 배포 전 `.sources/editorial-release/before-editorial.sql`을 백업하고 독립 SQLite 복원 확인(게시물3/CMS44/접수0). 배포/검증 결과는 해당 비공개 릴리스 폴더에 기록합니다.
+- 운영 배포 전 `.sources/editorial-release/before-editorial.sql`을 백업하고 독립 SQLite 복원 확인(게시물3/CMS44/접수0).
+- **운영 반영 완료**: 앱 커밋 `696e4cd`, 배포 스냅샷 `https://d01ef734.webapp-2-9y5.pages.dev`. 기존 운영 주소 `https://webapp-2-9y5.pages.dev`에 반영했습니다. 기존 도메인/DNS 전환은 하지 않았습니다.
+- 실제 운영 검증: 공개120경로·16화면폭, 관리자 Tiptap DOM·비공개 초안 저장/미리보기/충돌409/미승인 공개400/익명404, 정적자산 일치·환자화면 편집기 번들 미포함·원본 수가PDF 일치 확인. 브라우저 오류0. 시험용 초안 삭제·로그아웃 완료. 상세 기록 `.sources/editorial-release/production-check.json`.
 - 참고: https://tiptap.dev/docs/editor/markdown / https://developers.google.com/search/docs/appearance/ai-features . AEO 체크는 작성 보조이며 검색 순위·AI인용·리치결과 보장이 아닙니다. 현재 별도 운영 주소의 noindex 유지, 실제 기기/의료진 감수·일본어/중국어·정식 도메인 전환은 이전과 같이 미완료입니다.
 
 ## 납품 준비 — GM-HANDOFF-2026-10-08-R1

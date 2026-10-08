@@ -1,0 +1,14 @@
+{
+  "$schema": "../node_modules/wrangler/config-schema.json",
+  "name": "webapp-2",
+  "compatibility_date": "2026-09-17",
+  "pages_build_output_dir": "../dist",
+  "compatibility_flags": ["nodejs_compat"],
+  "d1_databases": [{
+    "binding": "DB",
+    "database_name": "webapp-2-goodmorning-production",
+    "database_id": "f5b6c1d7-f476-4fee-ae72-e2b864b39e98",
+    "migrations_dir": "../migrations"
+  }],
+  "r2_buckets": [{ "binding": "R2", "bucket_name": "webapp-2-goodmorning-media" }]
+}

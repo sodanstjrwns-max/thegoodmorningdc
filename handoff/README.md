@@ -1,26 +1,41 @@
-# 더굿모닝치과 납품 자료 — R1
+# 더굿모닝치과 납품 자료 — R1 기록 및 Operations16 변경 안내
 
-## 받는 분께
-1. `01_Handoff.pdf`: 7쪽 인계서. 구현 범위·관리자 사용법·검수·정식 전환·백업 안내.
-2. `02_Handoff_Editable.docx`: 같은 내용의 수정 가능한 Word. 글꼴/Word 환경에 따라 페이지 나눔은 PDF와 다를 수 있습니다. 인쇄 기준은 PDF입니다.
-3. `03_Checklist.csv`: 34개 항목. Excel에서 열어 실제 담당자·일자·결과·증빙을 기록하세요. 기술 통과와 병원 미확인/미완료를 구분했습니다.
+## 현재 앱 — Operations16 (2026-10-09)
+- 홈페이지: https://webapp-2-9y5.pages.dev/
+- 관리자: https://webapp-2-9y5.pages.dev/admin
+- 앱 커밋: `1a54192`, 기능 커밋: `948334d`.
+- 배포 스냅샷: https://d8ca0fac.webapp-2-9y5.pages.dev
+- 최신 사용법·API·데이터 모델·검증·미완료 설정은 저장소 루트 `README.md`의 Operations16 절을 확인하세요.
+- 추가 기능: 칼럼/인블로그 통합 탐색, 케이스 작성 틀/사진 설명·확대, 직원별 권한·검토 승인·변경 비교·화면폭 미리보기·내부 링크, 이미지 사용처/교체/안전 삭제, 콘텐츠 점검과 진료별 연결, 문맥별 모바일 CTA, 접수 담당자/필터/지연 표시, 발송 연결형 알림 큐, 개인정보를 최소화한 클릭·접수 합계.
+- 소유자는 아이디를 비우고 기존 관리자 비밀번호로 로그인합니다. 직원 계정은 관리자가 발급합니다. 초기 비밀번호는 별도 보안 채널로 전달하세요.
+- **메일 서비스는 미연결·비활성, 집계는 비활성**입니다. Resend 시크릿·검증된 발신/수신 설정 또는 집계 활성화는 실제 운영 담당자가 확인 후 진행합니다. 실제 메일을 발송하지 않았습니다.
+- 자동 점검/기술 검수는 의료 감수·환자 동의·채용조건·통역 계약·실제 기기 검사를 대신하지 않습니다. 실제 환자 사례/직원 계정은 임의 생성하지 않았으며 운영 QA 계정과 비공개 원고는 제거했습니다.
+- 운영 검증: 120경로·24화면폭·역할별 로그인/권한·비공개 검토 흐름·원본 수가 PDF/32항목·인블로그·정적자산 일치, 브라우저 오류0.
+- 운영 DB 전후 독립 복원 및 기존 CMS44건/게시물3건 모든 값 동일 확인. 증빙과 비공개 SQL은 `.sources/operations-release/`에 보관합니다.
+- 기존 공식 도메인·DNS·인블로그 전환은 하지 않았습니다. 별도 Pages 주소는 noindex 유지입니다.
+
+## R1 자료는 이전 납품 기준 기록입니다
+아래 기존 PDF/Word/ZIP은 Operations16 기능을 포함하지 않습니다. 원래 납품 기준을 보존하기 위해 자동 덮어쓰지 않았습니다.
+1. `01_Handoff.pdf`: 7쪽 R1 인계서.
+2. `02_Handoff_Editable.docx`: 같은 내용의 수정 가능한 Word. 인쇄 기준은 PDF입니다.
+3. `03_Checklist.csv`: 34개 항목. 실제 담당자·일자·결과·증빙을 기록합니다.
 4. `04_Message.txt`: 문석준 원장 검토 후 강도욱 원장님께 전달할 문안. 실제 발송하지 않았습니다.
-5. `05_Web_Manual.html`: 외부 글꼴 요청 없이 열리는 단일 HTML 인계서. 링크 클릭 시에는 해당 사이트에 접속합니다.
-6. `evidence/`: 실제 공개 화면2장과 읽기 전용 납품 전 재검사 JSON. 스크린샷은 Chromium이며 실기기 증빙이 아닙니다.
-7. `SHA256SUMS.txt`: 파일 무결성 확인용 목록.
+5. `05_Web_Manual.html`: 외부 글꼴 요청 없이 열리는 단일 HTML 인계서.
+6. `evidence/`: 당시 공개 화면2장과 읽기 전용 재검사 JSON. Chromium 화면폭 검사이며 실기기 증빙이 아닙니다.
+7. `SHA256SUMS.txt`: 파일 무결성 확인 목록.
 
-홈페이지: https://webapp-2-9y5.pages.dev/
-앱 기준 커밋: daaa9be509f7b743154989a4de8f1d66bfa2851b
-고정 배포 스냅샷: https://7543d6e6.webapp-2-9y5.pages.dev
+R1 앱 커밋: `daaa9be509f7b743154989a4de8f1d66bfa2851b`
+
+R1 배포 스냅샷: https://7543d6e6.webapp-2-9y5.pages.dev
+
 문서 ID: GM-HANDOFF-2026-10-08-R1 / 작성일: 2026-10-08
 
-## 별도 전달
-- **기술 백업**: 소스·Git 이력·운영 SQL 포함. 비공개 검토 콘텐츠가 있으므로 기술 담당자에게만 전달합니다. 일반 자료 ZIP에는 넣지 않았습니다.
-- **관리자 접근정보**: 실제 비밀번호 포함. 수신 담당자를 확인한 안전한 별도 경로로 전달합니다. 일반 자료 ZIP과 기술 백업에 비밀번호를 포함하지 않았습니다.
-- 이 일반 자료는 웹 공개 폴더에 배치하지 않았습니다. 검수용 자료이며 수령/오픈 승인란은 미작성입니다.
-- 기존 공식 도메인·인블로그·DNS는 변경하지 않았습니다. 일본어·중국어 및 병원/실기기 확인은 인계서의 미완료 목록을 확인하세요.
+## 별도 전달 원칙
+- 기술 백업은 소스·Git 이력·운영 SQL을 포함하며 비공개 검토 내용이 있으므로 기술 담당자에게만 전달합니다. 일반 자료 ZIP에 넣지 않습니다. R2 전체 객체 사본과 동일한 것은 아닙니다.
+- 실제 비밀번호는 안전한 별도 경로로 전달합니다. 일반 자료 ZIP·소스·기술 백업에 관리자 비밀번호 원문을 포함하지 않습니다.
+- 수령/정식 오픈 승인란·의료 검토·실기기 결과를 임의로 채우지 않습니다.
 
-## 제작 담당자용 재생성
-저장소 루트에서 `node handoff/build.mjs`를 실행하면 `.sources/handoff/`에 PDF·DOCX·HTML이 생성됩니다. Node/Playwright, pandoc, python-docx가 필요합니다. 글꼴은 기존 `public/static/fonts/PretendardVariable.woff2`를 HTML/PDF에 사용합니다. 일반 ZIP의 `FONT_LICENSE.txt`는 해당 OFL 라이선스입니다.
+## R1 문서 재생성
+저장소 루트에서 `node handoff/build.mjs`를 실행하면 `.sources/handoff/`에 R1 PDF·DOCX·HTML이 생성됩니다. Node/Playwright, pandoc, python-docx가 필요합니다. 이 명령은 최신 앱 변경사항을 R1 원문에 자동 반영하지 않습니다.
 
-원본: `DELIVERY.md`, `print.css`, `pagebreak.lua`, `build.mjs`, `CHECKLIST.csv`, `MESSAGE.txt`, `release-verification.json`. 이 작업은 문서 생성만 수행하며 앱 배포·접수 데이터 변경·도메인 전환은 하지 않습니다.
+원본: `DELIVERY.md`, `print.css`, `pagebreak.lua`, `build.mjs`, `CHECKLIST.csv`, `MESSAGE.txt`, `release-verification.json`. 글꼴은 `public/static/fonts/PretendardVariable.woff2`와 OFL 라이선스를 사용합니다.

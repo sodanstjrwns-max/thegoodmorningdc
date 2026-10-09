@@ -38,7 +38,7 @@ try{
  // Map network stays idle until explicit user interaction; switching branch has an independent iframe.
  await page.goto(base+'/directions');assert.equal(await page.locator('.clinic-map-frame[src]').count(),0);await page.locator('.branch-panel:not([hidden]) .map-load').click();assert.match(await page.locator('.branch-panel:not([hidden]) iframe').getAttribute('src'),/^https:\/\/www.google.com\/maps\?q=/);assert.equal(await page.locator('.branch-panel:not([hidden]) iframe').isVisible(),true);await page.locator('[data-branch="gwangmyeong"]').click();assert.equal(await page.locator('.branch-panel:not([hidden]) iframe').getAttribute('src'),null)
  const feeds=await api('channels/refresh','POST');assert.equal(feeds.status(),200);const column=(await feeds.json()).channels.find(c=>c.type==='column');assert.ok(column.items.length>0,'Real Inblog feed items');for(const i of column.items){assert.equal(new URL(i.url).hostname,'thegoodmorningdental.com');assert.ok(Number.isFinite(Date.parse(i.date)))}
- await page.goto(base+'/column');assert.ok(await page.locator('.channel-feed time').count()>0)
+ await page.goto(base+'/column');assert.ok(await page.locator('.external-column-card time').count()>0)
  for(const path of ['/cases','/careers','/visiting','/directions','/column'])for(const width of [320,390,600,768,1440]){await page.setViewportSize({width,height:844});await page.goto(base+path);assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),path+' overflow '+width)}
  // Expired records are inaccessible before lazy deletion, then removed with their private PDF.
  if(base==='http://localhost:3000'){

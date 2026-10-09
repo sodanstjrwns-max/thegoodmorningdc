@@ -15,8 +15,13 @@ import {casesView,careersView,requestForm,requestAdminPanel,approvedShowcase} fr
 import {siteOrigin,launchIndexable,privatePath,pageDescription,pageSchemas,llmIndex} from './seo'
 import {board,articleView,articleSchemas,editorialPath,publishedEntries,boardSchema} from './editorial'
 import {bodyMedia,markdown} from './markdown'
+import {getActor,verifyStaff,can,staffRoutes} from './staff'
+import {reviewRoutes} from './workflow'
+import {operationRoutes,mutationLock} from './operations'
+import {notificationRoutes} from './notifications'
+import {metricsPublic,metricsAdmin} from './metrics'
 
-type Env = { DB:any; R2:any; ASSETS?:{fetch:(request:Request)=>Promise<Response>}; ADMIN_PASSWORD?:string; PUBLIC_SITE_URL?:string }
+type Env = { DB:any; R2:any; ASSETS?:{fetch:(request:Request)=>Promise<Response>}; ADMIN_PASSWORD?:string; PUBLIC_SITE_URL?:string; RESEND_API_KEY?:string }
 const app = new Hono<{Bindings:Env;Variables:{content:Content}}>()
 app.use('*', secureHeaders({referrerPolicy:'strict-origin-when-cross-origin',xFrameOptions:'DENY',contentSecurityPolicy:{defaultSrc:["'self'"],scriptSrc:["'self'"],styleSrc:["'self'","'unsafe-inline'",'https://fonts.googleapis.com'],fontSrc:["'self'",'https://fonts.gstatic.com'],imgSrc:["'self'",'data:'],connectSrc:["'self'"],frameSrc:["'self'",'https://www.youtube-nocookie.com','https://www.google.com'],objectSrc:["'none'"],baseUri:["'self'"],formAction:["'self'"],frameAncestors:["'none'"]}}))
 app.use('/static/*',serveStatic({root:'./public'}))
@@ -41,7 +46,7 @@ app.use('*',async(c,next)=>{
 })
 const hash=async(s:string)=>Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s)))).map(b=>b.toString(16).padStart(2,'0')).join('')
 const random=()=>crypto.randomUUID()+crypto.randomUUID()
-async function isAdmin(c:any){const token=getCookie(c,'gm_session');if(!token||!c.env.DB)return false;const row=await c.env.DB.prepare('SELECT token_hash FROM admin_sessions WHERE token_hash=? AND expires_at>?').bind(await hash(token),Date.now()).first();return !!row}
+async function isAdmin(c:any){return !!await getActor(c)}
 app.use('*',async(c,next)=>{if(!/^\/(?:static|films|media|api\/admin)(?:\/|$)/.test(new URL(c.req.url).pathname))c.set('content',await loadContent(c.env.DB));await next()})
 const model=(c:any):Content=>c.get('content')
 const layout=(c:any)=>createUI(model(c))
@@ -66,7 +71,7 @@ app.get('/faq',c=>render(c,'자주 묻는 질문',views(c).faqPage(),[{'@context
 app.get('/symptom-checker',c=>render(c,'증상별 진료 정보 찾기',views(c).checkerPage()))
 // Editorial listings use server-side search and real pagination; no JavaScript required.
 for(const [base,kind] of [['/column','column'],['/cases','showcase']] as const){
- app.get(base,async c=>{const data=board(model(c),kind,new URL(c.req.url).searchParams);if(!data.valid)return render(c,'페이지를 찾을 수 없습니다',views(c).notFound(),[],404);return render(c,(kind==='column'?'원장 칼럼':'치료사례와 환자 경험')+(data.page>1?' · '+data.page+'페이지':''),data.html+(kind==='column'?views(c).channelPanel(await feeds(c),'column'):''),[boardSchema(data.items,kind,siteOrigin(c.env.PUBLIC_SITE_URL,c.req.url),data.page)],200,'',{canonicalPath:data.canonical,noindex:data.filtered})})
+ app.get(base,async c=>{const data=board(model(c),kind,new URL(c.req.url).searchParams,kind==='column'?await feeds(c):[]);if(!data.valid)return render(c,'페이지를 찾을 수 없습니다',views(c).notFound(),[],404);return render(c,(kind==='column'?'원장 칼럼':'치료사례와 환자 경험')+(data.page>1?' · '+data.page+'페이지':''),data.html,[boardSchema(data.items,kind,siteOrigin(c.env.PUBLIC_SITE_URL,c.req.url),data.page)],200,'',{canonicalPath:data.canonical,noindex:data.filtered})})
  app.get(base+'/:key',c=>{const e=publishedEntries(model(c),kind).find(e=>e.key===c.req.param('key'));if(!e)return render(c,'페이지를 찾을 수 없습니다',views(c).notFound(),[],404);return render(c,e.title,articleView(e,model(c),kind),articleSchemas(e,model(c),kind,siteOrigin(c.env.PUBLIC_SITE_URL,c.req.url)),200,e.seoDescription||e.summary||'',{seoTitle:e.seoTitle||e.title})})
 }
 app.get('/pricing',c=>render(c,'비급여 진료비 확인 안내',(model(c).operations.some(o=>o.category==='pricing'&&o.verified)?heading('TREATMENT FEES','비급여 진료비 안내','치료 항목별 금액을 확인하실 수 있습니다. 정확한 치료 계획과 총비용은 진료 후 안내합니다.')+`<section class="content-section"><div class="wrap">${views(c).operationPanels('pricing')}</div></section>`:views(c).pricingPage())))
@@ -106,8 +111,9 @@ app.get('/films/:file',async c=>{
  return new Response(c.req.method==='HEAD'?null:bytes,{headers});
 })
 app.route('/api/requests',publicRequests)
+app.route('/api',metricsPublic)
 app.get('/api/health',c=>c.json({ok:true,service:'the-good-morning'}))
-app.get('/admin',async c=>{c.header('Cache-Control','no-store');return render(c,'관리자 콘텐츠 스튜디오',views(c).adminPage(await isAdmin(c),!!c.env.ADMIN_PASSWORD)+(await isAdmin(c)?requestAdminPanel():''))})
+app.get('/admin',async c=>{c.header('Cache-Control','no-store');return render(c,'관리자 콘텐츠 스튜디오',views(c).adminPage(await isAdmin(c),!!c.env.ADMIN_PASSWORD,(await getActor(c))?.role)+(['admin','coordinator'].includes((await getActor(c))?.role||'')?requestAdminPanel():''))})
 app.post('/api/admin/login',async c=>{
  if(!c.env.ADMIN_PASSWORD||!c.env.DB)return c.json({error:'관리자 설정이 필요합니다.'},503)
  const ip=await hash((c.req.header('cf-connecting-ip')||'local')+c.env.ADMIN_PASSWORD);const now=Date.now()
@@ -116,12 +122,18 @@ app.post('/api/admin/login',async c=>{
  if(attempts.n>=5)return c.json({error:'로그인 시도가 많습니다. 15분 후 다시 시도해 주세요.'},429)
  const data=await c.req.json().catch(()=>null);const input=typeof data?.password==='string'?data.password:''
  await c.env.DB.prepare('INSERT INTO admin_attempts(ip_hash,attempted_at) VALUES(?,?)').bind(ip,now).run()
- const x=await hash(input);const y=await hash(c.env.ADMIN_PASSWORD);let diff=0;for(let i=0;i<x.length;i++)diff|=x.charCodeAt(i)^y.charCodeAt(i)
- if(diff)return c.json({error:'비밀번호를 확인해 주세요.'},401)
- const token=random();await c.env.DB.batch([c.env.DB.prepare('INSERT INTO admin_sessions(token_hash,expires_at) VALUES(?,?)').bind(await hash(token),now+8*3600*1000),c.env.DB.prepare('DELETE FROM admin_attempts WHERE ip_hash=?').bind(ip)])
+ const username=typeof data?.username==='string'?data.username.trim().toLowerCase():''
+ if(input.length>256||username.length>40)return c.json({error:'로그인 정보를 확인하세요.'},401)
+ let userId='';if(username){const id=await verifyStaff(c,username,input);if(!id)return c.json({error:'로그인 정보를 확인하세요.'},401);userId=id}else{const x=await hash(input),y=await hash(c.env.ADMIN_PASSWORD);let diff=0;for(let i=0;i<x.length;i++)diff|=x.charCodeAt(i)^y.charCodeAt(i);if(diff)return c.json({error:'비밀번호를 확인해 주세요.'},401)}
+ const token=random();await c.env.DB.batch([c.env.DB.prepare('INSERT INTO admin_sessions(token_hash,expires_at,user_id) VALUES(?,?,?)').bind(await hash(token),now+8*3600*1000,userId),c.env.DB.prepare('DELETE FROM admin_attempts WHERE ip_hash=?').bind(ip)])
  setCookie(c,'gm_session',token,{httpOnly:true,secure:new URL(c.req.url).protocol==='https:',sameSite:'Strict',path:'/',maxAge:8*3600});return c.json({ok:true})
 })
-app.use('/api/admin/*',async(c,next)=>{if(!await isAdmin(c))return c.json({error:'관리자 로그인이 필요합니다.'},401);await next()})
+app.use('/api/admin/*',async(c,next)=>{const actor=await getActor(c);if(!actor)return c.json({error:'관리자 로그인이 필요합니다.'},401);const path=new URL(c.req.url).pathname.slice('/api/admin'.length);if(!can(actor,path,c.req.method))return c.json({error:'이 작업에 필요한 권한이 없습니다.'},403);if(!['GET','HEAD'].includes(c.req.method)&&/^\/(content\/|reviews\/|posts(?:\/|$)|media-library\/)/.test(path))return mutationLock(c,next);await next()})
+app.route('/api/admin',staffRoutes)
+app.route('/api/admin',reviewRoutes)
+app.route('/api/admin',operationRoutes)
+app.route('/api/admin',notificationRoutes)
+app.route('/api/admin',metricsAdmin)
 app.route('/api/admin',studio)
 app.route('/api/admin',adminRequests)
 app.post('/api/admin/logout',async c=>{const token=getCookie(c,'gm_session');if(token)await c.env.DB.prepare('DELETE FROM admin_sessions WHERE token_hash=?').bind(await hash(token)).run();deleteCookie(c,'gm_session',{path:'/'});return c.json({ok:true})})
@@ -144,7 +156,7 @@ app.post('/api/admin/upload',async c=>{
  if(!ext)return c.json({error:'JPG, PNG, WebP 이미지 파일만 업로드할 수 있습니다.'},400)
  const key=crypto.randomUUID()+'.'+ext;await c.env.R2.put(key,b,{httpMetadata:{contentType:type}});return c.json({url:'/media/'+key})
 })
-app.get('/media/:key',async c=>{const key=c.req.param('key');if(!/^[a-f0-9-]+\.(png|jpg|webp)$/.test(key))return c.notFound();const published=await c.env.DB?.prepare("SELECT id FROM posts WHERE status='published' AND instr(body,?)>0 LIMIT 1").bind('/media/'+key).first();const content=await loadContent(c.env.DB);const path='/media/'+key;const contentRef=content.doctors.some(d=>d.image===path)||content.videos.some(v=>v.image===path)||content.operations.some(o=>o.verified&&['pricing','parking','accessibility','equipment','careers','legal','sedation'].includes(o.category)&&o.body.includes(']('+path+')'));const caseRef=content.showcases.some(s=>approvedShowcase(s)&&s.category==='case'&&(s.beforeImage===path||s.afterImage===path));const editorialRef=[...content.columns,...content.showcases.filter(approvedShowcase)].some(e=>e.coverImage===path||(e.body.includes(path)&&bodyMedia(e.body).includes(path)));if(!published&&!contentRef&&!caseRef&&!editorialRef&&!await isAdmin(c))return c.notFound();const obj=await c.env.R2?.get(key);if(!obj)return c.notFound();c.header('Content-Type',obj.httpMetadata?.contentType||'application/octet-stream');c.header('Cache-Control','private, no-store');return c.body(obj.body)})
+app.get('/media/:key',async c=>{const key=c.req.param('key');if(!/^[a-f0-9-]+\.(png|jpg|webp)$/.test(key))return c.notFound();const published=await c.env.DB?.prepare("SELECT id FROM posts WHERE status='published' AND instr(body,?)>0 LIMIT 1").bind('/media/'+key).first();const content=await loadContent(c.env.DB);const path='/media/'+key;const contentRef=content.doctors.some(d=>d.image===path)||content.videos.some(v=>v.image===path)||content.operations.some(o=>o.verified&&['pricing','parking','accessibility','equipment','careers','legal','sedation'].includes(o.category)&&o.body.includes(']('+path+')'));const caseRef=content.showcases.some(s=>approvedShowcase(s)&&s.category==='case'&&(s.beforeImage===path||s.afterImage===path));const editorialRef=[...content.columns,...content.showcases.filter(approvedShowcase)].some(e=>e.coverImage===path||(e.body.includes(path)&&bodyMedia(e.body).includes(path)));if(!published&&!contentRef&&!caseRef&&!editorialRef&&!['admin','editor','reviewer'].includes((await getActor(c))?.role||''))return c.notFound();const obj=await c.env.R2?.get(key);if(!obj)return c.notFound();c.header('Content-Type',obj.httpMetadata?.contentType||'application/octet-stream');c.header('Cache-Control','private, no-store');return c.body(obj.body)})
 const basePaths=['/','/treatments','/doctors','/mission','/tour','/directions','/reservation','/contents','/video','/faq','/symptom-checker','/cases','/pricing','/careers','/privacy','/terms','/blog','/notice','/encyclopedia','/visiting','/column']
 app.get('/sitemap.xml',async c=>{const origin=siteOrigin(c.env.PUBLIC_SITE_URL,c.req.url);const dated=[...model(c).columns.map(e=>({path:editorialPath('column',e.key),date:e.modifiedAt})),...model(c).showcases.filter(approvedShowcase).map(e=>({path:editorialPath('showcase',e.key),date:e.modifiedAt||''})),...(await posts(c,'blog')).map((p:any)=>({path:'/blog/'+p.slug,date:p.updated_at})),...(await posts(c,'notice')).map((p:any)=>({path:'/notice/'+p.slug,date:p.updated_at}))];const dates=new Map(dated.filter(p=>Number.isFinite(Date.parse(p.date))).map(p=>[p.path,new Date(p.date).toISOString()]));const list=[...new Set([...basePaths,...model(c).treatments.map(t=>'/treatments/'+t.slug),...model(c).doctors.map(d=>'/doctors/'+d.slug),...dated.map(p=>p.path)])];c.header('Content-Type','application/xml');return c.body('<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'+list.map(p=>'<url><loc>'+esc(origin+p)+'</loc>'+(dates.has(p)?'<lastmod>'+dates.get(p)+'</lastmod>':'')+'</url>').join('')+'</urlset>')})
 app.get('/sitemap-languages.xml',async c=>{const origin=siteOrigin(c.env.PUBLIC_SITE_URL,c.req.url),paths=[...basePaths,...model(c).treatments.map(t=>'/treatments/'+t.slug),...model(c).doctors.map(d=>'/doctors/'+d.slug),...(await posts(c,'blog')).map((p:any)=>'/blog/'+p.slug),...(await posts(c,'notice')).map((p:any)=>'/notice/'+p.slug)];c.header('Content-Type','application/xml');return c.body('<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'+locales.flatMap(l=>[...new Set(paths)].map(p=>'<url><loc>'+esc(origin+localPath(p,l))+'</loc></url>')).join('')+'</urlset>')})

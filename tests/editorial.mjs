@@ -27,7 +27,7 @@ try{
  assert.equal((await anon.request.get(base+'/en/column/'+item.key,{maxRedirects:0})).status(),302)
  const search=await(await anon.request.get(base+'/api/search?q=QA')).json();assert.ok(search.results.some(r=>r.url==='/column/'+item.key))
  for(let i=0;i<10;i++)await save('column','qa-paging-'+i,{...item,key:'qa-paging-'+i,title:'QA 게시물 '+i,category:i%2?'implant':'prevention',body:'검증용 본문입니다.'},'publish')
- await reader.goto(base+'/column?page=2');assert.equal(await reader.locator('.editorial-card').count(),2);assert.equal(await reader.locator('link[rel="canonical"]').getAttribute('href'),base+'/column?page=2');assert.equal((await anon.request.get(base+'/column?page=999')).status(),404)
+ await reader.goto(base+'/column?source=native&page=2');assert.equal(await reader.locator('.editorial-card').count(),2);assert.equal(await reader.locator('link[rel="canonical"]').getAttribute('href'),base+'/column?page=2');assert.equal((await anon.request.get(base+'/column?page=999')).status(),404)
  await reader.goto(base+'/en/column?page=2');assert.equal(await reader.locator('link[rel="canonical"]').getAttribute('href'),base+'/en/column?page=2')
  await reader.goto(base+'/column?category=implant');assert.equal(await reader.locator('.editorial-card').count(),5);assert.match(await reader.locator('meta[name="robots"]').getAttribute('content'),/noindex/)
  for(const width of [320,390,768,1440]){await reader.setViewportSize({width,height:900});assert.ok(await reader.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'board '+width)}

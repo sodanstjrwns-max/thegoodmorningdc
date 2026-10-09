@@ -1,12 +1,15 @@
 import {Hono} from 'hono'
 import {loadContent} from './content'
+import {notifyRequest,dispatchNotifications} from './notifications'
+import {recordEvent} from './metrics'
+import {audit} from './staff'
 export const publicRequests=new Hono<any>()
 export const adminRequests=new Hono<any>()
 const digest=async(s:string)=>Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s)))).map(v=>v.toString(16).padStart(2,'0')).join('')
 const statuses=['new','contacted','confirmed','closed']
 async function cleanup(env:any){
  const rows=(await env.DB.prepare('SELECT id,attachment_key FROM service_requests WHERE expires_at<=? LIMIT 25').bind(Date.now()).all()).results||[]
- for(const r of rows){if(r.attachment_key)await env.R2.delete(r.attachment_key);await env.DB.prepare('DELETE FROM service_requests WHERE id=? AND expires_at<=?').bind(r.id,Date.now()).run()}
+ for(const r of rows){await env.DB.prepare('DELETE FROM notification_outbox WHERE request_id=?').bind(r.id).run();if(r.attachment_key)await env.R2.delete(r.attachment_key);await env.DB.prepare('DELETE FROM service_requests WHERE id=? AND expires_at<=?').bind(r.id,Date.now()).run()}
  await env.DB.prepare('DELETE FROM request_limits WHERE expires_at<=?').bind(Date.now()).run()
 }
 publicRequests.use('*',async(c,next)=>{c.header('Cache-Control','no-store');if(!c.env.DB||!c.env.ADMIN_PASSWORD)return c.json({error:'접수 설정을 확인 중입니다. 지점으로 전화해 주세요.'},503);if(c.req.header('Origin')!==new URL(c.req.url).origin)return c.json({error:'허용되지 않은 요청입니다.'},403);await next()})
@@ -38,12 +41,16 @@ publicRequests.post('/:kind',async c=>{
   if(file)await c.env.R2.put(attachmentKey,await file.arrayBuffer(),{httpMetadata:{contentType:'application/pdf'}})
   await c.env.DB.prepare('INSERT INTO service_requests(id,kind,data_json,attachment_key,created_at,expires_at) VALUES(?,?,?,?,?,?)').bind(id,kind,JSON.stringify(payload),attachmentKey,now,now+(kind==='career'?90:30)*86400000).run()
  }catch(e){if(attachmentKey)await c.env.R2.delete(attachmentKey);throw e}
+ c.executionCtx.waitUntil(notifyRequest(c.env,id).catch(()=>{}))
+ if(c.req.header('DNT')!=='1'&&c.req.header('Sec-GPC')!=='1')c.executionCtx.waitUntil(recordEvent(c.env,kind==='career'?'/careers':'/visiting','form_success',branch).catch(()=>{}))
  return c.json({ok:true,id,message:'접수되었습니다. 담당자 확인 후 연락드립니다. 예약·채용·통역 제공 확정은 아닙니다.'},201)
 })
-adminRequests.get('/requests',async c=>{await cleanup(c.env);const r=await c.env.DB.prepare('SELECT * FROM service_requests WHERE expires_at>? ORDER BY created_at DESC LIMIT 200').bind(Date.now()).all();return c.json({requests:(r.results||[]).map((r:any)=>({id:r.id,kind:r.kind,data:JSON.parse(r.data_json),hasAttachment:!!r.attachment_key,status:r.status,note:r.note,revision:r.revision,createdAt:r.created_at,expiresAt:r.expires_at}))})})
+adminRequests.get('/requests',async c=>{await cleanup(c.env);c.executionCtx.waitUntil(dispatchNotifications(c.env).catch(()=>{}));const r=await c.env.DB.prepare('SELECT * FROM service_requests WHERE expires_at>? ORDER BY created_at DESC LIMIT 200').bind(Date.now()).all();return c.json({requests:(r.results||[]).map((r:any)=>({id:r.id,kind:r.kind,data:JSON.parse(r.data_json),hasAttachment:!!r.attachment_key,status:r.status,note:r.note,assignedTo:r.assigned_to,revision:r.revision,createdAt:r.created_at,expiresAt:r.expires_at}))})})
 adminRequests.post('/requests/:id',async c=>{
  const p=await c.req.json().catch(()=>null);if(!p||!statuses.includes(p.status)||typeof p.note!=='string'||p.note.length>2000||!Number.isInteger(p.revision))return c.json({error:'상태·메모·버전을 확인하세요.'},400)
- const r=await c.env.DB.prepare('UPDATE service_requests SET status=?,note=?,revision=revision+1 WHERE id=? AND revision=? AND expires_at>?').bind(p.status,p.note,c.req.param('id'),p.revision,Date.now()).run()
+ if(p.assignedTo!==undefined&&(typeof p.assignedTo!=='string'||p.assignedTo&&!await c.env.DB.prepare("SELECT id FROM staff_users WHERE id=? AND enabled=1 AND role IN ('admin','coordinator')").bind(p.assignedTo).first()))return c.json({error:'활성 접수 담당자를 선택하세요.'},400)
+ const r=await c.env.DB.prepare('UPDATE service_requests SET status=?,note=?,assigned_to=CASE WHEN ?=1 THEN ? ELSE assigned_to END,revision=revision+1 WHERE id=? AND revision=? AND expires_at>?').bind(p.status,p.note,p.assignedTo!==undefined?1:0,p.assignedTo||'',c.req.param('id'),p.revision,Date.now()).run()
+ if(r.meta.changes)await audit(c,'request.update',c.req.param('id'))
  return r.meta.changes?c.json({ok:true}):c.json({error:'다른 관리자가 수정했거나 접수가 만료되었습니다. 새로고침하세요.'},409)
 })
 adminRequests.get('/requests/:id/attachment',async c=>{

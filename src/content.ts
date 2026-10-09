@@ -29,17 +29,18 @@ export const defaults = {
  vacancy:[] as Vacancy[],
  operation:[] as Operation[]
 }
-export type Editorial={summary:string;seoTitle:string;seoDescription:string;author:string;coverImage:string;coverAlt:string;faq:[string,string][];references:{label:string;url:string}[];publishedAt:string;modifiedAt:string}
+export type Editorial={featured:boolean;summary:string;seoTitle:string;seoDescription:string;author:string;coverImage:string;coverAlt:string;faq:[string,string][];references:{label:string;url:string}[];publishedAt:string;modifiedAt:string}
 export type Column=Editorial&{key:string;category:string;title:string;treatment:string;body:string;medicalReviewed:boolean;reviewedOn:string}
-export type Showcase=Partial<Editorial>&{key:string;category:string;title:string;treatment:string;body:string;beforeImage:string;afterImage:string;beforeDate:string;afterDate:string;caption:string;risks:string;consentConfirmed:boolean;consentRef:string;anonymized:boolean;medicalReviewed:boolean;reviewer:string;reviewedOn:string;sourceUrl:string}
+export type Showcase=Partial<Editorial>&{beforeAlt?:string;afterAlt?:string;duration?:string;visits?:string;key:string;category:string;title:string;treatment:string;body:string;beforeImage:string;afterImage:string;beforeDate:string;afterDate:string;caption:string;risks:string;consentConfirmed:boolean;consentRef:string;anonymized:boolean;medicalReviewed:boolean;reviewer:string;reviewedOn:string;sourceUrl:string}
 export type Vacancy={key:string;title:string;branch:string;role:string;employmentType:string;schedule:string;salary:string;qualifications:string;benefits:string;body:string;deadline:string;accepting:boolean;verified:boolean;source:string}
 export type Operation = {key:string;category:string;branch:string;title:string;body:string;source:string;verified:boolean;effectiveDate:string;items:{name:string;amount:string;unit:string;note:string}[]}
 export type Kind = keyof typeof defaults
 export const kinds=Object.keys(defaults) as Kind[]
 export const keyOf=(kind:Kind,value:any)=>kind==='treatment'||kind==='doctor'?value.slug:kind==='branch'?value.id:value.key
 export const baseline=(kind:Kind,key:string)=>(defaults[kind] as any[]).find(x=>keyOf(kind,x)===key)
-const editorialFields={summary:'',seoTitle:'',seoDescription:'',author:'',coverImage:'',coverAlt:'',faq:[],references:[],publishedAt:'',modifiedAt:''}
-export const normalizeEditorial=(kind:string,value:any)=>['column','showcase'].includes(kind)?{...editorialFields,...value}:value
+const caseFields={beforeAlt:'',afterAlt:'',duration:'',visits:''}
+const editorialFields={featured:false,summary:'',seoTitle:'',seoDescription:'',author:'',coverImage:'',coverAlt:'',faq:[],references:[],publishedAt:'',modifiedAt:''}
+export const normalizeEditorial=(kind:string,value:any)=>['column','showcase'].includes(kind)?{...editorialFields,...(kind==='showcase'?caseFields:{}),...value}:value
 export const templates:Record<Kind,any>={
  treatment:{slug:'',name:'',group:0,tag:'',description:'',symptoms:[''],details:[''],steps:[''],risk:'',doctor:'kang-dowook',faq:[['','']],sections:[{title:'',paragraphs:['']}],strengths:[''],related:[''],sourceLines:''},
  doctor:{slug:'',name:'',role:'',image:'portrait-0',label:'MEDICAL TEAM',text:'',bio:[''],areas:[''],copySource:'홈페이지 소개 문구 · 원장 직접 인용 아님',doubleBoard:false,schedule:'근무 지점과 진료 요일 확인 필요'},
@@ -48,14 +49,14 @@ export const templates:Record<Kind,any>={
  section:{key:'',title:'',body:'',enabled:true,order:10},
  branch:baseBranches[0],channel:initialChannels[0],site:defaults.site[0],
  column:{...editorialFields,key:'',category:'general',title:'',treatment:'',body:'',medicalReviewed:false,reviewedOn:''},
- showcase:{...editorialFields,key:'',category:'case',title:'',treatment:'',body:'',beforeImage:'',afterImage:'',beforeDate:'',afterDate:'',caption:'',risks:'치료 결과와 회복 기간은 개인에 따라 다릅니다.',consentConfirmed:false,consentRef:'',anonymized:false,medicalReviewed:false,reviewer:'',reviewedOn:'',sourceUrl:''},
+ showcase:{...editorialFields,...caseFields,key:'',category:'case',title:'',treatment:'',body:'',beforeImage:'',afterImage:'',beforeDate:'',afterDate:'',caption:'',risks:'치료 결과와 회복 기간은 개인에 따라 다릅니다.',consentConfirmed:false,consentRef:'',anonymized:false,medicalReviewed:false,reviewer:'',reviewedOn:'',sourceUrl:''},
  vacancy:{key:'',title:'',branch:'cheongnyangni',role:'',employmentType:'',schedule:'',salary:'',qualifications:'',benefits:'',body:'',deadline:'',accepting:false,verified:false,source:''},
  operation:{key:'',category:'parking',branch:'cheongnyangni',title:'',body:'',source:'',verified:false,effectiveDate:'',items:[{name:'',amount:'',unit:'',note:''}]}
 }
 // Explicit shape descriptions also drive the form editor. No HTML or executable config.
 export type Shape = 'text'|'number'|'boolean'|{[key:string]:Shape}|[Shape]
 const T:Shape='text', N:Shape='number', B:Shape='boolean'
-const editorialShape={summary:T,seoTitle:T,seoDescription:T,author:T,coverImage:T,coverAlt:T,faq:[[T]] as Shape,references:[{label:T,url:T}] as Shape,publishedAt:T,modifiedAt:T}
+const editorialShape={featured:B,summary:T,seoTitle:T,seoDescription:T,author:T,coverImage:T,coverAlt:T,faq:[[T]] as Shape,references:[{label:T,url:T}] as Shape,publishedAt:T,modifiedAt:T}
 export const shapes:Record<Kind,Shape>={
  treatment:{slug:T,name:T,group:N,tag:T,description:T,symptoms:[T],details:[T],steps:[T],risk:T,doctor:T,faq:[[T]],sections:[{title:T,paragraphs:[T]}],strengths:[T],related:[T],sourceLines:T},
  doctor:{slug:T,name:T,role:T,image:T,label:T,text:T,bio:[T],areas:[T],copySource:T,doubleBoard:B,schedule:T},
@@ -63,7 +64,7 @@ export const shapes:Record<Kind,Shape>={
  branch:{id:T,name:T,phone:T,address:T,station:T,hours:[[T]],note:T,booking:T,kakao:T,parking:T,accessibility:T,schedule:[T],exceptions:[{date:T,hours:T,note:T}]},
  channel:{key:T,title:T,branch:T,type:T,url:T,feedId:T,source:T,enabled:B},site:{key:T,story:[T],promises:[{title:T,text:T}]},
  column:{...editorialShape,key:T,category:T,title:T,treatment:T,body:T,medicalReviewed:B,reviewedOn:T},
- showcase:{...editorialShape,key:T,category:T,title:T,treatment:T,body:T,beforeImage:T,afterImage:T,beforeDate:T,afterDate:T,caption:T,risks:T,consentConfirmed:B,consentRef:T,anonymized:B,medicalReviewed:B,reviewer:T,reviewedOn:T,sourceUrl:T},
+ showcase:{...editorialShape,beforeAlt:T,afterAlt:T,duration:T,visits:T,key:T,category:T,title:T,treatment:T,body:T,beforeImage:T,afterImage:T,beforeDate:T,afterDate:T,caption:T,risks:T,consentConfirmed:B,consentRef:T,anonymized:B,medicalReviewed:B,reviewer:T,reviewedOn:T,sourceUrl:T},
  vacancy:{key:T,title:T,branch:T,role:T,employmentType:T,schedule:T,salary:T,qualifications:T,benefits:T,body:T,deadline:T,accepting:B,verified:B,source:T},
  operation:{key:T,category:T,branch:T,title:T,body:T,source:T,verified:B,effectiveDate:T,items:[{name:T,amount:T,unit:T,note:T}]}
 }
@@ -80,7 +81,7 @@ function shapeCheck(value:any,shape:Shape,path='본문'):void{
 export function validate(kind:Kind,key:string,value:any,publishing=false){
  if(!kinds.includes(kind)||!/^[-a-zA-Z0-9_]{1,75}$/.test(key))throw Error('콘텐츠 종류와 주소를 확인하세요.')
  if(['column','showcase'].includes(kind))Object.assign(value,normalizeEditorial(kind,value))
- shapeCheck(value,shapes[kind]);if(JSON.stringify(value).length>160000)throw Error('콘텐츠가 너무 큽니다.')
+ shapeCheck(value,shapes[kind]);if(publishing&&typeof value.body==='string'&&value.body.includes('[작성 필요]'))throw Error('작성 틀의 미입력 항목을 확인하세요.');if(JSON.stringify(value).length>160000)throw Error('콘텐츠가 너무 큽니다.')
  if(keyOf(kind,value)!==key)throw Error('저장한 주소는 변경할 수 없습니다. 새 항목을 추가하세요.')
  if(['treatment','doctor'].includes(kind)&&!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(key))throw Error('주소는 영문 소문자·숫자·하이픈만 가능합니다.')
  if(value.image&&!/^(?:[a-z0-9-]+|\/media\/[a-f0-9-]+\.(?:png|jpg|webp))$/.test(value.image))throw Error('이미지는 제공 사진 이름 또는 업로드 경로만 가능합니다.')
@@ -115,6 +116,7 @@ export function validate(kind:Kind,key:string,value:any,publishing=false){
   if(value.coverImage&&!imagePath(value.coverImage))throw Error('표지는 업로드 이미지 또는 병원 정적 이미지 경로만 사용하세요.')
   if(value.faq.some((x:any)=>x.length!==2||!x[0].trim()||!x[1].trim())||value.references.some((r:any)=>!r.label.trim()||!safeUrl(r.url)))throw Error('FAQ 질문/답변과 출처 제목/HTTPS 주소를 확인하세요.')
   if(publishing){
+   if(value.body.includes('[작성 필요]'))throw Error('작성 틀의 미입력 항목을 실제 확인 내용으로 바꾸세요.')
    if(value.coverImage&&!value.coverAlt.trim())throw Error('표지의 대체 텍스트가 필요합니다.')
    if(markdown(value.body).images.some(i=>!imagePath(i.src)||!i.alt.trim()))throw Error('본문 이미지는 병원 이미지 경로와 대체 텍스트가 필요합니다.')
   }

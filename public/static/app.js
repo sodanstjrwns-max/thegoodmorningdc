@@ -5,10 +5,11 @@ let toastTimer;function toast(text){const t=$('#toast');t.textContent=text;t.cla
 const motionPreference=matchMedia('(prefers-reduced-motion: reduce)'),root=document.documentElement;
 const siteMotionButton=$('#site-motion-toggle');let sitePaused=false;
 try{sitePaused=sessionStorage.getItem('gm_motion')==='off'}catch{}
-const motionAllowed=()=>!motionPreference.matches&&!navigator.connection?.saveData&&!sitePaused;
+const slowConnection=()=>['slow-2g','2g','3g'].includes(navigator.connection?.effectiveType);
+const motionAllowed=()=>!motionPreference.matches&&!navigator.connection?.saveData&&!slowConnection()&&!sitePaused;
 function syncSiteMotion(){
  const allowed=motionAllowed();root.classList.toggle('motion-enabled',allowed);root.classList.toggle('motion-off',!allowed);
- if(siteMotionButton){siteMotionButton.hidden=false;siteMotionButton.disabled=motionPreference.matches||!!navigator.connection?.saveData;siteMotionButton.setAttribute('aria-pressed',String(!allowed));siteMotionButton.setAttribute('aria-label',allowed?'사이트 전체 모션 끄기':'사이트 전체 모션 켜기');siteMotionButton.lastElementChild.textContent=allowed?'모션 ON':'모션 OFF'}
+ if(siteMotionButton){siteMotionButton.hidden=false;siteMotionButton.disabled=motionPreference.matches||!!navigator.connection?.saveData||slowConnection();siteMotionButton.setAttribute('aria-pressed',String(!allowed));siteMotionButton.setAttribute('aria-label',allowed?'사이트 전체 모션 끄기':'사이트 전체 모션 켜기');siteMotionButton.lastElementChild.textContent=allowed?'모션 ON':'모션 OFF'}
  if(!allowed)$$('.type-ready,.lift-ready').forEach(el=>el.classList.add('type-visible','lift-visible'));
  document.dispatchEvent(new Event('site-motion-change'));
 }
@@ -17,7 +18,7 @@ motionPreference.addEventListener('change',syncSiteMotion);navigator.connection?
 // Retain the original heading structure and accessible name; only visual glyphs are split.
 if(!location.pathname.startsWith('/admin')){
  $$('#main h1,#main h2,.closing-inner h2').forEach(heading=>{
-  if(heading.querySelector('button,input,a'))return;
+  if(heading.querySelector('button,input,a')||!motionAllowed())return;
   const copy=heading.cloneNode(true);$$('br',copy).forEach(br=>br.replaceWith(' '));
   heading.setAttribute('aria-label',heading.getAttribute('aria-label')||copy.textContent.replace(/\s+/g,' ').trim());
   const walker=document.createTreeWalker(heading,NodeFilter.SHOW_TEXT),nodes=[];let node,index=0;

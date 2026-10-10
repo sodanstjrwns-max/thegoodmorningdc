@@ -3,8 +3,10 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "npm run build:editor && vite build",
+    "build": "npm run build:editor && npm run build:performance && vite build",
     "build:editor": "esbuild src/admin-editor.ts --bundle --minify --format=iife --target=es2022 --outfile=public/static/rich-editor.js",
+    "build:performance": "esbuild src/performance-client.ts --bundle --minify --format=iife --target=es2022 --outfile=public/static/performance.js",
+    "test:care": "node tests/care.mjs",
     "test": "node tests/smoke.mjs",
     "typecheck": "tsc --noEmit",
     "db:migrate:local": "wrangler d1 migrations apply webapp-production --local",
@@ -32,12 +34,14 @@
     "@tiptap/starter-kit": "3.31.4",
     "fast-xml-parser": "^5.11.2",
     "hono": "^4.13.8",
-    "marked": "18.1.0"
+    "marked": "18.1.0",
+    "web-vitals": "6.2.3"
   },
   "overrides": {
     "sharp": "0.35.5"
   },
   "devDependencies": {
+    "@axe-core/playwright": "4.13.0",
     "@hono/vite-build": "^1.11.1",
     "@hono/vite-dev-server": "^0.26.1",
     "@playwright/test": "^1.63.0",

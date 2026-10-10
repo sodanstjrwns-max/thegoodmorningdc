@@ -1,4 +1,8 @@
 import type {Content} from './content'
+import {textSummary} from './markdown'
+export const snippet=(text:string,max=180)=>{const value=textSummary(text);return value.length>max?value.slice(0,max-1).trimEnd()+'…':value}
+export function listingQuery(search:URLSearchParams){const q=(search.get('q')||'').trim().slice(0,100),raw=search.get('page')||'1',page=Number(raw);return {q,page,valid:/^[1-9]\d*$/.test(raw)&&Number.isSafeInteger(page)}}
+export function listingPath(base:string,q:string,page:number){const params=new URLSearchParams();if(q)params.set('q',q);if(page>1)params.set('page',String(page));return base+(params.size?'?'+params:'')}
 
 // Indexing is enabled only on the explicitly configured production origin.
 export function productionOrigin(value?:string){
@@ -31,7 +35,7 @@ export function pageDescription(path:string,title:string,c:Content,override=''){
   '/tour':'제공받은 더굿모닝치과 실제 공간 사진, CT·구강스캐너·원내 기공소와 환자 상태 관찰 장비를 소개합니다.',
   '/contents':'원장 칼럼·설명 영상·건강정보·백과사전·증상별 안내·FAQ를 한곳에서 찾아보세요.',
   '/blog':'병원이 게시한 건강정보와 청량리·광명 공식 네이버 블로그의 최신 글을 구분하여 안내합니다.',
-  '/column':'강도욱 원장의 진료 철학과 환자 이야기를 공식 인블로그 원문에서 읽어보세요.',
+  '/column':'더굿모닝치과의 공개 칼럼과 공식 인블로그 글을 출처·주제별로 검색하세요. 진료 과정, 주의사항과 의료진의 설명을 읽어보세요.',
   '/notice':'더굿모닝치과의 진료·내원 안내와 병원 소식을 확인하세요.',
   '/symptom-checker':'불편한 증상에 맞는 진료 정보를 4단계 선택형 안내로 찾아보세요. 의료 진단이 아니며 응답은 서버에 저장하지 않습니다.',
   '/cases':'치료사례의 환자 동의·비식별화·개인차 고지 기준을 안내합니다. 승인되지 않은 환자사진은 공개하지 않습니다.',
@@ -40,7 +44,7 @@ export function pageDescription(path:string,title:string,c:Content,override=''){
   '/terms':'홈페이지 의료정보의 이용 범위, 진료 예약, 저작권과 콘텐츠 이용 안내입니다.'
  }
  const text=override||(treatment?`${treatment.name}: ${treatment.description} 치료 과정·주의사항·자주 묻는 질문과 관련 의료진을 확인하세요.`:doctor?`${doctor.name} 원장 · ${doctor.role}. ${doctor.bio.slice(0,2).join(' · ')}. 전체 약력과 진료 분야를 확인하세요.`:descriptions[path]||title)
- return plain(text).slice(0,230)+' '+c.branches.map(b=>b.name+' '+b.phone).join(' · ')
+ return snippet(text)
 }
 const days=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday']
 export function clinicSchemas(c:Content,origin:string){
@@ -54,7 +58,7 @@ export function clinicSchemas(c:Content,origin:string){
 export function pageSchemas(c:Content,origin:string,path:string,title:string,description:string,extra:object[]){
  const url=origin+path,medical=path.startsWith('/treatments/')
  return [...clinicSchemas(c,origin),{'@context':'https://schema.org','@type':medical?'MedicalWebPage':'WebPage','@id':url+'#webpage',url,name:title,description,inLanguage:'ko-KR',isPartOf:{'@id':origin+'/#website'},publisher:{'@id':origin+'/#organization'},...(medical?{about:{'@type':'MedicalProcedure',name:c.treatments.find(t=>path.endsWith('/'+t.slug))?.name}}:{})},
- {'@context':'https://schema.org','@type':'BreadcrumbList',itemListElement:breadcrumbs(path,title).map((b,i)=>({'@type':'ListItem',position:i+1,name:b.name,item:origin+b.path}))},...extra]
+ {'@context':'https://schema.org','@type':'BreadcrumbList',itemListElement:breadcrumbs(path.split('?')[0],title).map((b,i,a)=>({'@type':'ListItem',position:i+1,name:b.name,item:i===a.length-1?url:origin+b.path}))},...extra]
 }
 export function llmIndex(c:Content,origin:string,preview:boolean){
  return `# 더굿모닝치과\n\n> 환자의 불편함을 한 번 더 듣는 치과. 1990년부터 이어온 진료의 마음.\n\n${preview?'제작 미리보기이며 검색 색인 대상이 아닙니다.\n\n':''}의료정보는 개인의 진단을 대신하지 않습니다. 상담·검사 후 치료 적합성과 비용을 안내합니다.\n\n## 공식 안내\n`+

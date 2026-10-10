@@ -2,13 +2,14 @@ import en from '../public/static/locales-en.json'
 import ja from '../public/static/locales-ja.json'
 import zh from '../public/static/locales-zh.json'
 import {esc} from './ui'
+import {snippet} from './seo'
 export type Locale='en'|'ja'|'zh'
 // Only complete, checked languages are advertised. JA/ZH generation was rate-limited.
 export const locales:Locale[]=['en']
 export const dictionaries:Record<Locale,Record<string,string>>={en,ja,zh}
 export const normalize=(s:string)=>s.replace(/\s+/g,' ').trim()
 const decode=(s:string)=>s.replace(/&(?:amp|lt|gt|quot|#39|#x27|nbsp);/g,c=>({'&amp;':'&','&lt;':'<','&gt;':'>','&quot;':'"','&#39;':"'",'&#x27;':"'",'&nbsp;':' '}[c]||c))
-export function translate(s:string,locale:Locale){const key=normalize(decode(s));return dictionaries[locale][key]||s}
+export function translate(s:string,locale:Locale){const key=normalize(decode(s));const translated=dictionaries[locale][key];if(translated)return translated;const numbered=/^(.*) · (\d+)페이지$/.exec(key);if(numbered&&locale==='en')return (dictionaries.en[numbered[1]]||numbered[1])+' · Page '+numbered[2];return s}
 export const localPath=(path:string,locale:string)=>path==='/'?'/'+locale:'/'+locale+path
 export function languageLinks(path:string,origin:string){return ['ko',...locales].map(l=>`<link rel="alternate" hreflang="${l==='zh'?'zh-Hans':l}" href="${esc(origin+(l==='ko'?path:localPath(path,l)))}">`).join('')+`<link rel="alternate" hreflang="x-default" href="${esc(origin+path)}">`}
 export const languageSwitch=(path:string,current='ko')=>`<nav class="locale-switch" aria-label="Language">${[['ko','한국어'],['en','English'],['ja','日本語'],['zh','中文']].filter(([l])=>l==='ko'||locales.includes(l as Locale)).map(([l,name])=>`<a href="${l==='ko'?path:localPath(path,l)}" lang="${l}" hreflang="${l==='zh'?'zh-Hans':l}" ${l===current?'aria-current="page"':''}>${name}</a>`).join('')}</nav>`
@@ -26,10 +27,11 @@ export function localizeHTML(html:string,locale:Locale,path:string,origin:string
   }
   if(/^<style\b/i.test(block))return block
   return block.split(/(<[^>]+>)/g).map(token=>{
-   if(token.startsWith('<'))return token.replace(/(alt|title|aria-label|placeholder|content)="([^"]*)"/g,(_m,a,v)=>`${a}="${esc(translate(decode(v),locale))}"`).replace(/href="(\/[^"#]*)"/g,(m,p)=>/^\/(?:static|media|films|api|admin|en|ja|zh)(?:\/|\?|$)/.test(p)?m:`href="${localPath(p,locale)}"`)
+   if(token.startsWith('<'))return token.replace(/(alt|title|aria-label|placeholder|content)="([^"]*)"/g,(_m,a,v)=>`${a}="${esc(translate(decode(v),locale))}"`).replace(/(href|action)="(\/[^" ]*)"/g,(m,a,p)=>/^\/(?:static|media|films|api|admin|en|ja|zh)(?:\/|\?|#|$)/.test(p)?m:`${a}="${localPath(p,locale)}"`)
    const translated=translate(decode(token),locale);return translated===decode(token)?token:esc(translated)
   }).join('')
  }).join('')
  if(locale==='en'&&path==='/')output=output.replace(/<h1\b[\s\S]*?<\/h1>/,'<h1 aria-label="A dental clinic that listens once more."><span class="hero-title-line hero-title-intro"><span>A dental clinic that</span></span><span class="hero-title-line hero-title-main"><span><em>listens once more.</em></span></span></h1>')
+ output=output.replace(/(<meta (?:name="(?:description|twitter:description)"|property="og:description") content=")([^"]*)(")/g,(_m,a,v,b)=>a+esc(snippet(decode(v),180))+b)
  return output.replace('<html lang="ko">',`<html lang="${locale==='zh'?'zh-Hans':locale}" data-locale="${locale}">`).replace(/<nav class="locale-switch"[\s\S]*?<\/nav>/,languageSwitch(path,locale)).replace(/<link rel="canonical" href="[^"]*">/,`<link rel="canonical" href="${esc(localizedUrl)}">`).replace(/<meta property="og:url" content="[^"]*">/,`<meta property="og:url" content="${esc(localizedUrl)}">`).replace(/<meta property="og:locale" content="[^"]*">/,`<meta property="og:locale" content="${{en:'en_US',ja:'ja_JP',zh:'zh_CN'}[locale]}">`).replace(/(<main\b[^>]*id="main"[^>]*>)/,`$1<aside class="translation-notice wrap">${notices[locale]}</aside>`).replace('</body>',`<script src="/static/locale.js?v=13" defer></script></body>`)
 }

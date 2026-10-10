@@ -11,7 +11,7 @@ export function markdown(text:string){
   switch(t.type){
    case 'space':return ''
    case 'html':return escape(t.text)
-   case 'heading':{const id='section-'+(++number),label=t.text.replace(/[*_`\[\]]/g,'');headings.push({id,text:label});return `<h${Math.min(3,Math.max(2,t.depth))} id="${id}">${nested()}</h${Math.min(3,Math.max(2,t.depth))}>`}
+   case 'heading':{const id='section-'+(++number),label=t.text.replace(/[*_`\[\]]/g,'');const level=headings.length?Math.min(3,Math.max(2,t.depth)):2;headings.push({id,text:label});return `<h${level} id="${id}">${nested()}</h${level}>`}
    case 'paragraph':return `<p>${nested()}</p>`
    case 'text':return t.tokens?nested():escape(t.text)
    case 'escape':return escape(t.text)
@@ -33,5 +33,5 @@ export function markdown(text:string){
  const html=render(marked.lexer(text.slice(0,40000),{gfm:true}))
  return {html,headings,images}
 }
-export const textSummary=(s:string)=>s.replace(/!\[[^\]]*\]\([^)]*\)/g,'').replace(/<[^>]*>/g,'').replace(/[#*_`>|~]/g,'').replace(/\[([^\]]*)\]\([^)]*\)/g,'$1').replace(/\s+/g,' ').trim()
+export const textSummary=(s:string)=>s.replace(/!\[[^\]]*\]\([^)]*\)/g,'').replace(/<[^>]*>/g,'').replace(/~~/g,'').replace(/[#*_`>|]/g,'').replace(/\[([^\]]*)\]\([^)]*\)/g,'$1').replace(/\s+/g,' ').trim()
 export const bodyMedia=(s:string)=>markdown(s).images.map(i=>i.src)

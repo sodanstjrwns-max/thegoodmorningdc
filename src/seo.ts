@@ -10,7 +10,7 @@ export function productionOrigin(value?:string){
 }
 export const siteOrigin=(configured:string|undefined,requestUrl:string)=>productionOrigin(configured)||new URL(requestUrl).origin
 export const launchIndexable=(configured:string|undefined,requestUrl:string)=>!!productionOrigin(configured)&&productionOrigin(configured)===new URL(requestUrl).origin
-export const privatePath=(path:string)=>/^\/(?:admin|api|media)(?:\/|$)/.test(path)
+export const privatePath=(path:string)=>/^\/(?:admin|api|media|handover)(?:\/|$)/.test(path)
 export const plain=(text:string)=>text.replace(/\s+/g,' ').trim()
 const labels:Record<string,string>={'/':'홈','/treatments':'진료 안내','/doctors':'의료진','/mission':'더굿모닝 약속','/tour':'공간·장비','/directions':'오시는 길','/reservation':'상담·예약','/contents':'치과 콘텐츠','/video':'원장 설명 영상','/faq':'자주 묻는 질문','/symptom-checker':'증상별 정보','/cases':'치료사례 안내','/pricing':'비급여 진료비','/careers':'채용 안내','/privacy':'개인정보 안내','/terms':'이용 안내','/blog':'건강정보','/notice':'병원 소식','/encyclopedia':'치과 백과사전','/visiting':'해외·타지역 내원','/column':'원장 칼럼'}
 export function breadcrumbs(path:string,title:string){

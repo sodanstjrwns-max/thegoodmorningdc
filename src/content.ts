@@ -1,4 +1,5 @@
 import * as source from './data'
+import {readQuery} from './resilience'
 import {markdown,imagePath} from './markdown'
 
 export const nativeSections = ['hero-section','care-priorities','opening-films','sedation-story','inclusive-care','trust','philosophy','question-story','why-goodmorning','treatments','preservation-assembly','revision-story','physician-deck','clinic-space-story','language-reveal','journal','visit-story','visit']
@@ -168,7 +169,7 @@ export function assemble(rows:any[]=[]){
  const generalFaq=sort(sets.faq).map(x=>[x.question,x.answer] as [string,string]);const treatments=sets.treatment as source.Treatment[]
  return {treatments,doctors:sets.doctor as typeof baseDoctors,videos:sort(sets.video) as typeof defaults.video,branches:sets.branch as typeof baseBranches,generalFaq,allFaq:[...generalFaq,...treatments.flatMap(t=>t.faq)],sections:sort(sets.section) as typeof defaults.section,channels:sets.channel as typeof initialChannels,operations:sets.operation as Operation[],columns:sets.column as Column[],showcases:sets.showcase as Showcase[],vacancies:sets.vacancy as Vacancy[],missionStory:sets.site[0].story as string[],missionPromises:sets.site[0].promises as typeof source.missionPromises}
 }
-export async function loadContent(db:any){if(!db)return assemble();const r=await db.prepare('SELECT kind,key,live_json FROM content_entries WHERE live_json IS NOT NULL').all();return assemble(r.results||[])}
+export async function loadContent(db:any){if(!db)return assemble();const r=await readQuery<any>(()=>db.prepare('SELECT kind,key,live_json FROM content_entries WHERE live_json IS NOT NULL').all(),'content_load');return assemble(r.results||[])}
 export function validateReferences(content:Content){
  const ts=new Set(content.treatments.map(t=>t.slug)),ds=new Set(content.doctors.map(d=>d.slug))
  for(const t of content.treatments)if(!ds.has(t.doctor)||t.related.some(s=>!ts.has(s)))throw Error('담당 의료진 또는 관련 진료가 아직 공개되지 않았습니다.')

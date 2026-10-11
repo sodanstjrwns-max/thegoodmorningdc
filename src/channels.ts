@@ -1,5 +1,6 @@
 import {XMLParser} from 'fast-xml-parser'
 import {type Content,safeUrl} from './content'
+import {readQuery} from './resilience'
 export type FeedItem={title:string;url:string;date:string}
 const array=(v:any)=>!v?[]:Array.isArray(v)?v:[v]
 const text=(s:any)=>String(typeof s==='object'?s?.['#text']||'':s||'').replace(/<[^>]*>/g,'').slice(0,300)
@@ -37,9 +38,19 @@ export async function refreshChannel(db:any,channel:Content['channels'][number],
 export async function channelListing(db:any,content:Content,waitUntil?:(promise:Promise<any>)=>void){
  const result=[]
  for(const ch of content.channels.filter(c=>c.enabled)){
-  const cached=await db?.prepare('SELECT * FROM channel_cache WHERE key=?').bind(ch.key+':'+ch.feedId).first()
-  if(db&&feedUrl(ch)&&(!cached||cached.next_attempt<Date.now())&&waitUntil)waitUntil(refreshChannel(db,ch))
-  result.push({...ch,items:cached?JSON.parse(cached.items_json) as FeedItem[]:[],fetchedAt:cached?.fetched_at||0,stale:!!cached?.error})
+  // External channel previews are optional. Their cache must never take down a clinic page.
+  let cached:any=null,stale=false,items:FeedItem[]=[]
+  try{
+   cached=await readQuery<any>(()=>db?.prepare('SELECT * FROM channel_cache WHERE key=?').bind(ch.key+':'+ch.feedId).first(),'channel_cache')
+   if(cached){
+    const value=JSON.parse(cached.items_json)
+    if(!Array.isArray(value))throw Error('Invalid channel cache')
+    items=value.filter((i:any)=>i&&typeof i.title==='string'&&typeof i.url==='string'&&typeof i.date==='string'&&safeUrl(i.url,ch.type==='youtube'?['www.youtube.com']:ch.type==='column'?['thegoodmorningdental.com']:['blog.naver.com','m.blog.naver.com'])).slice(0,12)
+   }
+  }catch{stale=true;console.warn('Optional channel cache unavailable')}
+  if(db&&feedUrl(ch)&&(!cached||cached.next_attempt<Date.now())&&waitUntil)waitUntil(refreshChannel(db,ch).catch(()=>{console.warn('Optional channel refresh unavailable')}))
+  const stamp=Number(cached?.fetched_at||0)
+  result.push({...ch,items,fetchedAt:Number.isFinite(stamp)&&stamp>=0&&stamp<=8640000000000000?stamp:0,stale:stale||!!cached?.error})
  }
  return result
 }

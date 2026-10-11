@@ -13,7 +13,7 @@
 - 미해결500/검색 비공개/개인정보·실물 기기·병원 검수 보류를 그대로 고지합니다. 안내서 공개가 최종 납품 승인이나 오류 해결을 의미하지 않습니다.
 - `MESSAGE.txt`와 `CHECKLIST.csv`를 현재 단일 병원과 안내서 중심으로 수정했습니다. 실제 발송은 하지 않았습니다.
 - `node handoff/build.mjs`는 현재 안내서로 V23 PDF/DOCX/HTML을 비공개 출력하는 선택 명령입니다. 기존 R1 파일을 덮어쓰지 않습니다.
-- 검증·배포 상태: 진행 중. `node tests/handover.mjs`에서 공개200/DB독립/noindex/모바일/접근성/인쇄/no-JS를 확인합니다.
+- 로컬 타입검사·빌드·`node tests/handover.mjs` PASS: 공개200/DB조회0회/항상noindex, Chromium·WebKit10화면폭, WCAG 자동검사, 목차11개, 인쇄/PDF, 복사 및 실패 대안, no-JS. PC/모바일 화면과 인쇄 본문을 확인했습니다. 실제 도메인 배포 검증은 진행 중이며 실물 기기 검수와 구분합니다.
 
 ## FinalAudit22 기록과 미해결 사항
 

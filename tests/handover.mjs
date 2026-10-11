@@ -12,7 +12,7 @@ const isolated=await app.fetch(new Request('https://thegoodmorningdc.kr/handover
 assert.equal(isolated.status,200);assert.match(isolated.headers.get('x-robots-tag'),/noindex/);assert.equal(dbCalls,0)
 const isolatedHtml=await isolated.text();assert.match(isolatedHtml,/SEO/);assert.match(isolatedHtml,/AEO/);assert.match(isolatedHtml,/최종 납품 승인·정식 오픈은 보류/)
 assert.doesNotMatch(isolatedHtml,/ADMIN_PASSWORD|CLOUDFLARE_API_TOKEN|database_id|\.sources\/|[가-힣]{2,}은행\s*\d{3}/)
-const source=fs.readFileSync('handoff/DELIVERY.md','utf8');assert.ok(source.length<40000,'Markdown renderer must not truncate source')
+const source=fs.readFileSync('handoff/DELIVERY.md','utf8');assert.ok(source.length<40000,'Markdown renderer must not truncate source');assert.doesNotMatch(source,/\uFFFD/,'Source must not contain replacement characters')
 assert.ok(source.includes('초안 저장만으로 환자 화면이 바뀌지는 않습니다.'))
 assert.ok(source.includes('네이버 예약이나 톡톡 대화가 홈페이지 관리자에 자동으로 모이는 구조는 아닙니다.'))
 const r=await fetch(base+'/handover');assert.equal(r.status,200);assert.match(r.headers.get('x-robots-tag'),/noindex/);assert.match(r.headers.get('content-security-policy'),/script-src 'self'/);assert.equal(r.headers.get('set-cookie'),null)

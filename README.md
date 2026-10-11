@@ -1,6 +1,22 @@
 # 더굿모닝치과 — Good Morning Web
 
-## 현재 상태 (2026-10-09)
+## 현재 상태 — Foundations18 + Care17 (2026-10-11)
+
+- **배포·GitHub 업로드 완료**. 앱 커밋 `ae3c03d`, 스냅샷 https://12de070f.webapp-2-9y5.pages.dev . 서비스 https://webapp-2-9y5.pages.dev/ , 관리자 `/admin`.
+- GitHub: https://github.com/sodanstjrwns-max/thegoodmorningdc (`main`). 사용자 선택 저장소에 업로드했으며 비밀번호·토큰·비공개 SQL·원자료는 제외합니다.
+- 진료31페이지와 `/visiting`에 상담 준비 카드32개, 인쇄/PDF 저장. 건강정보 입력·저장 없음. 금식·약 중단 등 개인별 의료 지시를 자동 생성하지 않습니다.
+- 의료진5명 소개에 기존 진료의 확인 과정·한계·질문 연결. 강도욱 원장 직접 인용은 제공 설문으로 확인했고, 다른 의료진의 개인 인터뷰·고유 방침을 지어내지 않았습니다.
+- 모바일 실제 사진9종의 480/800px 파생 이미지, 정확한 이미지 크기, 느린 연결의 자동 영상 로딩 제한. 입력 오류 요약·필드 연결·포커스 복귀, 입력 중 고정 CTA 숨김, 색 대비 보완.
+- 페이지별 설명문에서 반복 전화번호를 제거하고 본문 기반 180자 이내 요약 사용. H1 하나·본문 제목 단계, OG/Twitter 제목·설명·이미지 대체텍스트, 구조화 데이터와 실제 FAQ 일치 확인. 검색 순위·AI 인용·리치결과는 보장하지 않습니다.
+- `/column`, `/cases`는 검색/필터를 보존한 캐노니컬과 검색 결과 noindex. `/blog?q=...&page=...`, `/notice?q=...&page=...`는 서버 검색·9개 단위 페이지 나누기. 잘못된 페이지 번호는404. 영문 검색과 내부 문서 앵커는 영어 경로를 유지합니다.
+- 성능 집계는 상담 집계와 별도 설정이며 **운영 기본 OFF**. POST `/api/performance`는 활성화 시 LCP/INP/CLS의 구간·공개 경로·화면 분류만 합산합니다. 원시값·DOM·입력내용·방문자ID 제외, DNT/GPC 존중. `/api/admin/performance/settings` 및 `/admin` 집계 탭에서 관리합니다. 기존 D1 operation_settings/event_daily 재사용, 새 migration 없음.
+- 로컬 검증: 기존 navigation/smoke/studio/SEO/services/locales/editorial/operations 회귀 통과. `npm run test:care`: Chromium·WebKit 주요6경로 자동 접근성/48화면폭, 키보드·인쇄·폼 오류·느린 연결·no-JS·집계 제한 통과. 실제 iPhone/Android·VoiceOver/TalkBack 검사는 하지 않았습니다.
+- 실제 배포 검증: `TEST_URL=https://webapp-2-9y5.pages.dev npm run test:foundations` 통과. 한·영120경로, 제목 계층/메타/캐노니컬/FAQ, 480화면폭, 영어 검색/앵커, 공개 수가32항목과 원본 PDF 일치. 실제 운영에 시험 게시물이나 환자 자료를 등록하지 않았습니다.
+- 전후 운영 SQL을 독립 복원하여 CMS44건·게시물3건·접수/직원/운영설정/집계의 모든 값 동일 확인. 비공개 백업 `.sources/foundations-release/{before-deploy,after-deploy}.sql`, 검사 기록 `preservation-check.json` 및 `test-results/foundations-production.json`.
+- 기존 공식 홈페이지·인블로그·도메인/DNS 보존. `PUBLIC_SITE_URL` 미설정으로 검증 주소 **noindex 유지**. 메일·상담 집계·성능 집계 OFF. 다음 단계는 병원 담당자의 실기기/의료·개인정보 문안 확인과 별도 승인 후 정식 도메인 전환입니다.
+- 이전 R1 PDF/Word/ZIP은 역사 기록이며 이번 기능까지 자동 갱신된 자료가 아닙니다. 아래 Operations16·Editorial15 절은 이전 릴리스 기록입니다.
+
+## 이전 상태 (2026-10-09)
 
 ### Operations 16 — 7개 운영 개선 반영 완료
 - 현재 앱 기준: `1a54192` (기능 커밋 `948334d`), 스냅샷 https://d8ca0fac.webapp-2-9y5.pages.dev . 아래 Editorial15/R1은 이전 이력입니다.

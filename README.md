@@ -9,7 +9,8 @@
 - 출처: https://thegoodmorningdental.com/ , https://www.youtube.com/watch?v=EIBOfm2xcOM , https://www.youtube.com/watch?v=MPPSAHAajHc . 링크 데이터는 `src/content.ts`, 렌더링은 `src/pages.ts`·`src/ui.ts`입니다. CMS 데이터 모델/DB 마이그레이션·운영 데이터 쓰기·DNS 변경은 없습니다.
 - 검증: `node tests/broadcast-talk.mjs` — 한·영 Chromium/WebKit 80화면폭, 새 창 목적지(가로채기 검사), 방송 섹션 접근성, no-JS. 운영 검사에는 `TEST_URL=https://webapp-2-9y5.pages.dev`를 지정합니다.
 - 로고 교체·칼럼 전체 아카이브·장비 이미지 추가는 이번 범위에 포함하지 않습니다. 공개 수가32항목/PDF·의료진5명·단일 병원·noindex·집계 OFF를 유지합니다. 신규 도메인 활성화/검색 공개 전환은 별도 작업입니다.
-- 배포·검증 상태: 진행 중. 기존 BYOK Pages `webapp-2`, GitHub `sodanstjrwns-max/thegoodmorningdc` main을 사용합니다.
+- 배포·검증 완료: 앱 `64c1dbd`, 스냅샷 https://b5b0db45.webapp-2-9y5.pages.dev , 운영 https://webapp-2-9y5.pages.dev . 기존 BYOK Pages `webapp-2`, GitHub `sodanstjrwns-max/thegoodmorningdc` main 반영 완료.
+- 로컬 타입검사·빌드·`npm test` 전체 PASS. 방송/톡톡 검사는 로컬·운영 각각 한·영 Chromium/WebKit 80화면폭·외부 링크 목적지·접근성·no-JS PASS. 단일 병원 검사는 로컬·운영 각각120경로·72화면폭·수가32항목·PDF 원본 일치 PASS. 실물 iPhone/Android 및 실제 톡톡 메시지 송수신 검사는 하지 않았습니다.
 
 ## Hero20 — 메인 영상 하단 여백 정리 (2026-10-11)
 

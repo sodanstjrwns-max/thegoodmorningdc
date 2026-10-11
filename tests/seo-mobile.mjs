@@ -15,11 +15,11 @@ for(const [url,indexable,status] of [['https://clinic.example/',true,200],['http
 }
 assert.match(await (await lib.app.request('https://preview.example/robots.txt',{},env)).text(),/Disallow: \/\n/)
 const robots=await (await lib.app.request('https://clinic.example/robots.txt',{},env)).text();assert.match(robots,/Sitemap: https:\/\/clinic.example\/sitemap.xml/);assert.doesNotMatch(robots,/example\/\//)
-const data=lib.assemble(),schemas=lib.clinicSchemas(data,'https://clinic.example');assert.equal(schemas.filter(s=>s['@type']==='Dentist').length,2)
+const data=lib.assemble(),schemas=lib.clinicSchemas(data,'https://clinic.example');assert.equal(schemas.filter(s=>s['@type']==='Dentist').length,1)
 assert.equal(data.channels.find(c=>c.key==='instagram-cheongnyangni').url,'https://www.instagram.com/_thegoodmorning/')
-for(const [id,place] of [['cheongnyangni','19524548'],['gwangmyeong','2006007864']])assert.equal(schemas.find(s=>s['@id']==='https://clinic.example/#'+id).hasMap,'https://map.naver.com/p/entry/place/'+place)
+for(const [id,place] of [['cheongnyangni','19524548']])assert.equal(schemas.find(s=>s['@id']==='https://clinic.example/#'+id).hasMap,'https://map.naver.com/p/entry/place/'+place)
 for(const branch of data.branches){const s=schemas.find(s=>s['@id']==='https://clinic.example/#'+branch.id);assert.equal(s.telephone,branch.phone);assert.equal(s.address.streetAddress,branch.address);assert.equal(s.openingHoursSpecification.length,branch.schedule.flatMap(s=>s.split(',').filter(Boolean)).length)}
-const edited=structuredClone(data);edited.branches[1].phone='02-0000-0000';edited.branches[1].exceptions=[{date:'2026-12-25',hours:'',note:'휴진'}];const changed=lib.clinicSchemas(edited,'https://clinic.example').find(s=>s['@id']==='https://clinic.example/#gwangmyeong');assert.equal(changed.telephone,'02-0000-0000');assert.equal(changed.specialOpeningHoursSpecification[0].opens,'00:00')
+const edited=structuredClone(data);edited.branches[0].phone='02-0000-0000';edited.branches[0].exceptions=[{date:'2026-12-25',hours:'',note:'휴진'}];const changed=lib.clinicSchemas(edited,'https://clinic.example').find(s=>s['@id']==='https://clinic.example/#cheongnyangni');assert.equal(changed.telephone,'02-0000-0000');assert.equal(changed.specialOpeningHoursSpecification[0].opens,'00:00')
 assert.ok(fs.statSync('public/static/fonts/GoodMorningSans.woff2').size<500000)
 const browser=await chromium.launch({args:['--no-sandbox','--disable-dev-shm-usage']})
 const context=await browser.newContext({viewport:{width:1440,height:900},reducedMotion:'reduce'}),page=await context.newPage(),errors=[]
@@ -38,7 +38,7 @@ try{
   const description=await page.locator('meta[name="description"]').getAttribute('content');assert.ok(description.length>30);assert.ok(!descriptions.has(description),'unique description '+path);descriptions.add(description)
   assert.equal(await page.locator('link[rel="canonical"]').getAttribute('href'),url)
   assert.equal(await page.locator('meta[property="og:description"]').getAttribute('content'),description)
-  const all=await page.locator('script[type="application/ld+json"]').evaluate(el=>JSON.parse(el.textContent));assert.equal(all.filter(s=>s['@type']==='Dentist').length,2)
+  const all=await page.locator('script[type="application/ld+json"]').evaluate(el=>JSON.parse(el.textContent));assert.equal(all.filter(s=>s['@type']==='Dentist').length,1)
   const crumbs=all.find(s=>s['@type']==='BreadcrumbList').itemListElement;assert.equal(crumbs.at(-1).item,url)
   if(path!=='/'){const visible=await page.locator('.page-breadcrumbs li').allTextContents();assert.deepEqual(visible,crumbs.map(c=>c.name))}
   if(path.startsWith('/treatments/')){assert.equal(await page.locator('#care-summary').count(),1);assert.equal(crumbs.length,3);assert.ok(all.some(s=>s['@type']==='MedicalWebPage'))}
@@ -53,8 +53,8 @@ try{
  assert.deepEqual(errors,[])
  // Mobile menu links, selected branch and search work in touch emulation.
  const touch=await browser.newContext({viewport:{width:390,height:844},isMobile:true,hasTouch:true,reducedMotion:'reduce'}),tp=await touch.newPage();tp.on('pageerror',e=>errors.push(e.message))
- await tp.goto(base+'/');await tp.locator('.menu-toggle').tap();await tp.locator('#mobile-search-open').tap();await tp.locator('#site-search').fill('수가');await tp.waitForSelector('.search-result');assert.ok(await tp.locator('.search-result[href="/pricing"]').count()>0);await tp.locator('#search-dialog .dialog-close').tap();await tp.locator('.menu-toggle').tap();await tp.locator('#header-branch-select').selectOption('gwangmyeong');assert.match(await tp.locator('.mobile-bottom .branch-phone').getAttribute('href'),/0260132828/)
+ await tp.goto(base+'/');await tp.locator('.menu-toggle').tap();await tp.locator('#mobile-search-open').tap();await tp.locator('#site-search').fill('수가');await tp.waitForSelector('.search-result');assert.ok(await tp.locator('.search-result[href="/pricing"]').count()>0);await tp.locator('#search-dialog .dialog-close').tap();await tp.locator('.menu-toggle').tap();assert.equal(await tp.locator('#header-branch-select').count(),0);assert.match(await tp.locator('.mobile-bottom .branch-phone').getAttribute('href'),/029693776/)
  await tp.goto(base+'/pricing');await tp.screenshot({path:'test-results/audit-pricing-mobile.png',fullPage:true});await touch.close();assert.deepEqual(errors,[])
- console.log(`PASS SEO/AEO: ${urls.length} URLs, unique descriptions, canonical/OG, two clinic entities, breadcrumb parity, 31 visible care summaries, production/preview/private/error indexing rules, absolute llms index.`)
+ console.log(`PASS SEO/AEO: ${urls.length} URLs, unique descriptions, canonical/OG, one clinic entity, breadcrumb parity, 31 visible care summaries, production/preview/private/error indexing rules, absolute llms index.`)
  console.log(`PASS mobile: ${urls.length*6} route-width combinations, stable question anchors, video topic filters, six latest posts, public fee footer, touch menu/search/branch. Browser errors: 0.`)
 }finally{await browser.close()}

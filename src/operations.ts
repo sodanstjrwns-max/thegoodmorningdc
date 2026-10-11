@@ -21,7 +21,7 @@ operationRoutes.delete('/media-library/:key',async c=>{
  await c.env.R2.delete(key);await audit(c,'media.delete',key);return c.json({ok:true})
 })
 operationRoutes.get('/link-options',async c=>{
- const content=await loadContent(c.env.DB);return c.json({links:[...content.treatments.map(t=>({title:t.name,url:'/treatments/'+t.slug,type:'진료',keywords:t.description})),...content.columns.map(e=>({title:e.title,url:'/column/'+e.key,type:'칼럼',keywords:e.summary})),...content.showcases.map(e=>({title:e.title,url:'/cases/'+e.key,type:'사례',keywords:e.summary||''})),{title:'비급여 수가표',url:'/pricing',type:'안내',keywords:''},{title:'지점·예약 안내',url:'/reservation',type:'안내',keywords:''}]})
+ const content=await loadContent(c.env.DB);return c.json({links:[...content.treatments.map(t=>({title:t.name,url:'/treatments/'+t.slug,type:'진료',keywords:t.description})),...content.columns.map(e=>({title:e.title,url:'/column/'+e.key,type:'칼럼',keywords:e.summary})),...content.showcases.map(e=>({title:e.title,url:'/cases/'+e.key,type:'사례',keywords:e.summary||''})),{title:'비급여 수가표',url:'/pricing',type:'안내',keywords:''},{title:'예약 안내',url:'/reservation',type:'안내',keywords:''}]})
 })
 operationRoutes.get('/content-audit',async c=>{
  const content=await loadContent(c.env.DB),paths=await publicPaths(c.env),articles=[...content.columns.map(e=>({...e,path:'/column/'+e.key,kind:'column'})),...content.showcases.map(e=>({...e,path:'/cases/'+e.key,kind:'showcase'}))],issues:any[]=[],descriptions=new Map<string,string[]>(),links=new Set<string>();let probes=0,deferredImages=0

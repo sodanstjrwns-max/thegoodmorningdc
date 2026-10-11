@@ -12,19 +12,19 @@ async function cleanup(env:any){
  for(const r of rows){await env.DB.prepare('DELETE FROM notification_outbox WHERE request_id=?').bind(r.id).run();if(r.attachment_key)await env.R2.delete(r.attachment_key);await env.DB.prepare('DELETE FROM service_requests WHERE id=? AND expires_at<=?').bind(r.id,Date.now()).run()}
  await env.DB.prepare('DELETE FROM request_limits WHERE expires_at<=?').bind(Date.now()).run()
 }
-publicRequests.use('*',async(c,next)=>{c.header('Cache-Control','no-store');if(!c.env.DB||!c.env.ADMIN_PASSWORD)return c.json({error:'접수 설정을 확인 중입니다. 지점으로 전화해 주세요.'},503);if(c.req.header('Origin')!==new URL(c.req.url).origin)return c.json({error:'허용되지 않은 요청입니다.'},403);await next()})
+publicRequests.use('*',async(c,next)=>{c.header('Cache-Control','no-store');if(!c.env.DB||!c.env.ADMIN_PASSWORD)return c.json({error:'접수 설정을 확인 중입니다. 병원으로 전화해 주세요.'},503);if(c.req.header('Origin')!==new URL(c.req.url).origin)return c.json({error:'허용되지 않은 요청입니다.'},403);await next()})
 publicRequests.post('/:kind',async c=>{
  const kind=c.req.param('kind');if(!['career','interpretation'].includes(kind))return c.notFound()
  const data=await c.req.formData().catch(()=>null);if(!data)return c.json({error:'입력 내용을 확인하세요.'},400)
  const get=(k:string)=>typeof data.get(k)==='string'?String(data.get(k)).trim():''
  const name=get('name'),contact=get('contact'),branch=get('branch'),message=get('message'),locale=get('locale')||'ko'
  if(get('website'))return c.json({error:'요청을 확인할 수 없습니다.'},400)
- if(!name||name.length>80||contact.length>150||!(/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contact)||/^\+?[\d ()-]{8,25}$/.test(contact))||!['cheongnyangni','gwangmyeong'].includes(branch)||message.length>2000||!['ko','en','ja','zh'].includes(locale)||get('consent')!=='yes')return c.json({error:'이름·연락처·지점·개인정보 동의를 확인하세요.'},400)
+ if(!name||name.length>80||contact.length>150||!(/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contact)||/^\+?[\d ()-]{8,25}$/.test(contact))||branch!=='cheongnyangni'||message.length>2000||!['ko','en','ja','zh'].includes(locale)||get('consent')!=='yes')return c.json({error:'이름·연락처·개인정보 동의를 확인하세요.'},400)
  const payload:any={name,contact,branch,message,locale,consentVersion:'2026-10-08-v1'}
  const now=Date.now(),content=await loadContent(c.env.DB)
  if(kind==='career'){
   const vacancy=get('vacancy'),role=get('role');if(!role||role.length>100)return c.json({error:'희망 직무를 입력하세요.'},400)
-  if(vacancy){const job=content.vacancies.find(v=>v.key===vacancy);const today=new Date(now+9*3600000).toISOString().slice(0,10);if(!job||!job.accepting||(job.deadline&&job.deadline<today)||(job.branch!=='all'&&job.branch!==branch))return c.json({error:'현재 지원 가능한 공고와 지점을 확인하세요.'},409)}
+  if(vacancy){const job=content.vacancies.find(v=>v.key===vacancy);const today=new Date(now+9*3600000).toISOString().slice(0,10);if(!job||!job.accepting||(job.deadline&&job.deadline<today)||(job.branch!=='all'&&job.branch!==branch))return c.json({error:'현재 지원 가능한 공고를 확인하세요.'},409)}
   Object.assign(payload,{vacancy,role})
  }else{
   const language=get('language'),visitDate=get('visitDate');if(!language||language.length>80||!/^\d{4}-\d{2}-\d{2}$/.test(visitDate)||!Number.isFinite(Date.parse(visitDate))||new Date(visitDate).toISOString().slice(0,10)!==visitDate||visitDate<new Date(now+9*3600000).toISOString().slice(0,10))return c.json({error:'필요 언어와 희망 방문일을 확인하세요.'},400)

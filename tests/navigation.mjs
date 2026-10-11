@@ -53,7 +53,7 @@ try{
   await p.setViewportSize({width:390,height:844});await p.locator('.menu-toggle').click()
   await p.evaluate(()=>{sessionStorage.setItem('gm_motion','off');sessionStorage.setItem('gm_branch','gwangmyeong');dispatchEvent(new PageTransitionEvent('pageshow',{persisted:true}))})
   assert.equal(await p.locator('#main').evaluate(el=>el.inert),false)
-  assert.equal(await p.locator('#header-branch-select').inputValue(),'gwangmyeong')
+  assert.equal(await p.locator('#header-branch-select').count(),0);assert.equal(await p.locator('.header-phone').getAttribute('href'),'tel:029693776');assert.equal(await p.evaluate(()=>sessionStorage.getItem('gm_branch')),null)
   assert.equal(await p.locator('html').evaluate(el=>el.classList.contains('motion-off')),true)
   assert.equal(await p.locator('.route-enter').count(),0)
   await context.close()

@@ -3,24 +3,21 @@ import {markdown,imagePath} from './markdown'
 
 export const nativeSections = ['hero-section','care-priorities','opening-films','sedation-story','inclusive-care','trust','philosophy','question-story','why-goodmorning','treatments','preservation-assembly','revision-story','physician-deck','clinic-space-story','language-reveal','journal','visit-story','visit']
 export const officialSource = 'https://thegoodmorningdental.com/'
-// Matched against official Naver booking business IDs 1019716 / 1551337
-// and the two existing clinic websites on 2026-10-11.
-export function branchPlaceUrl(b:{id:string;address:string}){const id:Record<string,string>={cheongnyangni:'19524548',gwangmyeong:'2006007864'};return id[b.id]?'https://map.naver.com/p/entry/place/'+id[b.id]:'https://map.naver.com/p/search/'+encodeURIComponent('더굿모닝치과 '+b.address)}
+// Single public clinic: Kang Do-wook, booking 1019716 / place 19524548.
+export function branchPlaceUrl(b:{id:string;address:string}){const id:Record<string,string>={cheongnyangni:'19524548'};return id[b.id]?'https://map.naver.com/p/entry/place/'+id[b.id]:'https://map.naver.com/p/search/'+encodeURIComponent('더굿모닝치과 '+b.address)}
 export const initialChannels = [
- {key:'blog-cheongnyangni',title:'청량리 공식 블로그',branch:'cheongnyangni',type:'naver',url:'https://blog.naver.com/thegoodmorningdent',feedId:'thegoodmorningdent',source:officialSource,enabled:true},
- {key:'blog-gwangmyeong',title:'광명 공식 블로그',branch:'gwangmyeong',type:'naver',url:'https://blog.naver.com/wa517396',feedId:'wa517396',source:officialSource,enabled:true},
+ {key:'blog-cheongnyangni',title:'공식 네이버 블로그',branch:'cheongnyangni',type:'naver',url:'https://blog.naver.com/thegoodmorningdent',feedId:'thegoodmorningdent',source:officialSource,enabled:true},
  {key:'youtube',title:'더굿모닝치과 YouTube',branch:'all',type:'youtube',url:'https://www.youtube.com/channel/UCYLjg7-qpfI4ev-QkfpubFQ',feedId:'UCYLjg7-qpfI4ev-QkfpubFQ',source:officialSource,enabled:true},
  {key:'column',title:'강도욱 원장 칼럼 · 인블로그',branch:'cheongnyangni',type:'column',url:'https://thegoodmorningdental.com/blog/',feedId:'',source:officialSource,enabled:true},
  // Profile name/location and indexed clinician posts match Cheongnyangni.
  // External link only: no Instagram scraping, embedded feed or inferred branch account.
- {key:'instagram-cheongnyangni',title:'청량리 인스타그램',branch:'cheongnyangni',type:'instagram',url:'https://www.instagram.com/_thegoodmorning/',feedId:'',source:'https://www.instagram.com/_thegoodmorning/',enabled:true}
+ {key:'instagram-cheongnyangni',title:'더굿모닝치과 인스타그램',branch:'cheongnyangni',type:'instagram',url:'https://www.instagram.com/_thegoodmorning/',feedId:'',source:'https://www.instagram.com/_thegoodmorning/',enabled:true}
 ]
 const schedules = [
  ['10:00-14:00','09:30-13:00,14:30-18:30','09:30-13:00,14:30-18:30','09:30-13:00,15:30-18:30','09:30-13:00,14:30-18:30','09:30-13:00,14:30-18:30','09:30-14:00'],
- ['','09:30-13:00,14:00-20:30','09:30-13:00,14:00-18:30','09:30-13:00,14:00-18:30','09:30-13:00,14:00-18:30','09:30-13:00,14:00-18:30','09:30-14:00']
 ]
-export const baseBranches = source.branches.map((b,i)=>({...b,booking:'https://booking.naver.com/booking/13/bizes/'+(i?'1551337':'1019716'),kakao:'https://pf.kakao.com/'+(i?'_XGQYn':'_npxibG'),parking:'주차 위치와 지원 조건은 예약 시 지점에 확인해 주세요.',accessibility:'휠체어 이동·엘리베이터·진료실 진입 가능 여부를 내원 전에 지점에 확인해 주세요.',schedule:schedules[i],exceptions:[] as {date:string;hours:string;note:string}[]}))
-export const baseDoctors = source.doctors.map((d,i)=>({...d,copySource:i===0?'원장 제공 원문':'진료 분야를 설명하는 홈페이지 소개 문구 · 원장 직접 인용 아님',doubleBoard:i<2,schedule:'근무 지점과 진료 요일은 예약 시 확인해 주세요.'}))
+export const baseBranches = source.branches.map((b,i)=>({...b,booking:'https://booking.naver.com/booking/13/bizes/'+'1019716',kakao:'https://pf.kakao.com/'+'_npxibG',parking:'주차 위치와 지원 조건은 예약 시 병원에 확인해 주세요.',accessibility:'휠체어 이동·엘리베이터·진료실 진입 가능 여부를 내원 전에 병원에 확인해 주세요.',schedule:schedules[i],exceptions:[] as {date:string;hours:string;note:string}[]}))
+export const baseDoctors = source.doctors.map((d,i)=>({...d,copySource:i===0?'원장 제공 원문':'진료 분야를 설명하는 홈페이지 소개 문구 · 원장 직접 인용 아님',doubleBoard:i<2,schedule:'진료 요일은 예약 시 확인해 주세요.'}))
 export const defaults = {
  treatment:source.treatments,
  doctor:baseDoctors,
@@ -49,7 +46,7 @@ const editorialFields={featured:false,summary:'',seoTitle:'',seoDescription:'',a
 export const normalizeEditorial=(kind:string,value:any)=>['column','showcase'].includes(kind)?{...editorialFields,...(kind==='showcase'?caseFields:{}),...value}:value
 export const templates:Record<Kind,any>={
  treatment:{slug:'',name:'',group:0,tag:'',description:'',symptoms:[''],details:[''],steps:[''],risk:'',doctor:'kang-dowook',faq:[['','']],sections:[{title:'',paragraphs:['']}],strengths:[''],related:[''],sourceLines:''},
- doctor:{slug:'',name:'',role:'',image:'portrait-0',label:'MEDICAL TEAM',text:'',bio:[''],areas:[''],copySource:'홈페이지 소개 문구 · 원장 직접 인용 아님',doubleBoard:false,schedule:'근무 지점과 진료 요일 확인 필요'},
+ doctor:{slug:'',name:'',role:'',image:'portrait-0',label:'MEDICAL TEAM',text:'',bio:[''],areas:[''],copySource:'홈페이지 소개 문구 · 원장 직접 인용 아님',doubleBoard:false,schedule:'진료 요일 확인 필요'},
  video:{key:'',id:'',title:'',category:'',image:'',order:10},
  faq:{key:'',question:'',answer:'',order:10},
  section:{key:'',title:'',body:'',enabled:true,order:10},
@@ -101,7 +98,7 @@ export function validate(kind:Kind,key:string,value:any,publishing=false){
  if(kind==='section'&&key==='hero-section'&&(!value.enabled||value.order!==0||value.title!=='hero-section'||value.body!==''))throw Error('첫 화면 영상은 원본 구성·첫 번째 순서로 유지합니다. 다른 메인 섹션은 자유롭게 편집할 수 있습니다.')
  if(kind==='section'&&!nativeSections.includes(key)&&(!key.startsWith('custom-')||!value.title.trim()))throw Error('새 섹션 주소는 custom-으로 시작하고 제목이 필요합니다.')
  if(kind==='branch'){
-  if(!source.branches.some(b=>b.id===key)||!/^0[0-9-]{8,14}$/.test(value.phone)||value.schedule.length!==7||value.hours.some((x:any)=>x.length!==2))throw Error('지점·전화·7일 일정·시간표를 확인하세요.')
+  if(!source.branches.some(b=>b.id===key)||!/^0[0-9-]{8,14}$/.test(value.phone)||value.schedule.length!==7||value.hours.some((x:any)=>x.length!==2))throw Error('전화·7일 일정·시간표를 확인하세요.')
   const period=/^(?:|(?:[01]\d|2[0-3]):[0-5]\d-(?:[01]\d|2[0-3]):[0-5]\d(?:,(?:[01]\d|2[0-3]):[0-5]\d-(?:[01]\d|2[0-3]):[0-5]\d)*)$/
   for(const s of [...value.schedule,...value.exceptions.map((x:any)=>x.hours)])if(!period.test(s)||s.split(',').some((p:string)=>p&&p.split('-')[0]>=p.split('-')[1]))throw Error('일정은 09:30-13:00,14:00-18:30 형식입니다. 휴진은 빈칸입니다.')
   if(value.exceptions.some((x:any)=>!validDate(x.date))||new Set(value.exceptions.map((x:any)=>x.date)).size!==value.exceptions.length)throw Error('휴진/변경 날짜는 중복 없는 YYYY-MM-DD 형식입니다.')
@@ -157,6 +154,9 @@ export type Content = ReturnType<typeof assemble>
 export function assemble(rows:any[]=[]){
  const sets:Record<string,any[]>=structuredClone(defaults)
  for(const row of rows){if(!row.live_json||!kinds.includes(row.kind))continue;const value=normalizeEditorial(row.kind,JSON.parse(row.live_json));const a=sets[row.kind];const i=a.findIndex(x=>keyOf(row.kind,x)===row.key);if(i<0)a.push(value);else a[i]=value}
+ // Keep historical DB rows without exposing retired locations in public content.
+ sets.branch=sets.branch.filter(b=>b.id==='cheongnyangni').map(b=>({...b,name:'더굿모닝치과'}));
+ for(const kind of ['channel','operation','vacancy'])sets[kind]=sets[kind].filter(v=>!v.branch||['all','cheongnyangni'].includes(v.branch));
  const sort=(a:any[])=>a.sort((x,y)=>(x.order||0)-(y.order||0))
  const generalFaq=sort(sets.faq).map(x=>[x.question,x.answer] as [string,string]);const treatments=sets.treatment as source.Treatment[]
  return {treatments,doctors:sets.doctor as typeof baseDoctors,videos:sort(sets.video) as typeof defaults.video,branches:sets.branch as typeof baseBranches,generalFaq,allFaq:[...generalFaq,...treatments.flatMap(t=>t.faq)],sections:sort(sets.section) as typeof defaults.section,channels:sets.channel as typeof initialChannels,operations:sets.operation as Operation[],columns:sets.column as Column[],showcases:sets.showcase as Showcase[],vacancies:sets.vacancy as Vacancy[],missionStory:sets.site[0].story as string[],missionPromises:sets.site[0].promises as typeof source.missionPromises}

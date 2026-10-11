@@ -1,12 +1,25 @@
 # 더굿모닝치과 — Good Morning Web
 
-## 채널 연결 보완 (2026-10-11)
+## 현재 범위 — SingleClinic19 (2026-10-11)
+
+- 사용자 요청으로 **강도욱 원장님의 더굿모닝치과 한 병원만 공개 안내**합니다. 서울특별시 동대문구 왕산로 123, 2층 · 제기동역 2번 출구 · `02-969-3776`.
+- 광명 위치·시간·전화·예약·카카오·블로그·플레이스 및 공개 지점 선택 UI를 제거했습니다. Instagram은 지점명 없이 병원 계정으로 표시합니다.
+- 네이버 예약 `1019716`, 플레이스 `19524548`, 카카오 `_npxibG`, 네이버 블로그 `thegoodmorningdent`, Instagram `_thegoodmorning`, 기존 YouTube/인블로그를 유지합니다.
+- `/directions`, `/reservation`, `/visiting`, `/careers`, `/notice/check-clinic-hours` 및 한·영 공통 헤더/푸터/메타/JSON-LD/llms를 단일 병원으로 통일합니다. 공개 GET의 `?branch=...`는 해당 매개변수만 제거해301 이동하며 다른 검색 조건은 보존합니다.
+- 내부 ID `cheongnyangni`는 기존 CMS/접수 데이터 호환성 때문에 유지합니다. 접수 양식에서는 숨김값으로 고정하고 다른 병원 ID는 서버에서 거부합니다. 과거 CMS 행·이력은 삭제하지 않고 공개 합성 모델에서 타 지점 데이터를 제외합니다.
+- `0007_single_clinic.sql`은 기존 진료시간 공지 한 건의 제목·본문·수정일만 변경합니다. 기존 공개 상태·최초 게시일, 다른 게시물과 공개 수가32항목·원본PDF는 보존합니다. 운영 변경 전후 SQL은 `.sources/single-clinic-release/`에 비공개 보관합니다.
+- 제공 의료진5명과 관련 진료 연결은 유지합니다. 확인 없이 다른 의료진의 진료를 강도욱 원장에게 재배정하거나 새로운 의료 사실을 만들지 않습니다.
+- 단일 병원 검사: `node tests/single-clinic.mjs` (운영 읽기 전용: `TEST_URL=https://webapp-2-9y5.pages.dev node tests/single-clinic.mjs`). 공개 한·영120경로, 과거 지점 URL/저장값, Chromium/WebKit72화면폭, 수가32/PDF 보존을 검사합니다. 기존 SEO·CMS·접수·탐색·Foundations·Care 회귀도 유지합니다.
+- 배포 대상은 기존 사용자 소유 Pages `webapp-2`, D1/R2입니다. 기존 도메인/DNS·공식 사이트·인블로그는 변경하지 않습니다. `PUBLIC_SITE_URL` 미설정과 검증 주소 noindex, 알림·상담집계·성능집계 OFF 유지. 실물 기기·의료 감수는 별도 확인이 필요합니다.
+- 아래 다지점 안내는 **이전 릴리스 조사·구현 이력**이며 현재 공개 범위가 아닙니다.
+
+## 이전 채널 연결 보완 (2026-10-11)
 - 청량리 인스타그램 `https://www.instagram.com/_thegoodmorning/`을 공식 채널 목록/푸터에 추가. 공개 검색 인덱스의 병원명·제기동역 위치·의료진 관련 내용을 대조했습니다. 인스타그램 직접 페이지는 비로그인 접근 제한이 있어 전체 피드/로그인 후 동작을 검증한 것은 아닙니다. 외부 링크만 제공하며 게시물 자동 수집이나 임베드는 하지 않습니다. 광명 별도 계정은 확인되지 않아 임의 추가하지 않았습니다.
 - 청량리 네이버 플레이스 `19524548`, 광명 `2006007864`: 기존 공식 홈페이지 및 네이버 예약 business `1019716` / `1551337`에 포함된 placeId와 대조. 양 지점 지도 버튼을 검색 URL 대신 장소 고유주소로 변경하고 Dentist hasMap/sameAs에도 동일 반영했습니다.
 - 출처: https://thegoodmorningdental.com/ , https://sthegmdent.com/ , https://booking.naver.com/booking/13/bizes/1019716 , https://booking.naver.com/booking/13/bizes/1551337 . 네이버 플레이스 자동 접근은429 제한이 있어 예약 데이터와 공식 홈페이지를 교차 확인했습니다. 예약·메시지를 실제 제출하지 않았습니다.
 - DB migration·운영 데이터 변경 없음. 인스타그램은 기존 channel CMS에서 수정/비활성화할 수 있으며 RSS 지원 채널이 아닙니다. WhatsApp 및 네이버 톡톡 추가는 이번 변경에 포함하지 않았습니다.
 
-## 현재 상태 — Foundations18 + Care17 (2026-10-11)
+## 이전 릴리스 — Foundations18 + Care17 (2026-10-11)
 
 - **배포·GitHub 업로드 완료**. 앱 커밋 `ae3c03d`, 스냅샷 https://12de070f.webapp-2-9y5.pages.dev . 서비스 https://webapp-2-9y5.pages.dev/ , 관리자 `/admin`.
 - GitHub: https://github.com/sodanstjrwns-max/thegoodmorningdc (`main`). 사용자 선택 저장소에 업로드했으며 비밀번호·토큰·비공개 SQL·원자료는 제외합니다.

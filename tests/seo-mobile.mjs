@@ -16,6 +16,8 @@ for(const [url,indexable,status] of [['https://clinic.example/',true,200],['http
 assert.match(await (await lib.app.request('https://preview.example/robots.txt',{},env)).text(),/Disallow: \/\n/)
 const robots=await (await lib.app.request('https://clinic.example/robots.txt',{},env)).text();assert.match(robots,/Sitemap: https:\/\/clinic.example\/sitemap.xml/);assert.doesNotMatch(robots,/example\/\//)
 const data=lib.assemble(),schemas=lib.clinicSchemas(data,'https://clinic.example');assert.equal(schemas.filter(s=>s['@type']==='Dentist').length,2)
+assert.equal(data.channels.find(c=>c.key==='instagram-cheongnyangni').url,'https://www.instagram.com/_thegoodmorning/')
+for(const [id,place] of [['cheongnyangni','19524548'],['gwangmyeong','2006007864']])assert.equal(schemas.find(s=>s['@id']==='https://clinic.example/#'+id).hasMap,'https://map.naver.com/p/entry/place/'+place)
 for(const branch of data.branches){const s=schemas.find(s=>s['@id']==='https://clinic.example/#'+branch.id);assert.equal(s.telephone,branch.phone);assert.equal(s.address.streetAddress,branch.address);assert.equal(s.openingHoursSpecification.length,branch.schedule.flatMap(s=>s.split(',').filter(Boolean)).length)}
 const edited=structuredClone(data);edited.branches[1].phone='02-0000-0000';edited.branches[1].exceptions=[{date:'2026-12-25',hours:'',note:'휴진'}];const changed=lib.clinicSchemas(edited,'https://clinic.example').find(s=>s['@id']==='https://clinic.example/#gwangmyeong');assert.equal(changed.telephone,'02-0000-0000');assert.equal(changed.specialOpeningHoursSpecification[0].opens,'00:00')
 assert.ok(fs.statSync('public/static/fonts/GoodMorningSans.woff2').size<500000)

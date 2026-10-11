@@ -3,11 +3,17 @@ import {markdown,imagePath} from './markdown'
 
 export const nativeSections = ['hero-section','care-priorities','opening-films','sedation-story','inclusive-care','trust','philosophy','question-story','why-goodmorning','treatments','preservation-assembly','revision-story','physician-deck','clinic-space-story','language-reveal','journal','visit-story','visit']
 export const officialSource = 'https://thegoodmorningdental.com/'
+// Matched against official Naver booking business IDs 1019716 / 1551337
+// and the two existing clinic websites on 2026-10-11.
+export function branchPlaceUrl(b:{id:string;address:string}){const id:Record<string,string>={cheongnyangni:'19524548',gwangmyeong:'2006007864'};return id[b.id]?'https://map.naver.com/p/entry/place/'+id[b.id]:'https://map.naver.com/p/search/'+encodeURIComponent('더굿모닝치과 '+b.address)}
 export const initialChannels = [
  {key:'blog-cheongnyangni',title:'청량리 공식 블로그',branch:'cheongnyangni',type:'naver',url:'https://blog.naver.com/thegoodmorningdent',feedId:'thegoodmorningdent',source:officialSource,enabled:true},
  {key:'blog-gwangmyeong',title:'광명 공식 블로그',branch:'gwangmyeong',type:'naver',url:'https://blog.naver.com/wa517396',feedId:'wa517396',source:officialSource,enabled:true},
  {key:'youtube',title:'더굿모닝치과 YouTube',branch:'all',type:'youtube',url:'https://www.youtube.com/channel/UCYLjg7-qpfI4ev-QkfpubFQ',feedId:'UCYLjg7-qpfI4ev-QkfpubFQ',source:officialSource,enabled:true},
- {key:'column',title:'강도욱 원장 칼럼 · 인블로그',branch:'cheongnyangni',type:'column',url:'https://thegoodmorningdental.com/blog/',feedId:'',source:officialSource,enabled:true}
+ {key:'column',title:'강도욱 원장 칼럼 · 인블로그',branch:'cheongnyangni',type:'column',url:'https://thegoodmorningdental.com/blog/',feedId:'',source:officialSource,enabled:true},
+ // Profile name/location and indexed clinician posts match Cheongnyangni.
+ // External link only: no Instagram scraping, embedded feed or inferred branch account.
+ {key:'instagram-cheongnyangni',title:'청량리 인스타그램',branch:'cheongnyangni',type:'instagram',url:'https://www.instagram.com/_thegoodmorning/',feedId:'',source:'https://www.instagram.com/_thegoodmorning/',enabled:true}
 ]
 const schedules = [
  ['10:00-14:00','09:30-13:00,14:30-18:30','09:30-13:00,14:30-18:30','09:30-13:00,15:30-18:30','09:30-13:00,14:30-18:30','09:30-13:00,14:30-18:30','09:30-14:00'],

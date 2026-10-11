@@ -1,5 +1,11 @@
 # 더굿모닝치과 — Good Morning Web
 
+## 채널 연결 보완 (2026-10-11)
+- 청량리 인스타그램 `https://www.instagram.com/_thegoodmorning/`을 공식 채널 목록/푸터에 추가. 공개 검색 인덱스의 병원명·제기동역 위치·의료진 관련 내용을 대조했습니다. 인스타그램 직접 페이지는 비로그인 접근 제한이 있어 전체 피드/로그인 후 동작을 검증한 것은 아닙니다. 외부 링크만 제공하며 게시물 자동 수집이나 임베드는 하지 않습니다. 광명 별도 계정은 확인되지 않아 임의 추가하지 않았습니다.
+- 청량리 네이버 플레이스 `19524548`, 광명 `2006007864`: 기존 공식 홈페이지 및 네이버 예약 business `1019716` / `1551337`에 포함된 placeId와 대조. 양 지점 지도 버튼을 검색 URL 대신 장소 고유주소로 변경하고 Dentist hasMap/sameAs에도 동일 반영했습니다.
+- 출처: https://thegoodmorningdental.com/ , https://sthegmdent.com/ , https://booking.naver.com/booking/13/bizes/1019716 , https://booking.naver.com/booking/13/bizes/1551337 . 네이버 플레이스 자동 접근은429 제한이 있어 예약 데이터와 공식 홈페이지를 교차 확인했습니다. 예약·메시지를 실제 제출하지 않았습니다.
+- DB migration·운영 데이터 변경 없음. 인스타그램은 기존 channel CMS에서 수정/비활성화할 수 있으며 RSS 지원 채널이 아닙니다. WhatsApp 및 네이버 톡톡 추가는 이번 변경에 포함하지 않았습니다.
+
 ## 현재 상태 — Foundations18 + Care17 (2026-10-11)
 
 - **배포·GitHub 업로드 완료**. 앱 커밋 `ae3c03d`, 스냅샷 https://12de070f.webapp-2-9y5.pages.dev . 서비스 https://webapp-2-9y5.pages.dev/ , 관리자 `/admin`.

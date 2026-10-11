@@ -17,7 +17,7 @@ const sitemap=await(await fetch(base+'/sitemap.xml')).text()
 const paths=[...new Set([...sitemap.matchAll(/<loc>(.*?)<\/loc>/g)].flatMap(m=>{const p=new URL(m[1]).pathname;return /^\/en(?:\/|$)/.test(p)?[p]:[p,p==='/'?'/en':'/en'+p]}))]
 for(const path of [...paths,'/llms.txt','/api/search?q='+encodeURIComponent('광명')]){
  const r=await fetch(base+path);assert.equal(r.status,200,path);const html=await r.text();assert.doesNotMatch(html,retired,path)
- if(paths.includes(path)){assert.doesNotMatch(html,/id="header-branch-select"|class="branch-tabs"|<select[^>]*name="branch"/,path);assert.match(r.headers.get('x-robots-tag')||'',/noindex/,path)}
+ if(paths.includes(path)){assert.doesNotMatch(html,/id="header-branch-select"|class="branch-tabs"|<select[^>]*name="branch"/,path);if(process.env.EXPECT_INDEXABLE==='1'){assert.equal(r.headers.get('x-robots-tag'),null,path);assert.match(html,/name="robots" content="index,follow/)}else assert.match(r.headers.get('x-robots-tag')||'',/noindex/,path)}
 }
 for(const prefix of ['','/en'])for(const query of ['branch=gwangmyeong','branch=cheongnyangni','q=keep&branch=gwangmyeong']){
  const r=await fetch(base+prefix+'/directions?'+query,{redirect:'manual'});assert.equal(r.status,301);assert.equal(new URL(r.headers.get('location'),base).pathname,prefix+'/directions');assert.ok(!new URL(r.headers.get('location'),base).searchParams.has('branch'));if(query.startsWith('q='))assert.equal(new URL(r.headers.get('location'),base).searchParams.get('q'),'keep')

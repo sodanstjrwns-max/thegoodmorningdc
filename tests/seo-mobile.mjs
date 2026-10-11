@@ -3,7 +3,7 @@ import assert from 'node:assert/strict'
 import fs from 'node:fs'
 import {build} from 'esbuild'
 const base=process.env.TEST_URL||'http://localhost:3000'
-const compiled=await build({stdin:{contents:"export * from './src/seo';export * from './src/content';export {default as app} from './src/index'",resolveDir:process.cwd()},bundle:true,platform:'node',format:'esm',write:false})
+const compiled=await build({stdin:{contents:"export * from './src/seo';export * from './src/content';export {default as app} from './src/index'",resolveDir:process.cwd()},bundle:true,platform:'node',format:'esm',write:false,loader:{'.md':'text'}})
 const lib=await import('data:text/javascript;base64,'+Buffer.from(compiled.outputFiles[0].text).toString('base64'))
 assert.equal(lib.productionOrigin('https://clinic.example/'),'https://clinic.example')
 for(const bad of ['http://clinic.example','https://user:pass@clinic.example','https://clinic.example/path','javascript:alert(1)'])assert.equal(lib.productionOrigin(bad),'')

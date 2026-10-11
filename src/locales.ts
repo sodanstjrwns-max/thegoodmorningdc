@@ -9,7 +9,18 @@ export const locales:Locale[]=['en']
 export const dictionaries:Record<Locale,Record<string,string>>={en,ja,zh}
 export const normalize=(s:string)=>s.replace(/\s+/g,' ').trim()
 const decode=(s:string)=>s.replace(/&(?:amp|lt|gt|quot|#39|#x27|nbsp);/g,c=>({'&amp;':'&','&lt;':'<','&gt;':'>','&quot;':'"','&#39;':"'",'&#x27;':"'",'&nbsp;':' '}[c]||c))
-export function translate(s:string,locale:Locale){const key=normalize(decode(s));const translated=dictionaries[locale][key];if(translated)return translated;const numbered=/^(.*) · (\d+)페이지$/.exec(key);if(numbered&&locale==='en')return (dictionaries.en[numbered[1]]||numbered[1])+' · Page '+numbered[2];return s}
+export function translate(s:string,locale:Locale):string{
+ const key=normalize(decode(s)),translated=dictionaries[locale][key];if(translated)return translated
+ if(locale==='en'){
+  // Translate interface patterns, not arbitrary patient stories or external article titles.
+  const branded=/^(.*) \| 더굿모닝치과$/.exec(key);if(branded)return translate(branded[1],locale)+' | THE GOOD MORNING DENTAL'
+  const numbered=/^(.*) · (\d+)페이지$/.exec(key);if(numbered)return translate(numbered[1],locale)+' · Page '+numbered[2]
+  const count=/^(\d+)개의 이야기 · (\d+) \/ (\d+) 페이지$/.exec(key);if(count)return `${count[1]} articles · Page ${count[2]} / ${count[3]}`
+  const questions=/^진료별 질문 (\d+)개$/.exec(key);if(questions)return `Treatment questions: ${questions[1]}`
+  const updated=/^수정일 (\d{4}-\d{2}-\d{2}) · (병원 안내|일반 치과 정보)$/.exec(key);if(updated)return `Updated ${updated[1]} · ${updated[2]==='병원 안내'?'Clinic information':'General dental information'}`
+ }
+ return s
+}
 export const localPath=(path:string,locale:string)=>path==='/'?'/'+locale:'/'+locale+path
 export function languageLinks(path:string,origin:string){return ['ko',...locales].map(l=>`<link rel="alternate" hreflang="${l==='zh'?'zh-Hans':l}" href="${esc(origin+(l==='ko'?path:localPath(path,l)))}">`).join('')+`<link rel="alternate" hreflang="x-default" href="${esc(origin+path)}">`}
 export const languageSwitch=(path:string,current='ko')=>`<nav class="locale-switch" aria-label="Language">${[['ko','한국어'],['en','English'],['ja','日本語'],['zh','中文']].filter(([l])=>l==='ko'||locales.includes(l as Locale)).map(([l,name])=>`<a href="${l==='ko'?path:localPath(path,l)}" lang="${l}" hreflang="${l==='zh'?'zh-Hans':l}" ${l===current?'aria-current="page"':''}>${name}</a>`).join('')}</nav>`

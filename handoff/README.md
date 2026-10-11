@@ -4,7 +4,7 @@
 - 대상은 강도욱 원장님의 더굿모닝치과 한 병원입니다. 서울비디치과·광명 지점은 공개 범위가 아닙니다.
 - 홈페이지: https://thegoodmorningdc.kr/ . www도 HTTPS200을 확인했습니다.
 - 관리자: https://thegoodmorningdc.kr/admin . 소유자는 직원 아이디를 비우고 별도 전달된 비밀번호를 사용합니다. 비밀번호는 이 문서에 포함하지 않습니다.
-- 검증용 주소: https://webapp-2-9y5.pages.dev/ . 최신 커밋/배포 결과는 프로젝트 루트 README의 FinalAudit22 기록을 기준으로 합니다.
+- 검증용 주소: https://webapp-2-9y5.pages.dev/ . 수정 앱 `95f7676`, 스냅샷 https://b9b8b778.webapp-2-9y5.pages.dev . 최신 검사 결과와 남은 안정성 이슈는 프로젝트 루트 README의 FinalAudit22 기록을 기준으로 합니다.
 - GitHub: https://github.com/sodanstjrwns-max/thegoodmorningdc (`main`). 코드 위치 `/home/user/webapp`.
 - 사용자 소유 Cloudflare Pages `webapp-2`, D1 `webapp-2-goodmorning-production`, R2 `webapp-2-goodmorning-media` 유지.
 
@@ -19,7 +19,8 @@
 - CMS 초안/발행/철회/이력/CAS, Tiptap/Markdown, 직원 역할/검토 workflow, 미디어 사용처, 접수함, 알림·집계 기능.
 - 승인되지 않은 사례는 공개하지 않으며 기존 로그인 제한 사례를 가져오지 않았습니다.
 
-## 실제 운영 전 필수 확인 — 기술 완료와 구분
+## 실제 운영 전 필수 확인 — 최종 납품 승인 보류
+0. **간헐500 원인 미확정:** 운영 `/en/blog`에서 첫 수정 배포 후 HTTP500을 확인했습니다. 이후 직접 요청·35회 낮은 동시성 검사·순차 회귀는 정상이나 오류 당시 서버 원인은 확보하지 못했습니다. 후속 정상 응답만으로 해결 처리하지 않으며 안정화 후 최종 인수가 필요합니다. 근거는 루트 README와 `test-results/final-incidents.json`입니다.
 1. **검색 공개 설정:** DNS/TLS는 active지만 `PUBLIC_SITE_URL`은 아직 미설정이고 apex/www/Pages 모두 noindex입니다. 병원 승인 후 대표 URL을 확정하고 www 정규화·canonical·robots·sitemap·검색도구 등록을 확인해야 합니다. 현재 noindex는 비밀번호 보호가 아닙니다.
 2. **개인정보·운영 주체:** `/privacy`·`/terms`에는 제작 미리보기/정식 운영 전 확인 문안이 남아 있습니다. 운영 주체·보호책임자·연락창구·수집/보유/위탁 내역을 병원 기준으로 확정해야 합니다. 기존 공식사이트의 사업자 대표자와 임상 대표원장을 임의로 동일시하지 않습니다.
 3. **의료·운영 정보:** 의료진 자격·일정, 현행 장비 모델/운영 여부, 주차·접근성, 정규시간·공휴일을 병원 담당자가 확인해야 합니다. 자동검사가 실제 의료 감수를 대신하지 않습니다. 공개 승인 수가는 재승인 대기로 되돌리지 않습니다.

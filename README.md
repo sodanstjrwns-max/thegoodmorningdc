@@ -1,5 +1,16 @@
 # 더굿모닝치과 — Good Morning Web
 
+## Broadcast21 — 방송 출연 영상·네이버 톡톡 (2026-10-11)
+
+- `/video#broadcast-appearances`, `/doctors/kang-dowook#broadcast-appearances` 및 영문 대응 경로에 한국경제TV `EIBOfm2xcOM`, 의학채널 비온뒤 `MPPSAHAajHc`의 공식 YouTube 링크 카드 2개를 추가했습니다. 기존 병원 제공 영상·플레이어·필터는 유지하며 방송 썸네일·영상 파일·환자사진을 복제하지 않습니다. 전체 영상 의료 검수나 방송사 추천·보증을 주장하지 않습니다.
+- 네이버 톡톡 `https://talk.naver.com/w4s3ry?frm=mnmb&frm=nmb_detail`: 기존 공식 홈페이지 링크를 바탕으로 HTTPS GET에서 `/ct/w4s3ry` 이동·200 응답과 `더굿모닝치과의원 - 네이버톡톡` 메타를 확인했습니다. HEAD는404이지만 GET은 정상입니다. 채팅·예약 제출 및 실제 응답 시간 검사는 하지 않았습니다.
+- 톡톡은 `/reservation`, `/directions`, 홈의 병원 안내 버튼, 공통 PC 빠른 상담·모바일 메뉴·푸터에 연결합니다. 모바일 고정 하단 4버튼은 밀집을 피하기 위해 늘리지 않았습니다. 외부 서비스·민감정보 전송 금지·응답시간 확인 안내를 포함합니다.
+- 링크는 새 창에서 열리고 `noopener noreferrer`를 적용합니다. 자동 임베드나 채팅 스크립트는 없으며 JavaScript 없이도 연결됩니다. 한·영 번역을 함께 반영했습니다.
+- 출처: https://thegoodmorningdental.com/ , https://www.youtube.com/watch?v=EIBOfm2xcOM , https://www.youtube.com/watch?v=MPPSAHAajHc . 링크 데이터는 `src/content.ts`, 렌더링은 `src/pages.ts`·`src/ui.ts`입니다. CMS 데이터 모델/DB 마이그레이션·운영 데이터 쓰기·DNS 변경은 없습니다.
+- 검증: `node tests/broadcast-talk.mjs` — 한·영 Chromium/WebKit 80화면폭, 새 창 목적지(가로채기 검사), 방송 섹션 접근성, no-JS. 운영 검사에는 `TEST_URL=https://webapp-2-9y5.pages.dev`를 지정합니다.
+- 로고 교체·칼럼 전체 아카이브·장비 이미지 추가는 이번 범위에 포함하지 않습니다. 공개 수가32항목/PDF·의료진5명·단일 병원·noindex·집계 OFF를 유지합니다. 신규 도메인 활성화/검색 공개 전환은 별도 작업입니다.
+- 배포·검증 상태: 진행 중. 기존 BYOK Pages `webapp-2`, GitHub `sodanstjrwns-max/thegoodmorningdc` main을 사용합니다.
+
 ## Hero20 — 메인 영상 하단 여백 정리 (2026-10-11)
 
 - 배포 앱 `dbb39ba`, 스냅샷 https://097855aa.webapp-2-9y5.pages.dev . 검증 사이트 https://webapp-2-9y5.pages.dev/ 및 GitHub main 반영 완료.

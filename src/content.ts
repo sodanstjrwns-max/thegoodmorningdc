@@ -3,6 +3,13 @@ import {markdown,imagePath} from './markdown'
 
 export const nativeSections = ['hero-section','care-priorities','opening-films','sedation-story','inclusive-care','trust','philosophy','question-story','why-goodmorning','treatments','preservation-assembly','revision-story','physician-deck','clinic-space-story','language-reveal','journal','visit-story','visit']
 export const officialSource = 'https://thegoodmorningdental.com/'
+// Official-site links, kept separate from clinic-owned player videos and RSS feeds.
+// HTTPS GET follows to the same Talk account; no chat message is sent by this site.
+export const officialTalkUrl = 'https://talk.naver.com/w4s3ry?frm=mnmb&frm=nmb_detail'
+export const broadcastLinks = [
+ {id:'EIBOfm2xcOM',publisher:'한국경제TV',title:'틀니를 오래 사용한 경우의 임플란트 · 기존 임플란트 문제 상담',description:'강도욱 원장이 출연한 건강 상담 방송입니다. 한국경제TV 공식 YouTube 채널의 원본 영상으로 연결됩니다.'},
+ {id:'MPPSAHAajHc',publisher:'의학채널 비온뒤',title:'[치과] 무엇이든 물어보세요 / 굿모닝치과 강도욱',description:'강도욱 원장이 출연한 치과 질문·답변 영상입니다. 의학채널 비온뒤 공식 YouTube 채널의 원본 영상으로 연결됩니다.'}
+]
 // Single public clinic: Kang Do-wook, booking 1019716 / place 19524548.
 export function branchPlaceUrl(b:{id:string;address:string}){const id:Record<string,string>={cheongnyangni:'19524548'};return id[b.id]?'https://map.naver.com/p/entry/place/'+id[b.id]:'https://map.naver.com/p/search/'+encodeURIComponent('더굿모닝치과 '+b.address)}
 export const initialChannels = [

@@ -1,6 +1,13 @@
 # 더굿모닝치과 — Good Morning Web
 
-## 현재 범위 — SingleClinic19 (2026-10-11)
+## Hero20 — 메인 영상 하단 여백 정리 (2026-10-11)
+
+- `/`, `/en`의 장면 선택을 절대 위치에서 빼고 하단 재생 제어 줄에 배치했습니다. 본문/상담 버튼과 조작부는 PC40~52px, 모바일32px 간격으로 분리됩니다.
+- 영상 안내 버튼 크기를 정리하고 설명 줄간격과 버튼 간격을 확대했습니다. 모바일은 본문→상담 버튼→장면 선택→재생 제어 순서로 배치하며 영문 장면명은 좁은 화면에서 줄바꿈합니다.
+- `node tests/hero-layout.mjs`: Chromium/WebKit·한/영·320~1920px 44조합의 겹침/잘림/44px 터치영역·장면 선택/정지/앵커/no-JS 검사. 로컬 통과. 기존 `npm test` 전체 통과.
+- H1·의료 문구·영상 원본·상담 링크·단일 병원 범위·수가32/PDF는 변경하지 않았습니다. 운영 DB 쓰기/마이그레이션과 DNS 변경 없음. 검증 주소 noindex 유지.
+
+## 단일 병원 범위 — SingleClinic19 (2026-10-11)
 
 - **배포·GitHub main 반영 완료**. 앱 `9f9f4fb`, 스냅샷 https://78bf57b4.webapp-2-9y5.pages.dev , 현재 검증 사이트 https://webapp-2-9y5.pages.dev/ . 운영 단일 병원 검사: 한·영120경로·Chromium/WebKit72화면폭·수정 공지·수가32/PDF 통과. 운영 Foundations120경로480화면폭 메타·제목·캐노니컬 검사도 통과. 로컬 SEO/CMS/접수/탐색/Foundations/Care/smoke/operations/editorial 회귀 통과.
 - 운영 전후 SQL 대조: CMS44건·이력1건 동일, 공지 `initial-hours`의 제목/본문/수정일만 변경, 다른 게시물2건 및 접수·직원·설정·집계·알림큐 동일. 실제 접수나 외부 메시지 발송 없음.

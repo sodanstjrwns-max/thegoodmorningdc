@@ -7,6 +7,7 @@
     "build:editor": "esbuild src/admin-editor.ts --bundle --minify --format=iife --target=es2022 --outfile=public/static/rich-editor.js",
     "build:performance": "esbuild src/performance-client.ts --bundle --minify --format=iife --target=es2022 --outfile=public/static/performance.js",
     "test:care": "node tests/care.mjs",
+    "test:foundations": "node tests/foundations.mjs",
     "test": "node tests/smoke.mjs",
     "typecheck": "tsc --noEmit",
     "db:migrate:local": "wrangler d1 migrations apply webapp-production --local",

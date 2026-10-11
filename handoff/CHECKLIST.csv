@@ -1,6 +1,6 @@
 ID,분류,확인 항목,현재 상태,권장 확인 주체,근거 또는 메모,실제 담당자,확인일,결과 또는 보류 사유,페이지 또는 증빙
-G01,안내서,공개 안내서 로그인 없이 열기,검증 예정,제작 측,이번 Handover23에서 실제 HTTP200 재검사,,,,https://thegoodmorningdc.kr/handover
-G02,안내서,휴대폰 목차 및 인쇄 PDF 저장,검증 예정,제작 측,자동 브라우저 검사와 병원 실기기 인수 구분,,,,https://thegoodmorningdc.kr/handover
+G01,안내서,공개 안내서 로그인 없이 열기,검증 완료,제작 측,Handover23 실제 도메인 GET HEAD200 및 noindex 확인,,2026-10-11,운영 자동검사 통과,https://thegoodmorningdc.kr/handover
+G02,안내서,휴대폰 목차 및 인쇄 PDF 저장,자동검사 통과,제작 측,Chromium WebKit10화면폭 목차11개 인쇄 PDF 및 no-JS 확인,,2026-10-11,병원 실물 기기 인수 별도,https://thegoodmorningdc.kr/handover
 T01,기술,홈페이지 새 도메인과 HTTPS,확인 완료,제작 측,2026-10-11 FinalAudit22에서 apex와 www HTTP200 확인,,,,https://thegoodmorningdc.kr/
 T02,기술,간헐 영문 페이지 HTTP500 원인 및 안정화,미해결,기술 담당,후속 검사는 정상이지만 원인 미확정 - 최종 승인 전 필요,,,,https://thegoodmorningdc.kr/en/blog
 T03,기술,수가32항목과 원본 PDF 보존,확인 완료,제작 측,FinalAudit22 운영 비교 통과 - 공개 승인 유지,,,,https://thegoodmorningdc.kr/pricing

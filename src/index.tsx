@@ -20,6 +20,7 @@ import {reviewRoutes} from './workflow'
 import {operationRoutes,mutationLock} from './operations'
 import {notificationRoutes} from './notifications'
 import {metricsPublic,metricsAdmin} from './metrics'
+import {handoverPage} from './handover'
 
 type Env = { DB:any; R2:any; ASSETS?:{fetch:(request:Request)=>Promise<Response>}; ADMIN_PASSWORD?:string; PUBLIC_SITE_URL?:string; RESEND_API_KEY?:string }
 const app = new Hono<{Bindings:Env;Variables:{content:Content}}>()
@@ -30,6 +31,10 @@ app.use('/api/admin/*',async(c,next)=>{c.header('Cache-Control','no-store');if(!
 app.use('*',async(c,next)=>{await next();if(!launchIndexable(c.env.PUBLIC_SITE_URL,c.req.url)||privatePath(new URL(c.req.url).pathname)||c.res.status>=400)c.header('X-Robots-Tag','noindex, nofollow')})
 app.use('*',async(c,next)=>{const u=new URL(c.req.url);if(c.req.method==='GET'&&!/^\/(api|admin)(?:\/|$)/.test(u.pathname)&&u.searchParams.has('branch')){u.searchParams.delete('branch');return c.redirect(u.pathname+u.search+u.hash,301)}await next()})
 app.use('*',async(c,next)=>{const p=new URL(c.req.url).pathname;if(p.length>1&&p.endsWith('/'))return c.redirect(p.slice(0,-1)+new URL(c.req.url).search,301);await next()})
+// Public operator guide: independent of CMS/DB, permanently search-excluded.
+// Keep it outside patient navigation, sitemaps and locale rewriting.
+app.get('/handover',c=>{c.header('X-Robots-Tag','noindex, nofollow');c.header('Cache-Control','public, max-age=0, must-revalidate');return c.html(handoverPage())})
+app.get('/en/handover',c=>c.redirect('/handover',302))
 app.use('*',async(c,next)=>{
  const url=new URL(c.req.url),match=/^\/(en|ja|zh)(\/.*)?$/.exec(url.pathname)
  if(!match)return next()

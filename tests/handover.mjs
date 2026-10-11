@@ -10,7 +10,7 @@ let dbCalls=0
 const env={PUBLIC_SITE_URL:'https://thegoodmorningdc.kr',DB:{prepare(){dbCalls++;throw Error('Guide must not read DB')}}}
 const isolated=await app.fetch(new Request('https://thegoodmorningdc.kr/handover'),env)
 assert.equal(isolated.status,200);assert.match(isolated.headers.get('x-robots-tag'),/noindex/);assert.equal(dbCalls,0)
-const isolatedHtml=await isolated.text();assert.match(isolatedHtml,/SEO/);assert.match(isolatedHtml,/AEO/);assert.match(isolatedHtml,/최종 납품 승인·정식 오픈은 보류/)
+const isolatedHtml=await isolated.text();assert.match(isolatedHtml,/SEO/);assert.match(isolatedHtml,/AEO/);assert.match(isolatedHtml,/검색 공개는 승인에 따라 진행/);assert.match(isolatedHtml,/과거500의 단일 원인은 미확정/)
 assert.doesNotMatch(isolatedHtml,/ADMIN_PASSWORD|CLOUDFLARE_API_TOKEN|database_id|\.sources\//)
 // The owner expressly approved publishing these payment terms; auth secrets remain forbidden.
 const paymentTerms=['15,000,000원','VAT 포함','NH 농협','1085-02-007634','문석준','입금 확인 후 2주 이내 발급','영원한 무상 수정']

@@ -1,5 +1,5 @@
 import * as source from './data'
-import {readQuery} from './resilience'
+import {readWithRetry as readQuery} from './reliability'
 import {markdown,imagePath} from './markdown'
 
 export const nativeSections = ['hero-section','care-priorities','opening-films','sedation-story','inclusive-care','trust','philosophy','question-story','why-goodmorning','treatments','preservation-assembly','revision-story','physician-deck','clinic-space-story','language-reveal','journal','visit-story','visit']

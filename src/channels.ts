@@ -1,6 +1,6 @@
 import {XMLParser} from 'fast-xml-parser'
 import {type Content,safeUrl} from './content'
-import {readQuery} from './resilience'
+import {readWithRetry as readQuery} from './reliability'
 export type FeedItem={title:string;url:string;date:string}
 const array=(v:any)=>!v?[]:Array.isArray(v)?v:[v]
 const text=(s:any)=>String(typeof s==='object'?s?.['#text']||'':s||'').replace(/<[^>]*>/g,'').slice(0,300)

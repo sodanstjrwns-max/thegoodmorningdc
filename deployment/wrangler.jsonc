@@ -4,6 +4,7 @@
   "compatibility_date": "2026-09-17",
   "pages_build_output_dir": "../dist",
   "compatibility_flags": ["nodejs_compat"],
+  "vars": { "PUBLIC_SITE_URL": "https://thegoodmorningdc.kr" },
   "d1_databases": [{
     "binding": "DB",
     "database_name": "webapp-2-goodmorning-production",

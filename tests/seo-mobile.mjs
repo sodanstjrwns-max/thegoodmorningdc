@@ -51,10 +51,10 @@ try{
  await page.goto(base+'/');assert.equal(await page.locator('.latest-journal li').count(),6);assert.ok(await page.locator('.footer-fees li').count()>0);await page.locator('.footer-hours summary').last().click();assert.ok(await page.locator('.footer-hours[open] dd').count()===7)
  const llms=await (await context.request.get(base+'/llms.txt')).text();assert.match(llms,new RegExp(base.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'/pricing'));assert.doesNotMatch(llms,/@gmail\.com|copy-review-|ADMIN_PASSWORD/)
  assert.deepEqual(errors,[])
- // Mobile menu links, selected branch and search work in touch emulation.
+ // Mobile menu links, single-clinic contacts and search work in touch emulation.
  const touch=await browser.newContext({viewport:{width:390,height:844},isMobile:true,hasTouch:true,reducedMotion:'reduce'}),tp=await touch.newPage();tp.on('pageerror',e=>errors.push(e.message))
  await tp.goto(base+'/');await tp.locator('.menu-toggle').tap();await tp.locator('#mobile-search-open').tap();await tp.locator('#site-search').fill('수가');await tp.waitForSelector('.search-result');assert.ok(await tp.locator('.search-result[href="/pricing"]').count()>0);await tp.locator('#search-dialog .dialog-close').tap();await tp.locator('.menu-toggle').tap();assert.equal(await tp.locator('#header-branch-select').count(),0);assert.match(await tp.locator('.mobile-bottom .branch-phone').getAttribute('href'),/029693776/)
  await tp.goto(base+'/pricing');await tp.screenshot({path:'test-results/audit-pricing-mobile.png',fullPage:true});await touch.close();assert.deepEqual(errors,[])
  console.log(`PASS SEO/AEO: ${urls.length} URLs, unique descriptions, canonical/OG, one clinic entity, breadcrumb parity, 31 visible care summaries, production/preview/private/error indexing rules, absolute llms index.`)
- console.log(`PASS mobile: ${urls.length*6} route-width combinations, stable question anchors, video topic filters, six latest posts, public fee footer, touch menu/search/branch. Browser errors: 0.`)
+ console.log(`PASS mobile: ${urls.length*6} route-width combinations, stable question anchors, video topic filters, six latest posts, public fee footer, touch menu/search/clinic contacts. Browser errors: 0.`)
 }finally{await browser.close()}

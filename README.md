@@ -2,6 +2,9 @@
 
 ## 현재 범위 — SingleClinic19 (2026-10-11)
 
+- **배포·GitHub main 반영 완료**. 앱 `9f9f4fb`, 스냅샷 https://78bf57b4.webapp-2-9y5.pages.dev , 현재 검증 사이트 https://webapp-2-9y5.pages.dev/ . 운영 단일 병원 검사: 한·영120경로·Chromium/WebKit72화면폭·수정 공지·수가32/PDF 통과. 운영 Foundations120경로480화면폭 메타·제목·캐노니컬 검사도 통과. 로컬 SEO/CMS/접수/탐색/Foundations/Care/smoke/operations/editorial 회귀 통과.
+- 운영 전후 SQL 대조: CMS44건·이력1건 동일, 공지 `initial-hours`의 제목/본문/수정일만 변경, 다른 게시물2건 및 접수·직원·설정·집계·알림큐 동일. 실제 접수나 외부 메시지 발송 없음.
+
 - 사용자 요청으로 **강도욱 원장님의 더굿모닝치과 한 병원만 공개 안내**합니다. 서울특별시 동대문구 왕산로 123, 2층 · 제기동역 2번 출구 · `02-969-3776`.
 - 광명 위치·시간·전화·예약·카카오·블로그·플레이스 및 공개 지점 선택 UI를 제거했습니다. Instagram은 지점명 없이 병원 계정으로 표시합니다.
 - 네이버 예약 `1019716`, 플레이스 `19524548`, 카카오 `_npxibG`, 네이버 블로그 `thegoodmorningdent`, Instagram `_thegoodmorning`, 기존 YouTube/인블로그를 유지합니다.

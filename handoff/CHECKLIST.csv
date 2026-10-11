@@ -1,7 +1,7 @@
 ID,분류,확인 항목,현재 상태,권장 확인 주체,근거 또는 메모,실제 담당자,확인일,결과 또는 보류 사유,페이지 또는 증빙
 G01,안내서,공개 안내서 로그인 없이 열기,검증 완료,제작 측,Handover23 실제 도메인 GET HEAD200 및 noindex 확인,,2026-10-11,운영 자동검사 통과,https://thegoodmorningdc.kr/handover
 G02,안내서,휴대폰 목차 및 인쇄 PDF 저장,자동검사 통과,제작 측,Chromium WebKit10화면폭 목차11개 인쇄 PDF 및 no-JS 확인,,2026-10-11,병원 실물 기기 인수 별도,https://thegoodmorningdc.kr/handover
-T01,기술,홈페이지 새 도메인과 HTTPS,확인 완료,제작 측,2026-10-11 FinalAudit22에서 apex와 www HTTP200 확인,,,,https://thegoodmorningdc.kr/
+T01,기술,홈페이지 새 도메인과 HTTPS,확인 완료,제작 측,대표주소 HTTPS200 및 www 대표주소301 - 기존 공식 도메인 보존,,,,https://thegoodmorningdc.kr/
 T02,기술,간헐 영문 페이지 HTTP500 원인 및 안정화,방어 보완 및 재검사,기술 담당,외부목록 장애격리와 읽기 재시도 - 과거 원인은 미확정,,2026-10-11,재발 시 오류식별번호 추적,https://thegoodmorningdc.kr/en/blog
 T03,기술,수가32항목과 원본 PDF 보존,확인 완료,제작 측,FinalAudit22 운영 비교 통과 - 공개 승인 유지,,,,https://thegoodmorningdc.kr/pricing
 T04,기술,관리자 역할 초안 공개 철회 및 접수 보호,검사 통과,제작 측,쓰기 검사는 로컬 - 실제 직원 사용 인수 별도,,,,https://thegoodmorningdc.kr/admin
@@ -17,6 +17,6 @@ C02,콘텐츠,사례 웹 공개 동의 비식별 및 의료광고 검토,자료�
 D01,실기기,iPhone Android 인앱 메뉴 영상 상담 연결,미실시,병원 지정,자동 Chromium WebKit 검사는 실물 검수가 아님,,,,https://thegoodmorningdc.kr/
 D02,실기기,전화 네이버 카카오 톡톡 실제 송수신,병원 확인 필요,병원 지정,점검 과정에서 실제 예약이나 메시지 전송하지 않음,,,,https://thegoodmorningdc.kr/reservation
 S01,검색,대표 URL 검색 공개 www 정규화 승인,사용자 승인 및 적용,제작 측,대표주소 index와 www301 - 관리자 안내서 Pages미리보기 noindex,,2026-10-11,실제 검색 색인과 별개,https://thegoodmorningdc.kr/robots.txt
-S02,검색,검색 도구 등록 수집 색인 확인,별도 확인 필요,검색 담당,검색 순위 AI 인용 또는 색인 시점 보장하지 않음,,,,
+S02,검색,검색 도구 등록 수집 색인 확인,별도 확인 필요,검색 담당,약6개월 계획으로 수집 색인 노출 추이를 확인 - 검색도구 등록 완료나 순위 보장은 아님,,,,
 A01,계약,결제 및 무상 수정 조건 안내,사용자 동일 조건 승인,제작 측,VAT포함1500만원 계좌이체 및 입금확인후2주내계산서 발급과 영원한무상수정,,2026-10-11,조건 게시 승인이며 실제 입금 발급 확인 아님,https://thegoodmorningdc.kr/handover
 A02,승인,자료 수령 기능 인수 정식 오픈 승인 구분,검색 공개 사용자 승인,양측 지정,공개 적용과 법률 의료 실물기기 검수는 구분,,2026-10-11,확인되지 않은 병원 운영 사실은 완료표시 안함,https://thegoodmorningdc.kr/handover

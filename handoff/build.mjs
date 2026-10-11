@@ -6,7 +6,7 @@ import {execFileSync} from 'node:child_process'
 import {chromium} from '@playwright/test'
 const root=process.cwd(),out=path.join(root,'.sources/handoff')
 fs.mkdirSync(out,{recursive:true})
-const stem=path.join(out,'GoodMorning_Handoff_2026-10-11_V25')
+const stem=path.join(out,'GoodMorning_Handoff_2026-10-11_V26')
 let html=execFileSync('pandoc',['handoff/DELIVERY.md','--from=markdown','--to=html5','--standalone','--metadata=lang:en','--metadata=pagetitle:더굿모닝치과 홈페이지 운영·인수 안내서'],{encoding:'utf8'})
 const font=fs.readFileSync('public/static/fonts/PretendardVariable.woff2').toString('base64')
 html=html.replace('lang="en"','lang="ko"').replace(/<style>[\s\S]*?<\/style>/g,'').replace('</head>',`<style>@font-face{font-family:'Handoff Sans';src:url(data:font/woff2;base64,${font}) format('woff2');font-weight:100 900;font-style:normal;}\n${fs.readFileSync('handoff/print.css','utf8')}</style></head>`)
@@ -42,7 +42,7 @@ for table in d.tables:
    if i==0:
     shade=OxmlElement('w:shd');shade.set(qn('w:fill'),'EDE8C5');cell._tc.get_or_add_tcPr().append(shade)
 for section in d.sections:
- p=section.footer.paragraphs[0];p.text='GOOD MORNING DENTAL · HANDOFF V25 · 2026-10-11'
+ p=section.footer.paragraphs[0];p.text='GOOD MORNING DENTAL · HANDOFF V26 · 2026-10-11'
  for r in p.runs:r.font.size=Pt(8)
 d.core_properties.title='더굿모닝치과 홈페이지 운영·인수 안내서'
 d.save(sys.argv[1])
@@ -51,6 +51,6 @@ const browser=await chromium.launch({args:['--no-sandbox','--disable-dev-shm-usa
 try {
  const page=await browser.newPage()
  await page.setContent(html,{waitUntil:'load'});await page.evaluate(()=>document.fonts.ready)
- await page.pdf({path:stem+'.pdf',format:'A4',printBackground:true,preferCSSPageSize:true,displayHeaderFooter:true,headerTemplate:'<span></span>',footerTemplate:'<div style="font-family:sans-serif;font-size:8px;width:100%;margin:0 15mm;color:#777;display:flex;justify-content:space-between"><span>GOOD MORNING DENTAL · HANDOFF V25 · 2026-10-11</span><span><span class="pageNumber"></span> / <span class="totalPages"></span></span></div>'})
+ await page.pdf({path:stem+'.pdf',format:'A4',printBackground:true,preferCSSPageSize:true,displayHeaderFooter:true,headerTemplate:'<span></span>',footerTemplate:'<div style="font-family:sans-serif;font-size:8px;width:100%;margin:0 15mm;color:#777;display:flex;justify-content:space-between"><span>GOOD MORNING DENTAL · HANDOFF V26 · 2026-10-11</span><span><span class="pageNumber"></span> / <span class="totalPages"></span></span></div>'})
  console.log('Built PDF / DOCX / self-contained HTML:',stem)
 } finally {await browser.close()}

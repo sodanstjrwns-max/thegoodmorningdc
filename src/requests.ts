@@ -20,7 +20,7 @@ publicRequests.post('/:kind',async c=>{
  const name=get('name'),contact=get('contact'),branch=get('branch'),message=get('message'),locale=get('locale')||'ko'
  if(get('website'))return c.json({error:'요청을 확인할 수 없습니다.'},400)
  if(!name||name.length>80||contact.length>150||!(/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contact)||/^\+?[\d ()-]{8,25}$/.test(contact))||branch!=='cheongnyangni'||message.length>2000||!['ko','en','ja','zh'].includes(locale)||get('consent')!=='yes')return c.json({error:'이름·연락처·개인정보 동의를 확인하세요.'},400)
- const payload:any={name,contact,branch,message,locale,consentVersion:'2026-10-11-v2'}
+ const payload:any={name,contact,branch,message,locale,consentVersion:'2026-10-12-v3'}
  const now=Date.now(),content=await loadContent(c.env.DB)
  if(kind==='career'){
   const vacancy=get('vacancy'),role=get('role');if(!role||role.length>100)return c.json({error:'희망 직무를 입력하세요.'},400)

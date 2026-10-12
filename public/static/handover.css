@@ -4,3 +4,12 @@
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
 @page{size:A4;margin:16mm 14mm}
 @media print{html{scroll-behavior:auto}body{background:#fff;color:#111;font-size:10pt;line-height:1.6;print-color-adjust:exact;-webkit-print-color-adjust:exact}.guide-bar,.guide-actions,.guide-index,.skip-link,.guide-quicklinks,#guide-feedback,.guide-footer a{display:none!important}.guide-cover{padding:0 0 8mm;max-width:none}.guide-cover h1{font-size:30pt}.guide-subtitle{font-size:16pt}.guide-lead{font-size:11pt}.guide-meta{font-size:9pt;margin:5mm 0 0}.guide-layout{display:block;padding:8mm 0 0;max-width:none}.guide-document{font-size:10pt;line-height:1.65}.guide-document>p:first-child{font-size:12pt}.guide-document h2{font-size:17pt;margin:9mm 0 4mm;padding-top:4mm;break-after:avoid}.guide-document h3{font-size:12pt;margin:6mm 0 2mm;break-after:avoid}.guide-document p{margin:3mm 0;orphans:3;widows:3}.guide-document li{margin:2mm 0}.guide-document blockquote{padding:4mm;margin:5mm 0;break-inside:avoid}.editorial-table{overflow:visible;margin:5mm 0}.editorial-table table{font-size:9pt}.editorial-table th,.editorial-table td{font-size:9pt;padding:2.5mm}.editorial-table tr{break-inside:avoid}thead{display:table-header-group}.guide-footer{margin-top:8mm;padding:6mm;background:#f0f1e8;color:#262c28;font-size:9pt}.guide-document a{color:inherit}.guide-cover .eyebrow{font-size:8pt;margin-bottom:5mm}}
+/* Admin login block: production origin only (agency policy). */
+.guide-credentials{margin-top:28px;padding:22px 24px;border:1px solid #b9a14e;background:#fbf8ec;max-width:720px}
+.guide-credentials h2{font-size:20px;margin:0 0 14px}
+.guide-credentials .credential-label{margin:12px 0 4px;font-size:13px;color:#46503d;font-weight:650}
+.guide-credentials .credential-label small{font-weight:400}
+.guide-credentials .credential-url,.guide-credentials .credential-value{margin:0;word-break:break-all}
+.guide-credentials code{font-size:18px;letter-spacing:.02em;padding:4px 8px;background:#fff;border:1px solid #cfcec2;user-select:all}
+.guide-credentials .credential-warning{margin:16px 0 0;font-size:13px;color:#5b4a14}
+@media print{.guide-credentials{break-inside:avoid}}

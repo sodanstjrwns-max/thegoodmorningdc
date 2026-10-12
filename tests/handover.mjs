@@ -16,6 +16,14 @@ assert.doesNotMatch(isolatedHtml,/ADMIN_PASSWORD|CLOUDFLARE_API_TOKEN|database_i
 const paymentTerms=['15,000,000원','VAT 포함','NH 농협','1085-02-007634','문석준','입금 확인 후 2주 이내 발급','영원한 무상 수정']
 for(const term of paymentTerms)assert.ok(isolatedHtml.includes(term),'Approved payment term: '+term)
 assert.doesNotMatch(isolatedHtml,/별도 견적·계약·결제 안내|500만원|3회 분할/)
+// Agency policy: the admin login block shows the real ADMIN_PASSWORD only on the production origin.
+const secret='qa-'+crypto.randomUUID()
+const prod=await(await app.fetch(new Request('https://thegoodmorningdc.kr/handover'),{...env,ADMIN_PASSWORD:secret})).text()
+assert.match(prod,/id="delivery-admin-access"/);assert.ok(prod.includes('https://thegoodmorningdc.kr/admin'));assert.ok(prod.includes(secret),'Production origin renders the owner password')
+for(const host of ['https://abc123.webapp-2-9y5.pages.dev/handover','https://preview.example/handover']){const r=await app.fetch(new Request(host),{...env,ADMIN_PASSWORD:secret});const t=await r.text();assert.ok(!t.includes(secret),'Preview host never renders the password: '+host);assert.match(t,/정식 도메인의 안내서/)}
+const prodResponse=await app.fetch(new Request('https://thegoodmorningdc.kr/handover'),{...env,ADMIN_PASSWORD:secret});assert.match(prodResponse.headers.get('cache-control'),/no-store/);assert.match(prodResponse.headers.get('x-robots-tag'),/noindex/)
+assert.doesNotMatch(prod,/공개 안내서에는 비밀번호|관리자 비밀번호와 환자·직원 개인정보는 이 공개 문서에 넣지 않았습니다/)
+assert.ok(!fs.readFileSync('src/handover.ts','utf8').includes(secret)&&!fs.readFileSync('handoff/DELIVERY.md','utf8').includes(secret))
 assert.deepEqual([...new Set(isolatedHtml.match(/\b\d{4}-\d{2}-\d{6}\b/g))],['1085-02-007634'])
 const source=fs.readFileSync('handoff/DELIVERY.md','utf8');assert.ok(source.length<40000,'Markdown renderer must not truncate source');assert.doesNotMatch(source,/\uFFFD/,'Source must not contain replacement characters')
 assert.ok(source.includes('초안 저장만으로 환자 화면이 바뀌지는 않습니다.'))
@@ -55,4 +63,4 @@ for(const [name,engine] of [['chromium',chromium],['webkit',webkit]]){
 }
 assert.deepEqual(errors,[])
 fs.writeFileSync('test-results/handover'+(base.includes('localhost')?'':'-production')+'.json',JSON.stringify({base,dbIndependent:true,permanentNoindex:true,public200:true,widths,browsers:['chromium','webkit'],print:true,noJs:true,errors},null,2))
-console.log(`PASS public handover: DB-independent HTTP200, permanent noindex, ${widths} Chromium/WebKit widths, axe, 11 TOC targets, print/PDF, copy/fallback and no-JS. Approved payment terms verified; no auth credentials or form submissions.`)
+console.log(`PASS public handover: DB-independent HTTP200, permanent noindex, ${widths} Chromium/WebKit widths, axe, 11 TOC targets, print/PDF, copy/fallback and no-JS. Approved payment terms verified; admin login block shows the password only on the production origin; no form submissions.`)

@@ -1,6 +1,8 @@
 import {XMLParser} from 'fast-xml-parser'
 import {type Content,safeUrl} from './content'
 import {readWithRetry as readQuery} from './reliability'
+// Local relevance filter for Naver blog titles (Cheongnyangni / Jegi-dong / Dongdaemun area or the clinic itself).
+export const localPost=(title:string)=>/청량리|동대문|전농|제기|회기|용두|경동|휘경|이문동|답십리|장안동|신설동|더굿모닝/.test(title)
 export type FeedItem={title:string;url:string;date:string}
 const array=(v:any)=>!v?[]:Array.isArray(v)?v:[v]
 const text=(s:any)=>String(typeof s==='object'?s?.['#text']||'':s||'').replace(/<[^>]*>/g,'').slice(0,300)
@@ -49,6 +51,8 @@ export async function channelListing(db:any,content:Content,waitUntil?:(promise:
    }
   }catch{stale=true;console.warn('Optional channel cache unavailable')}
   if(db&&feedUrl(ch)&&(!cached||cached.next_attempt<Date.now())&&waitUntil)waitUntil(refreshChannel(db,ch).catch(()=>{console.warn('Optional channel refresh unavailable')}))
+  // The official Naver blog also targets other regions; show only clinic-area posts on this site.
+  if(ch.type==='naver')items=items.filter(i=>localPost(i.title))
   const stamp=Number(cached?.fetched_at||0)
   result.push({...ch,items,fetchedAt:Number.isFinite(stamp)&&stamp>=0&&stamp<=8640000000000000?stamp:0,stale:stale||!!cached?.error})
  }

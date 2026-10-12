@@ -24,7 +24,8 @@
     "test:operations": "node tests/notification-unit.mjs && node tests/operations.mjs",
     "test:operations:production": "node tests/operations-production.mjs",
     "test:editorial": "node tests/editorial.mjs",
-    "test:all": "npm run test:navigation && npm test && npm run test:studio && npm run test:seo && npm run test:services && npm run test:locales && npm run test:editorial"
+    "test:all": "npm run test:navigation && npm test && npm run test:studio && npm run test:seo && npm run test:services && npm run test:locales && npm run test:editorial && npm run test:local-seo",
+    "test:local-seo": "node tests/local-seo.mjs"
   },
   "dependencies": {
     "@tiptap/core": "3.31.4",

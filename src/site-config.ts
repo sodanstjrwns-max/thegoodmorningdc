@@ -4,7 +4,7 @@
 export const GA_MEASUREMENT_ID='G-CNEEQ5VCH0'
 export const CLARITY_PROJECT_ID='ywkymprujk'
 // Naver Search Advisor HTML-tag value. Pending from the owner; env NAVER_SITE_VERIFICATION overrides.
-export const NAVER_SITE_VERIFICATION=''
+export const NAVER_SITE_VERIFICATION='f785841c2e30468ae35aa3553ae334175a084986'
 // IndexNow key file: https://thegoodmorningdc.kr/<key>.txt returns the key itself as text/plain.
 export const INDEXNOW_KEY='98fd1c7b41dc3340ee91b700aef8397d'
 // Central PF dashboard stats endpoint. Bearer token is the Pages secret STATS_API_TOKEN only.

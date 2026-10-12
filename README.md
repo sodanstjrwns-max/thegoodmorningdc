@@ -1,5 +1,18 @@
 # 더굿모닝치과 — Good Morning Web
 
+## LocalSEO29 + Typography31 — 지역 허브·측정·원장 답변·타이포·영상·캐시 (2026-10-12, Claude Code)
+
+- **지역 SEO:** 홈 title `청량리 치과 | 더굿모닝치과 — 제기동역 수면치료·임플란트`, H1 첫 줄 `청량리 치과 · 더굿모닝치과`. 한국어 전용 허브 `/area/cheongnyangni`(청량리 치과)·`/area/jegi-dong`(제기동 치과): 정확 일치 title/H1, 본문 한글 약 1,900/1,540자, FAQ 5개=FAQPage, Dentist `@id` 참조, hreflang 없음, `/en/area/*`는 한국어 원문으로 302. 정확 앵커: 홈 본문 2·푸터 1(청량리)·진료 페이지 aside 1(제기동). 사이트맵 포함, 언어 사이트맵 제외. 위치 정보는 사이트에 이미 있는 사실(왕산로 123 2층, 제기동역 2번 출구 85m, 진료시간)만 사용했고 도보시간·주차·층 정보는 새로 만들지 않았습니다.
+- **측정:** `src/site-config.ts`에 GA4 `G-CNEEQ5VCH0`, Clarity `ywkymprujk`, IndexNow 키, naver-site-verification 슬롯(빈 값=미출력, env `NAVER_SITE_VERIFICATION` 우선). 외부 파일 `/static/analytics.js`(인라인 없음, DNT/GPC면 미로드)를 운영 도메인 공개 페이지에만 넣습니다(관리자·/handover·미리보기 제외). CSP에 googletagmanager/google-analytics/clarity/c.bing.com 추가. `/98fd1c7b41dc3340ee91b700aef8397d.txt` text/plain. **Amplitude 금지.** `/admin/stats`(관리자 역할만, 그 외 404)는 Pages 시크릿 `STATS_API_TOKEN`으로 중앙 대시보드를 서버에서 조회합니다(토큰은 Git·문서에 없음).
+- **개인정보처리방침:** 5항을 GA4·Clarity(쿠키, 목적, 보관, DNT/GPC·쿠키 차단·GA 차단 부가기능)로, 6항에 Google LLC·Microsoft Corporation 국외 이전 추가. 시행일 2026-10-12, 접수 동의 버전 `2026-10-12-v3`.
+- **/handover:** 회사 원칙에 따라 관리자 로그인 블록 복구 — 접속 주소와 env `ADMIN_PASSWORD`를 **운영 origin(또는 localhost)에서만** 요청 시 렌더(`private, no-store`, noindex 유지). “공개 안내서에는 비밀번호를 넣지 않습니다” 문구 삭제. 미리보기 호스트는 정식 안내서 링크만 표시.
+- **원장 12문항 반영(`src/director.ts`):** 홈 브랜드 스토리 섹션(우선 진료 4개 바로 다음), 미션의 원장 회고(환자 식별정보 없음·개인차 고지)와 ‘시간을 더 들이는 진료’, 강도욱/강종승 원장 진료 분야, 수면치료(전향성 기억상실을 원장 설명으로, 후기 인용 아님)·장애/전신질환 준비(혈압·혈당·지혈·골다공증·콧줄·낭종·조직검사)·앞니 화이트/핑크 에스테틱·상악동 노트. 할인·가격 유연성은 의료법상 게시하지 않았습니다. 대표 영상 3개는 확인된 uploadDate로 VideoObject.
+- **크롤링:** robots AI 크롤러 명시 허용+LLMs 안내, `/llms-full.txt`, 모든 사이트맵 URL에 실제 수정일 lastmod(`contentDates`, 요청 시각 아님), 공개 사례 0건이면 `/cases` noindex·사이트맵 제외, 네이버 블로그 피드는 청량리·제기동·동대문 관련 글만, `webapp-2-9y5.pages.dev`→운영 도메인 301(해시 미리보기는 noindex 유지), `/favicon.ico`·`/apple-touch-icon.png`, 의사 페이지 `Person+Physician`(사이트에 있는 전문의·학교만), 스키마 상호 `더굿모닝치과의원`·주소의 시/구.
+- **Typography31:** 큰 제목의 음수 자간(-0.035~-0.08em, -2px)이 작은 자식에 px로 상속돼 수면치료 부제가 -0.12em으로 뭉개졌습니다. 제목 -0.01em, 부제·본문 0, word-spacing normal, keep-all+overflow-wrap:anywhere, 제목 행간 1.25 이상·본문 1.7. 홈·수면치료·의료진·미션·허브 1440/390 전후 스크린숏 확인.
+- **영상:** 히어로 영상의 오류/지연 카드(“영상을 불러오지 못했습니다…”, 새 창 링크)와 8초 지연 타이머 제거. 실패·지연 시 포스터를 그대로 두고 작은 원형 재생 아이콘만 남깁니다. YouTube는 기존대로 클릭 시 nocookie 플레이어만 로드.
+- **성능:** 운영 익명 GET 페이지를 Cache API로 120초 엣지 캐시(관리자 저장 시 주요 KO/EN 경로 퍼지, 관리자·API·미디어·영상·/handover 제외), `public/_headers`로 버전 붙은 CSS/JS·폰트 1년 immutable, 이미지·영상 7일+SWR, Google Fonts CSS를 렌더 차단하지 않게 변경.
+- 검사: 타입/빌드, 신규 `tests/local-seo.mjs`, 로컬 smoke·navigation·services·locales(EN59)·seo-mobile(61 URL)·foundations·handover/hero-layout/request-audit/single-clinic/care(Chromium만 — 이 Mac에 WebKit 미설치). studio(비공개 `.sources` 필요)·editorial(localhost:3000 전용)은 이번 환경에서 실행하지 못했습니다. 운영 DB/R2 쓰기 없음.
+
 ## RequestAudit28 — 원장 요청 대조와 누락 보완 (2026-10-12)
 
 - 원장 사전설문·원본 기획안의 메뉴/진료/의료진/관리자/콘텐츠/도메인 요구와 최근 수정 요청을 현재 코드·운영 화면에 대조했습니다. `handoff/CHECKLIST.csv`에 최근 요청6개 및 원본 요구10개를 구현/운영자료/후속 지시 변경으로 구분해 기록했습니다.

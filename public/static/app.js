@@ -90,7 +90,9 @@ if(hero&&motionButton){
  let userPaused=false,explicitPlayback=false,inView=true,playPending=false,blocked=false,issue='',attempt=0,slowTimer;
  const chapters=$$('.film-chapters [data-film-chapter]',hero);
  const chapterLabels=['함께 이야기하는 의료진','함께 살펴보는 두 원장님','좋은 아침을 맞이하는 공간','진료에 집중할 수 있는 공간'];
- const playbackAllowed=()=>explicitPlayback||motionAllowed();
+ // The hero film starts on arrival (muted, from HTML autoplay); only reduced-motion, data-saver or the visitor's own pause stop it.
+ const heroMotionAllowed=()=>!motionPreference.matches&&!navigator.connection?.saveData&&!sitePaused;
+ const playbackAllowed=()=>explicitPlayback||heroMotionAllowed();
  const suspended=()=>document.hidden||!inView||!!$('#video-dialog')?.open;
  const wantsPlayback=()=>playbackAllowed()&&!userPaused&&!suspended();
  function paintPlayback(){
@@ -101,7 +103,7 @@ if(hero&&motionButton){
   hero.classList.toggle('motion-paused',userPaused);hero.classList.toggle('motion-suspended',suspended());
   hero.dataset.motionState=!playbackAllowed()?'reduced':suspended()?'suspended':userPaused?'paused':blocked?'blocked':'playing';
   hero.dataset.playbackReason=issue||(!playbackAllowed()?'preference':userPaused?'paused':playing?'playing':'loading');
-  const controls=$('.film-chapters',hero);if(controls)controls.hidden=!film?.getAttribute('src');
+  const controls=$('.film-chapters',hero);if(controls)controls.hidden=!(film?.currentSrc||film?.getAttribute('src'));
   if(playButton)playButton.hidden=false;
   // Never show patients an error card: a failed or slow film silently keeps the poster image.
   if(status)status.textContent=issue==='network'?'':issue==='autoplay'?'자동재생이 제한되었습니다. 눌러서 영상을 재생하세요.':!playbackAllowed()?'자동재생은 꺼져 있습니다. 영상만 직접 재생할 수 있습니다.':userPaused?'영상이 일시정지되었습니다.':'원내 소개 영상 · 무음 재생';
@@ -118,7 +120,7 @@ if(hero&&motionButton){
   if(!film)return;
   if(!wantsPlayback()){film.pause();clearTimeout(slowTimer);paintPlayback();return}
   if(blocked){paintPlayback();return}
-  if(!film.getAttribute('src')){film.defaultMuted=true;film.muted=true;film.playsInline=true;film.src=matchMedia('(max-width:760px)').matches?film.dataset.mobile:film.dataset.desktop;film.load()}
+  if(!film.currentSrc&&!film.getAttribute('src')&&!film.querySelector('source')){film.defaultMuted=true;film.muted=true;film.playsInline=true;film.src=matchMedia('(max-width:760px)').matches?film.dataset.mobile:film.dataset.desktop;film.load()}
   if(film.paused&&!playPending){
    playPending=true;const currentAttempt=++attempt;
    clearTimeout(slowTimer);
@@ -129,7 +131,7 @@ if(hero&&motionButton){
   }
   paintPlayback();
  }
- function syncMotion(){root.classList.toggle('hero-in-view',inView);hero.classList.toggle('motion-ready',motionAllowed());syncFilm()}
+ function syncMotion(){root.classList.toggle('hero-in-view',inView);hero.classList.toggle('motion-ready',heroMotionAllowed());syncFilm()}
  function directPlay(){
   // Called synchronously inside the trusted click; do not defer play() to metadata/timers.
   explicitPlayback=true;userPaused=false;blocked=false;issue='';playPending=false;++attempt;

@@ -1,0 +1,61 @@
+/* 공지 팝업 — fixed overlay, hidden until opened (no layout shift). esoldc card-deck pattern. */
+.gm-popup-overlay{position:fixed;inset:0;z-index:9000;background:rgba(24,27,25,.58);display:flex;flex-direction:column;padding:20px;overflow-y:auto;overscroll-behavior:contain;opacity:0;transition:opacity .3s ease}
+.gm-popup-overlay[hidden]{display:none!important}
+.gm-popup-overlay:not(.show){pointer-events:none}
+.gm-popup-overlay.show{opacity:1;pointer-events:auto}
+.gm-popup-bar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:auto auto 10px;width:min(100%,420px);flex:none}
+.gm-popup-bar[hidden]{display:none}
+.gm-popup-bar-t{font-size:14px;font-weight:700;color:#fff;letter-spacing:.02em}
+.gm-popup-bar-t b{display:inline-flex;align-items:center;justify-content:center;min-width:22px;height:22px;margin-left:6px;padding:0 6px;border-radius:99px;background:#f2d45e;color:#242725;font-size:12px}
+.gm-popup-all{min-height:44px;padding:8px 16px;border-radius:99px;border:1px solid #d9dccf;background:#f7f6f0;color:#242725;font-size:13px;font-weight:700;cursor:pointer}
+.gm-popup-stack{margin:auto;display:flex;flex-wrap:wrap;gap:16px;justify-content:center;align-items:flex-start;max-width:100%}
+.gm-popup-bar:not([hidden])+.gm-popup-stack{margin-top:0}
+.gm-popup-card{background:#fff;color:#242725;border-radius:18px;overflow:hidden;box-shadow:0 28px 80px rgba(20,24,20,.42);width:360px;max-width:100%;max-height:86vh;display:flex;flex-direction:column;position:relative;transform:translateY(20px) scale(.98);transition:transform .35s cubic-bezier(.2,.8,.2,1),opacity .25s ease}
+.gm-popup-overlay.show .gm-popup-card{transform:none}
+.gm-popup-overlay.show .gm-popup-card.gm-popup-out{opacity:0;transform:translateY(12px) scale(.95)}
+.gm-popup-x{position:absolute;top:10px;right:10px;width:44px;height:44px;border:0;border-radius:50%;background:rgba(255,255,255,.92);color:#242725;font-size:24px;line-height:1;cursor:pointer;z-index:3;box-shadow:0 2px 8px rgba(0,0,0,.15)}
+.gm-popup-link{display:block;color:inherit;text-decoration:none;overflow-y:auto;flex:1 1 auto;min-height:0}
+a.gm-popup-link:hover .gm-popup-more,a.gm-popup-link:focus-visible .gm-popup-more{text-decoration:underline}
+.gm-popup-img img{display:block;width:100%;height:auto;max-height:52vh;object-fit:contain;background:#f4f3ee}
+.gm-popup-body{padding:24px 24px 20px}
+.gm-popup-tag{display:inline-block;font-size:11px;font-weight:800;letter-spacing:.16em;color:#5d6b4f;background:#eef0e4;padding:4px 11px;border-radius:99px;margin-bottom:10px}
+.gm-popup-title{font-size:20px;font-weight:800;line-height:1.35;letter-spacing:-.01em;margin:0 44px 8px 0;word-break:keep-all;overflow-wrap:anywhere}
+.gm-popup-text{font-size:15px;line-height:1.7;color:#4a4f48;word-break:keep-all;overflow-wrap:anywhere}
+.gm-popup-text p{margin:.4em 0}
+.gm-popup-more{display:inline-block;margin-top:8px;font-size:14px;font-weight:700;color:#3d5a2f}
+.gm-popup-foot{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 16px;border-top:1px solid #ecebe3;background:#f7f6f0;flex:none}
+.gm-popup-hide,.gm-popup-close{min-height:44px;font-size:14px;cursor:pointer;border-radius:10px}
+.gm-popup-hide{background:none;border:0;color:#5b6158;padding:6px 4px}
+.gm-popup-close{font-weight:700;color:#242725;background:#fff;border:1px solid #d9dccf;padding:8px 16px}
+.gm-popup-overlay button:focus-visible,.gm-popup-overlay a:focus-visible{outline:3px solid #f2d45e;outline-offset:2px}
+.gm-popup-peek{display:none}
+/* PC: 계단식 카드 뭉치 */
+.gm-popup-deck .gm-popup-bar{width:var(--gm-w,auto)}
+.gm-popup-deck .gm-popup-stack{display:block;position:relative;flex:none;margin:0 auto auto;max-width:none}
+.gm-popup-deck .gm-popup-card{position:absolute;top:0;left:0;max-width:calc(100vw - 40px);max-height:var(--gm-maxh,86vh);transform:translate(var(--gm-x,0),calc(var(--gm-y,0px) + 20px))}
+.gm-popup-deck.show .gm-popup-card{transform:translate(var(--gm-x,0),var(--gm-y,0))}
+.gm-popup-deck.show .gm-popup-card.gm-popup-out{opacity:0;pointer-events:none}
+.gm-popup-deck .gm-popup-back{cursor:pointer;box-shadow:0 12px 34px rgba(20,24,20,.3)}
+.gm-popup-deck .gm-popup-back>:not(.gm-popup-peek){pointer-events:none}
+.gm-popup-deck .gm-popup-back .gm-popup-x{visibility:hidden}
+.gm-popup-deck .gm-popup-peek{display:flex;align-items:center;position:absolute;top:0;left:0;right:0;height:var(--gm-dy,32px);z-index:4;margin:0;padding:0 16px;border:0;border-bottom:1px solid #ecebe3;background:#f7f6f0;color:#242725;font-size:13px;font-weight:700;text-align:left;cursor:pointer;opacity:0;visibility:hidden}
+.gm-popup-deck .gm-popup-back .gm-popup-peek{opacity:1;visibility:visible}
+.gm-popup-peek-n{flex:none;font-size:11px;font-weight:800;color:#5d6b4f;margin-right:8px;letter-spacing:.08em}
+.gm-popup-peek-t{overflow:hidden;white-space:nowrap;text-overflow:ellipsis;min-width:0}
+/* 모바일: 한 장씩 */
+.gm-popup-nav{display:none}
+.gm-popup-single .gm-popup-stack{margin:auto auto 0;width:100%;max-width:420px;flex-wrap:nowrap;position:relative;isolation:isolate}
+.gm-popup-single .gm-popup-card{display:none;width:100%}
+.gm-popup-single .gm-popup-card.gm-popup-active{display:flex;animation:gmPopupIn .25s ease}
+.gm-popup-single .gm-popup-stack.gm-popup-more::before{content:'';position:absolute;z-index:-1;top:14px;bottom:14px;right:-7px;left:30%;border-radius:18px;background:#e9e8de;pointer-events:none}
+.gm-popup-single .gm-popup-stack.gm-popup-more2::after{content:'';position:absolute;z-index:-2;top:28px;bottom:28px;right:-13px;left:45%;border-radius:18px;background:#d9d8cc;pointer-events:none}
+.gm-popup-single .gm-popup-nav{display:flex;align-items:center;justify-content:center;gap:14px;margin:12px auto auto}
+.gm-popup-single .gm-popup-nav[hidden]{display:none}
+.gm-popup-nav button{width:44px;height:44px;border-radius:50%;border:1px solid #d9dccf;background:#f7f6f0;color:#242725;font-size:22px;line-height:1;cursor:pointer}
+.gm-popup-dots{display:flex;align-items:center;gap:6px;min-width:64px;justify-content:center}
+.gm-popup-dots i{display:block;width:7px;height:7px;border-radius:99px;background:rgba(255,255,255,.55)}
+.gm-popup-dots i.on{width:18px;background:#fff}
+.gm-popup-ind{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+@keyframes gmPopupIn{from{opacity:0;transform:translateX(var(--gm-dx,0))}to{opacity:1;transform:none}}
+@media (max-width:480px){.gm-popup-overlay{padding:16px 12px}.gm-popup-single .gm-popup-card{max-height:calc(100svh - 150px)}.gm-popup-img img{max-height:40svh}.gm-popup-body{padding:20px 18px 16px}.gm-popup-title{font-size:18px}.gm-popup-single .gm-popup-stack{width:calc(100% - 12px);margin-left:0}}
+@media (prefers-reduced-motion:reduce){.gm-popup-overlay,.gm-popup-card{transition:none!important}.gm-popup-single .gm-popup-card.gm-popup-active{animation:none}}

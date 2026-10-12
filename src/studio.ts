@@ -8,6 +8,7 @@ import {articleView} from './editorial'
 import {bodyMedia} from './markdown'
 import {getActor,audit} from './staff'
 import {comparable} from './workflow'
+import {queueIndexNow,contentPaths} from './indexnow'
 export const studio=new Hono<any>()
 const rows=async(db:any)=>(await db.prepare('SELECT * FROM content_entries').all()).results||[]
 studio.get('/content',async c=>{
@@ -59,6 +60,7 @@ studio.post('/content/:kind/:key',async c=>{
   if(p.revision===0)await c.env.DB.prepare('DELETE FROM content_reviews WHERE kind=? AND key=?').bind(kind,key).run()
   await c.env.DB.prepare('UPDATE content_reviews SET state=?,updated_at=? WHERE kind=? AND key=? AND content_revision<=?').bind(p.action==='publish'?'published':'stale',now,kind,key,p.revision).run()
   await audit(c,'content.'+p.action,kind+'/'+key)
+  if(p.action==='publish')queueIndexNow(c,contentPaths(kind,key),'publish:'+kind)
   return c.json({ok:true,revision:p.revision+1,value:p.value})
  }catch(e){return c.json({error:e instanceof Error?e.message:'입력 내용을 확인하세요.'},400)}
 })
@@ -67,7 +69,7 @@ studio.post('/content/:kind/:key/withdraw',async c=>{
  if(!['column','showcase','vacancy'].includes(kind)||!Number.isInteger(p?.revision))return c.json({error:'공개 내림 대상과 버전을 확인하세요.'},400)
  const row=await c.env.DB.prepare('SELECT draft_json FROM content_entries WHERE kind=? AND key=? AND revision=?').bind(kind,key,p.revision).first();if(!row)return c.json({error:'변경 충돌입니다.'},409)
  const result=await c.env.DB.batch([c.env.DB.prepare('UPDATE content_entries SET live_json=NULL,revision=revision+1,updated_at=? WHERE kind=? AND key=? AND revision=?').bind(new Date().toISOString(),kind,key,p.revision),c.env.DB.prepare('INSERT INTO content_history(kind,key,action,snapshot,created_at) SELECT ?,?,?,?,? WHERE changes()=1').bind(kind,key,'withdraw',row.draft_json,new Date().toISOString())])
- if(result[0].meta.changes){await c.env.DB.prepare("UPDATE content_reviews SET state='stale' WHERE kind=? AND key=?").bind(kind,key).run();await audit(c,'content.withdraw',kind+'/'+key)}
+ if(result[0].meta.changes){await c.env.DB.prepare("UPDATE content_reviews SET state='stale' WHERE kind=? AND key=?").bind(kind,key).run();await audit(c,'content.withdraw',kind+'/'+key);queueIndexNow(c,contentPaths(kind,key),'withdraw:'+kind)}
  return result[0].meta.changes?c.json({ok:true}):c.json({error:'변경 충돌입니다.'},409)
 })
 studio.delete('/content/:kind/:key',async c=>{
@@ -76,7 +78,7 @@ studio.delete('/content/:kind/:key',async c=>{
  if(!row||row.revision!==revision)return c.json({error:'다른 창에서 변경되었습니다. 목록을 새로고침하세요.'},409)
  try{validateReferences(assemble(all.filter((r:any)=>!(r.kind===kind&&r.key===key))))}catch(e){return c.json({error:'연결된 콘텐츠가 있습니다. 관련 진료·의료진 연결을 먼저 수정하세요.'},409)}
  const result=await c.env.DB.batch([c.env.DB.prepare('DELETE FROM content_entries WHERE kind=? AND key=? AND revision=?').bind(kind,key,revision),c.env.DB.prepare('INSERT INTO content_history(kind,key,action,snapshot,created_at) SELECT ?,?,?,?,? WHERE changes()=1').bind(kind,key,baseline(kind,key)?'restore':'delete',row.draft_json,new Date().toISOString())])
- if(result[0].meta.changes){await c.env.DB.prepare('DELETE FROM content_reviews WHERE kind=? AND key=?').bind(kind,key).run();await audit(c,'content.delete',kind+'/'+key)}
+ if(result[0].meta.changes){await c.env.DB.prepare('DELETE FROM content_reviews WHERE kind=? AND key=?').bind(kind,key).run();await audit(c,'content.delete',kind+'/'+key);if(row.live_json)queueIndexNow(c,contentPaths(kind,key),'delete:'+kind)}
  return result[0].meta.changes?c.json({ok:true}):c.json({error:'변경 충돌입니다. 새로고침하세요.'},409)
 })
 studio.get('/history/:kind/:key',async c=>c.json({history:(await c.env.DB.prepare('SELECT id,action,snapshot,created_at FROM content_history WHERE kind=? AND key=? ORDER BY id DESC LIMIT 20').bind(c.req.param('kind'),c.req.param('key')).all()).results}))

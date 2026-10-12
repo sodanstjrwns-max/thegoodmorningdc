@@ -10,6 +10,7 @@ export async function mediaUsage(db:any){
  for(const r of records){add(r.draft_json,{kind:r.kind,key:r.key,state:'draft'});if(r.live_json)add(r.live_json,{kind:r.kind,key:r.key,state:'live'})}
  for(const p of posts)add(p.body,{kind:'post',key:p.id,state:p.status==='published'?'live':'draft'})
  for(const h of history)add(h.snapshot,{kind:h.kind,key:h.key,state:'history'})
+ try{for(const p of (await db.prepare('SELECT id,title,image,enabled FROM site_popups').all()).results||[])add(p.image,{kind:'popup',key:p.title,state:p.enabled?'live':'draft'})}catch{}
  return map
 }
 operationRoutes.get('/media-library',async c=>{

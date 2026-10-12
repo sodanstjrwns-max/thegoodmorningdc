@@ -44,7 +44,7 @@ export type Editorial={featured:boolean;summary:string;seoTitle:string;seoDescri
 export type Column=Editorial&{key:string;category:string;title:string;treatment:string;body:string;medicalReviewed:boolean;reviewedOn:string}
 export type Showcase=Partial<Editorial>&{beforeAlt?:string;afterAlt?:string;duration?:string;visits?:string;key:string;category:string;title:string;treatment:string;body:string;beforeImage:string;afterImage:string;beforeDate:string;afterDate:string;caption:string;risks:string;consentConfirmed:boolean;consentRef:string;anonymized:boolean;medicalReviewed:boolean;reviewer:string;reviewedOn:string;sourceUrl:string}
 export type Vacancy={key:string;title:string;branch:string;role:string;employmentType:string;schedule:string;salary:string;qualifications:string;benefits:string;body:string;deadline:string;accepting:boolean;verified:boolean;source:string}
-export type Operation = {key:string;category:string;branch:string;title:string;body:string;source:string;verified:boolean;effectiveDate:string;items:{name:string;amount:string;unit:string;note:string}[]}
+export type Operation = {key:string;category:string;branch:string;title:string;body:string;source:string;verified:boolean;effectiveDate:string;items:{name:string;amount:string;unit:string;note:string;hidden?:boolean}[]}
 export type Kind = keyof typeof defaults
 export const kinds=Object.keys(defaults) as Kind[]
 export const keyOf=(kind:Kind,value:any)=>kind==='treatment'||kind==='doctor'?value.slug:kind==='branch'?value.id:value.key
@@ -62,7 +62,7 @@ export const templates:Record<Kind,any>={
  column:{...editorialFields,key:'',category:'general',title:'',treatment:'',body:'',medicalReviewed:false,reviewedOn:''},
  showcase:{...editorialFields,...caseFields,key:'',category:'case',title:'',treatment:'',body:'',beforeImage:'',afterImage:'',beforeDate:'',afterDate:'',caption:'',risks:'치료 결과와 회복 기간은 개인에 따라 다릅니다.',consentConfirmed:false,consentRef:'',anonymized:false,medicalReviewed:false,reviewer:'',reviewedOn:'',sourceUrl:''},
  vacancy:{key:'',title:'',branch:'cheongnyangni',role:'',employmentType:'',schedule:'',salary:'',qualifications:'',benefits:'',body:'',deadline:'',accepting:false,verified:false,source:''},
- operation:{key:'',category:'parking',branch:'cheongnyangni',title:'',body:'',source:'',verified:false,effectiveDate:'',items:[{name:'',amount:'',unit:'',note:''}]}
+ operation:{key:'',category:'parking',branch:'cheongnyangni',title:'',body:'',source:'',verified:false,effectiveDate:'',items:[{name:'',amount:'',unit:'',note:'',hidden:false}]}
 }
 // Explicit shape descriptions also drive the form editor. No HTML or executable config.
 export type Shape = 'text'|'number'|'boolean'|{[key:string]:Shape}|[Shape]
@@ -77,7 +77,7 @@ export const shapes:Record<Kind,Shape>={
  column:{...editorialShape,key:T,category:T,title:T,treatment:T,body:T,medicalReviewed:B,reviewedOn:T},
  showcase:{...editorialShape,beforeAlt:T,afterAlt:T,duration:T,visits:T,key:T,category:T,title:T,treatment:T,body:T,beforeImage:T,afterImage:T,beforeDate:T,afterDate:T,caption:T,risks:T,consentConfirmed:B,consentRef:T,anonymized:B,medicalReviewed:B,reviewer:T,reviewedOn:T,sourceUrl:T},
  vacancy:{key:T,title:T,branch:T,role:T,employmentType:T,schedule:T,salary:T,qualifications:T,benefits:T,body:T,deadline:T,accepting:B,verified:B,source:T},
- operation:{key:T,category:T,branch:T,title:T,body:T,source:T,verified:B,effectiveDate:T,items:[{name:T,amount:T,unit:T,note:T}]}
+ operation:{key:T,category:T,branch:T,title:T,body:T,source:T,verified:B,effectiveDate:T,items:[{name:T,amount:T,unit:T,note:T,hidden:B}]}
 }
 export function safeUrl(value:string,hosts?:string[]){try{const u=new URL(value);return u.protocol==='https:'&&!u.username&&!u.password&&!u.port&&(!hosts||hosts.includes(u.hostname))}catch{return false}}
 const validDate=(s:string)=>/^\d{4}-\d{2}-\d{2}$/.test(s)&&Number.isFinite(Date.parse(s))&&new Date(s).toISOString().slice(0,10)===s
@@ -92,6 +92,7 @@ function shapeCheck(value:any,shape:Shape,path='본문'):void{
 export function validate(kind:Kind,key:string,value:any,publishing=false){
  if(!kinds.includes(kind)||!/^[-a-zA-Z0-9_]{1,75}$/.test(key))throw Error('콘텐츠 종류와 주소를 확인하세요.')
  if(['column','showcase'].includes(kind))Object.assign(value,normalizeEditorial(kind,value))
+ if(kind==='operation')normalizeFeeItems(value)
  shapeCheck(value,shapes[kind]);if(publishing&&typeof value.body==='string'&&value.body.includes('[작성 필요]'))throw Error('작성 틀의 미입력 항목을 확인하세요.');if(JSON.stringify(value).length>160000)throw Error('콘텐츠가 너무 큽니다.')
  if(keyOf(kind,value)!==key)throw Error('저장한 주소는 변경할 수 없습니다. 새 항목을 추가하세요.')
  if(['treatment','doctor'].includes(kind)&&!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(key))throw Error('주소는 영문 소문자·숫자·하이픈만 가능합니다.')
@@ -156,20 +157,28 @@ export function validate(kind:Kind,key:string,value:any,publishing=false){
   if(publishing&&((value.effectiveDate&&!validDate(value.effectiveDate))||(!value.effectiveDate&&value.category!=='pricing')))throw Error('유효한 적용일을 입력하세요. 원본에 날짜가 없는 수가표만 빈칸을 허용합니다.')
   if(publishing&&['case','approval'].includes(value.category))throw Error('환자 사례와 원문 승인 자료는 현재 비공개 검토 전용입니다.')
   if(publishing&&value.category==='pricing'&&(!value.items.length||value.items.some((x:any)=>!x.name.trim()||!x.amount.trim())))throw Error('공개 수가표에 항목과 금액이 필요합니다.')
+  if(value.category==='pricing'&&value.items.some((x:any)=>promotionalFee.test([x.name,x.amount,x.unit,x.note].join(' '))))throw Error('의료법상 할인·이벤트·특가 등 가격 홍보 문구는 수가표에 게시하지 않습니다.')
  }
 }
+// Medical-advertising guard: fee tables state plain prices only (no discount/event/promotion wording).
+export const promotionalFee=/할인|이벤트|특가|프로모션|무료|선착순|정가|원가|%|→|\b(?:sale|discount|event|free)\b/i
+export function normalizeFeeItems(value:any){if(Array.isArray(value?.items))value.items=value.items.map((i:any)=>i&&typeof i==='object'&&!Array.isArray(i)?{...i,hidden:i.hidden===true}:i);return value}
 export type Content = ReturnType<typeof assemble>
-export function assemble(rows:any[]=[]){
+// feePageEnabled=false (admin '수가 공개' OFF) removes public fee tables; hidden items never render publicly.
+export function assemble(rows:any[]=[],options:{feePageEnabled?:boolean}={}){const feePageEnabled=options.feePageEnabled!==false
  const sets:Record<string,any[]>=structuredClone(defaults)
  for(const row of rows){if(!row.live_json||!kinds.includes(row.kind))continue;const value=normalizeEditorial(row.kind,JSON.parse(row.live_json));const a=sets[row.kind];const i=a.findIndex(x=>keyOf(row.kind,x)===row.key);if(i<0)a.push(value);else a[i]=value}
  // Keep historical DB rows without exposing retired locations in public content.
  sets.branch=sets.branch.filter(b=>b.id==='cheongnyangni').map(b=>({...b,name:'더굿모닝치과'}));
  for(const kind of ['channel','operation','vacancy'])sets[kind]=sets[kind].filter(v=>!v.branch||['all','cheongnyangni'].includes(v.branch));
+ sets.operation=sets.operation.filter(o=>o.category!=='pricing'||feePageEnabled).map(o=>o.category==='pricing'?{...o,items:(o.items||[]).filter((i:any)=>!i.hidden)}:o);
  const sort=(a:any[])=>a.sort((x,y)=>(x.order||0)-(y.order||0))
  const generalFaq=sort(sets.faq).map(x=>[x.question,x.answer] as [string,string]);const treatments=sets.treatment as source.Treatment[]
- return {treatments,doctors:sets.doctor as typeof baseDoctors,videos:sort(sets.video) as typeof defaults.video,branches:sets.branch as typeof baseBranches,generalFaq,allFaq:[...generalFaq,...treatments.flatMap(t=>t.faq)],sections:sort(sets.section) as typeof defaults.section,channels:sets.channel as typeof initialChannels,operations:sets.operation as Operation[],columns:sets.column as Column[],showcases:sets.showcase as Showcase[],vacancies:sets.vacancy as Vacancy[],missionStory:sets.site[0].story as string[],missionPromises:sets.site[0].promises as typeof source.missionPromises}
+ return {treatments,doctors:sets.doctor as typeof baseDoctors,videos:sort(sets.video) as typeof defaults.video,branches:sets.branch as typeof baseBranches,generalFaq,allFaq:[...generalFaq,...treatments.flatMap(t=>t.faq)],sections:sort(sets.section) as typeof defaults.section,channels:sets.channel as typeof initialChannels,operations:sets.operation as Operation[],columns:sets.column as Column[],showcases:sets.showcase as Showcase[],vacancies:sets.vacancy as Vacancy[],missionStory:sets.site[0].story as string[],missionPromises:sets.site[0].promises as typeof source.missionPromises,feePageEnabled}
 }
-export async function loadContent(db:any){if(!db)return assemble();const r=await readQuery<any>(()=>db.prepare('SELECT kind,key,live_json FROM content_entries WHERE live_json IS NOT NULL').all(),'content_load');return assemble(r.results||[])}
+// Fee-page switch lives in operation_settings('fee_page'); unreadable/missing means ON (the published default).
+export async function feePageEnabled(db:any){try{const r=await db.prepare("SELECT value_json FROM operation_settings WHERE key='fee_page'").first();return r?JSON.parse(r.value_json).enabled!==false:true}catch{return true}}
+export async function loadContent(db:any){if(!db)return assemble();const [r,feePage]=await Promise.all([readQuery<any>(()=>db.prepare('SELECT kind,key,live_json FROM content_entries WHERE live_json IS NOT NULL').all(),'content_load'),feePageEnabled(db)]);return assemble(r.results||[],{feePageEnabled:feePage})}
 export function validateReferences(content:Content){
  const ts=new Set(content.treatments.map(t=>t.slug)),ds=new Set(content.doctors.map(d=>d.slug))
  for(const t of content.treatments)if(!ds.has(t.doctor)||t.related.some(s=>!ts.has(s)))throw Error('담당 의료진 또는 관련 진료가 아직 공개되지 않았습니다.')

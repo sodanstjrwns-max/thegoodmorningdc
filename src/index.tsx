@@ -32,9 +32,25 @@ const app = new Hono<{Bindings:Env;Variables:{content:Content}}>()
 app.use('*', secureHeaders({referrerPolicy:'strict-origin-when-cross-origin',xFrameOptions:'DENY',contentSecurityPolicy:{defaultSrc:["'self'"],scriptSrc:["'self'",...analyticsCsp.script],styleSrc:["'self'","'unsafe-inline'",'https://fonts.googleapis.com'],fontSrc:["'self'",'https://fonts.gstatic.com'],imgSrc:["'self'",'data:',...analyticsCsp.img],connectSrc:["'self'",...analyticsCsp.connect],frameSrc:["'self'",'https://www.youtube-nocookie.com','https://www.google.com'],objectSrc:["'none'"],baseUri:["'self'"],formAction:["'self'"],frameAncestors:["'none'"]}}))
 // Canonicalize the explicitly owned www host and the production Pages host (not hashed previews), preserving path and query.
 app.use('*',async(c,next)=>{const u=new URL(c.req.url);if(['GET','HEAD'].includes(c.req.method)&&['www.thegoodmorningdc.kr','webapp-2-9y5.pages.dev'].includes(u.hostname)&&c.env.PUBLIC_SITE_URL==='https://thegoodmorningdc.kr'){u.hostname='thegoodmorningdc.kr';u.protocol='https:';return c.redirect(u.href,301)}await next()})
+// Edge HTML cache (production public pages, anonymous only). Keeps pages fast when D1 or the
+// network is slow; CMS changes appear within 2 minutes and admin saves purge the main pages.
+const EDGE_TTL=120
+const edgeCacheable=(c:any)=>{const u=new URL(c.req.url);return ['GET','HEAD'].includes(c.req.method)&&typeof caches!=='undefined'&&launchIndexable(c.env.PUBLIC_SITE_URL,c.req.url)&&!/^\/(?:admin|api|media|films|handover|static)(?:\/|$)/.test(u.pathname)&&!getCookie(c,'gm_session')}
+app.use('*',async(c,next)=>{
+ if(!edgeCacheable(c))return next()
+ const cache=(caches as any).default,key=new Request(new URL(c.req.url).toString())
+ const hit=await cache.match(key).catch(()=>null)
+ if(hit){const r=new Response(c.req.method==='HEAD'?null:hit.body,hit);r.headers.set('X-Edge-Cache','HIT');return r}
+ await next()
+ if(c.req.method==='GET'&&c.res.status===200&&!c.res.headers.has('Set-Cookie')&&/text\/html|application\/xml|text\/plain/.test(c.res.headers.get('Content-Type')||'')){
+  c.res.headers.set('Cache-Control',`public, max-age=0, s-maxage=${EDGE_TTL}, stale-while-revalidate=600`);c.res.headers.set('X-Edge-Cache','MISS')
+  c.executionCtx.waitUntil(cache.put(key,c.res.clone()).catch(()=>{}))
+ }
+})
+const purgeEdge=async(origin:string)=>{if(typeof caches==='undefined')return;const d=assemble(),paths=[...basePaths,...hubs.map(hubPath),...d.treatments.map(t=>'/treatments/'+t.slug),...d.doctors.map(x=>'/doctors/'+x.slug),'/sitemap.xml','/sitemap-languages.xml','/llms.txt','/llms-full.txt','/feed.xml'];await Promise.all(paths.flatMap(p=>[p,localPath(p,'en')]).map(p=>(caches as any).default.delete(new Request(origin+p)).catch(()=>false)))}
 app.use('/static/*',serveStatic({root:'./public'}))
 app.use('/api/*',bodyLimit({maxSize:5*1024*1024,onError:c=>c.json({error:'요청 크기가 너무 큽니다. 최대 5MB까지 허용됩니다.'},413)}))
-app.use('/api/admin/*',async(c,next)=>{c.header('Cache-Control','no-store');if(!['GET','HEAD'].includes(c.req.method)){const origin=c.req.header('Origin');if(origin!==new URL(c.req.url).origin)return c.json({error:'허용되지 않은 요청입니다.'},403)}await next()})
+app.use('/api/admin/*',async(c,next)=>{c.header('Cache-Control','no-store');if(!['GET','HEAD'].includes(c.req.method)){const origin=c.req.header('Origin');if(origin!==new URL(c.req.url).origin)return c.json({error:'허용되지 않은 요청입니다.'},403)}await next();if(!['GET','HEAD'].includes(c.req.method)&&c.res.status<400&&launchIndexable(c.env.PUBLIC_SITE_URL,c.req.url))c.executionCtx.waitUntil(purgeEdge(siteOrigin(c.env.PUBLIC_SITE_URL,c.req.url)))})
 app.use('*',async(c,next)=>{await next();if(!launchIndexable(c.env.PUBLIC_SITE_URL,c.req.url)||privatePath(new URL(c.req.url).pathname)||c.res.status>=400)c.header('X-Robots-Tag','noindex, nofollow')})
 app.use('*',async(c,next)=>{const u=new URL(c.req.url);if(c.req.method==='GET'&&!/^\/(api|admin)(?:\/|$)/.test(u.pathname)&&u.searchParams.has('branch')){u.searchParams.delete('branch');return c.redirect(u.pathname+u.search+u.hash,301)}await next()})
 app.use('*',async(c,next)=>{const p=new URL(c.req.url).pathname;if(p.length>1&&p.endsWith('/'))return c.redirect(p.slice(0,-1)+new URL(c.req.url).search,301);await next()})

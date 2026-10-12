@@ -1,3 +1,5 @@
+// Enable the latin display font without blocking first paint (loaded as media=print in <head>).
+document.getElementById('font-manrope')?.setAttribute('media','all');
 (()=>{'use strict';
 const $=(s,r=document)=>r.querySelector(s),$$=(s,r=document)=>[...r.querySelectorAll(s)];
 const safe=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));

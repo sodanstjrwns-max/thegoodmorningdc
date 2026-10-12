@@ -4,7 +4,7 @@ import {chromium,webkit} from '@playwright/test'
 const base=process.env.TEST_URL||'http://localhost:3000'
 const indexable=process.env.EXPECT_INDEXABLE==='1'
 const sitemap=await(await fetch(base+'/sitemap.xml')).text()
-const paths=[...new Set([...sitemap.matchAll(/<loc>(.*?)<\/loc>/g)].flatMap(m=>{const p=new URL(m[1]).pathname;return [p,p==='/'?'/en':'/en'+p]}))]
+const paths=[...new Set([...sitemap.matchAll(/<loc>(.*?)<\/loc>/g)].flatMap(m=>{const p=new URL(m[1]).pathname;return p.startsWith('/area/')?[p]:[p,p==='/'?'/en':'/en'+p] /* local hubs are Korean-only */}))]
 const report={base,publicRoutes:paths.length,footerRoutes:0,viewports:0,checks:[],errors:[]}
 for(const path of paths){
  const r=await fetch(base+path);assert.equal(r.status,200,path);const html=await r.text();const footer=html.match(/<footer class="site-footer">([\s\S]*?)<\/footer>/)?.[1];assert.ok(footer,path+' footer');assert.match(footer,/id="clinic-business-info"/,path);assert.match(footer,/204-96-61655/,path)

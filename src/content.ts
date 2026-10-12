@@ -2,7 +2,7 @@ import * as source from './data'
 import {readWithRetry as readQuery} from './reliability'
 import {markdown,imagePath} from './markdown'
 
-export const nativeSections = ['hero-section','director-story','care-priorities','opening-films','sedation-story','inclusive-care','trust','philosophy','question-story','why-goodmorning','treatments','preservation-assembly','revision-story','physician-deck','clinic-space-story','language-reveal','journal','visit-story','visit']
+export const nativeSections = ['hero-section','care-priorities','director-story','opening-films','sedation-story','inclusive-care','trust','philosophy','question-story','why-goodmorning','treatments','preservation-assembly','revision-story','physician-deck','clinic-space-story','language-reveal','journal','visit-story','visit']
 export const officialSource = 'https://thegoodmorningdental.com/'
 // Official-site links, kept separate from clinic-owned player videos and RSS feeds.
 // HTTPS GET follows to the same Talk account; no chat message is sent by this site.

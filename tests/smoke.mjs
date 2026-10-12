@@ -101,7 +101,7 @@ try{
  assert.equal(await motionPage.locator('#hero-clinic-film').evaluate(el=>el.muted&&el.loop&&el.playsInline),true)
  assert.ok(await motionPage.locator('h1 .kinetic-char').count()>10,'real split-glyph typography')
  const glyphMotion=await motionPage.locator('h1 .kinetic-char').last().evaluate(el=>{const a=el.getAnimations()[0];if(!a)return false;a.pause();a.currentTime=100;const start=getComputedStyle(el).transform;a.currentTime=2000;const end=getComputedStyle(el).transform;a.finish();return start!==end});assert.equal(glyphMotion,true,'glyph animation changes its transform')
- assert.equal(await motionPage.locator('h1').getAttribute('aria-label'),'환자의 불편함을 한 번 더 듣는 치과.')
+ assert.equal(await motionPage.locator('h1').getAttribute('aria-label'),'청량리 치과 더굿모닝치과, 환자의 불편함을 한 번 더 듣는 치과.')
  await motionPage.locator('#hero-motion-toggle').click()
  assert.equal(await motionPage.locator('#hero-motion-toggle').getAttribute('aria-pressed'),'true')
  await motionPage.waitForTimeout(80);const paused=await filmTime();await motionPage.waitForTimeout(300);assert.equal(await filmTime(),paused,'film freeze')

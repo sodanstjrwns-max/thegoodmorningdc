@@ -18,7 +18,8 @@ export async function audit(c:any,action:string,target:string){const actor=await
 export function can(actor:Actor,path:string,method:string){
  if(actor.role==='admin')return true
  if(['/me','/logout','/password'].includes(path))return true
- if(actor.role==='coordinator')return method==='GET'&&(/^\/requests(?:\/|$)/.test(path)||path==='/assignees'||path==='/notifications')||method==='POST'&&/^\/requests\/[a-f0-9-]+$/.test(path)
+ // Coordinators (접수 담당) handle requests and may register devices for new-request push alerts.
+ if(actor.role==='coordinator')return method==='GET'&&(/^\/requests(?:\/|$)/.test(path)||path==='/assignees'||path==='/notifications'||path==='/push/devices')||method==='POST'&&(/^\/requests\/[a-f0-9-]+$/.test(path)||/^\/push\/(?:subscribe|unsubscribe|test)$/.test(path))
  if(method==='GET')return ['/content','/review-queue','/media-library','/content-audit','/link-options'].includes(path)||/^\/history\/(column|showcase|vacancy)\//.test(path)
  if(method==='POST')return path==='/upload'||/^\/content-preview\/(column|showcase|vacancy)\//.test(path)||/^\/content\/(column|showcase|vacancy)\/[-a-z0-9]+$/.test(path)||/^\/reviews\/(column|showcase|vacancy)\/[-a-z0-9]+$/.test(path)||(actor.role==='reviewer'&&/^\/content\/(column|showcase|vacancy)\/[-a-z0-9]+\/withdraw$/.test(path))
  return false

@@ -5,13 +5,14 @@ import {esc} from './ui'
 import {snippet} from './seo'
 import {legalText,legalExtraPairs} from './legal'
 import {directorPairs} from './director'
+import {reservationPairs} from './reservation-copy'
 export type Locale='en'|'ja'|'zh'
 // Only complete, checked languages are advertised. JA/ZH generation was rate-limited.
 export const locales:Locale[]=['en']
 export const normalize=(s:string)=>s.replace(/\s+/g,' ').trim()
 // Source-adjacent [ko,en] pairs (director content, local hubs UI, privacy policy) extend the generated dictionary.
 const pairs=(list:[string,string][])=>Object.fromEntries(list.map(([ko,v])=>[normalize(ko),v]))
-export const dictionaries:Record<Locale,Record<string,string>>={en:{...en,...pairs(legalText),...pairs(legalExtraPairs),...pairs(directorPairs)},ja,zh}
+export const dictionaries:Record<Locale,Record<string,string>>={en:{...en,...pairs(legalText),...pairs(legalExtraPairs),...pairs(directorPairs),...pairs(reservationPairs)},ja,zh}
 const decode=(s:string)=>s.replace(/&(?:amp|lt|gt|quot|#39|#x27|nbsp);/g,c=>({'&amp;':'&','&lt;':'<','&gt;':'>','&quot;':'"','&#39;':"'",'&#x27;':"'",'&nbsp;':' '}[c]||c))
 export function translate(s:string,locale:Locale):string{
  const key=normalize(decode(s)),translated=dictionaries[locale][key];if(translated)return translated

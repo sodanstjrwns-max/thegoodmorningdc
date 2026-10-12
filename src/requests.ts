@@ -3,6 +3,8 @@ import {loadContent} from './content'
 import {notifyRequest,dispatchNotifications} from './notifications'
 import {recordEvent} from './metrics'
 import {audit} from './staff'
+import {createReservation,cleanupReservations,reservationStatuses,CONSENT_VERSION} from './reservations'
+import {notifyNewRequest} from './push'
 export const publicRequests=new Hono<any>()
 export const adminRequests=new Hono<any>()
 const digest=async(s:string)=>Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s)))).map(v=>v.toString(16).padStart(2,'0')).join('')
@@ -10,17 +12,19 @@ const statuses=['new','contacted','confirmed','closed']
 async function cleanup(env:any){
  const rows=(await env.DB.prepare('SELECT id,attachment_key FROM service_requests WHERE expires_at<=? LIMIT 25').bind(Date.now()).all()).results||[]
  for(const r of rows){await env.DB.prepare('DELETE FROM notification_outbox WHERE request_id=?').bind(r.id).run();if(r.attachment_key)await env.R2.delete(r.attachment_key);await env.DB.prepare('DELETE FROM service_requests WHERE id=? AND expires_at<=?').bind(r.id,Date.now()).run()}
+ await cleanupReservations(env)
  await env.DB.prepare('DELETE FROM request_limits WHERE expires_at<=?').bind(Date.now()).run()
 }
 publicRequests.use('*',async(c,next)=>{c.header('Cache-Control','no-store');if(!c.env.DB||!c.env.ADMIN_PASSWORD)return c.json({error:'접수 설정을 확인 중입니다. 병원으로 전화해 주세요.'},503);if(c.req.header('Origin')!==new URL(c.req.url).origin)return c.json({error:'허용되지 않은 요청입니다.'},403);await next()})
 publicRequests.post('/:kind',async c=>{
- const kind=c.req.param('kind');if(!['career','interpretation'].includes(kind))return c.notFound()
+ const kind=c.req.param('kind');if(!['career','interpretation','reservation'].includes(kind))return c.notFound()
  const data=await c.req.formData().catch(()=>null);if(!data)return c.json({error:'입력 내용을 확인하세요.'},400)
+ if(kind==='reservation')return createReservation(c,await loadContent(c.env.DB),data,cleanup)
  const get=(k:string)=>typeof data.get(k)==='string'?String(data.get(k)).trim():''
  const name=get('name'),contact=get('contact'),branch=get('branch'),message=get('message'),locale=get('locale')||'ko'
  if(get('website'))return c.json({error:'요청을 확인할 수 없습니다.'},400)
  if(!name||name.length>80||contact.length>150||!(/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contact)||/^\+?[\d ()-]{8,25}$/.test(contact))||branch!=='cheongnyangni'||message.length>2000||!['ko','en','ja','zh'].includes(locale)||get('consent')!=='yes')return c.json({error:'이름·연락처·개인정보 동의를 확인하세요.'},400)
- const payload:any={name,contact,branch,message,locale,consentVersion:'2026-10-12-v3'}
+ const payload:any={name,contact,branch,message,locale,consentVersion:CONSENT_VERSION}
  const now=Date.now(),content=await loadContent(c.env.DB)
  if(kind==='career'){
   const vacancy=get('vacancy'),role=get('role');if(!role||role.length>100)return c.json({error:'희망 직무를 입력하세요.'},400)
@@ -42,15 +46,16 @@ publicRequests.post('/:kind',async c=>{
   await c.env.DB.prepare('INSERT INTO service_requests(id,kind,data_json,attachment_key,created_at,expires_at) VALUES(?,?,?,?,?,?)').bind(id,kind,JSON.stringify(payload),attachmentKey,now,now+(kind==='career'?90:30)*86400000).run()
  }catch(e){if(attachmentKey)await c.env.R2.delete(attachmentKey);throw e}
  c.executionCtx.waitUntil(notifyRequest(c.env,id).catch(()=>{}))
+ c.executionCtx.waitUntil(notifyNewRequest(c.env,{title:kind==='career'?'새 채용 지원서':'새 방문·통역 요청',body:'홈페이지에 새 접수가 있습니다. 관리자 접수함에서 확인하세요.',url:'/admin#request-inbox',tag:kind+'-'+id}))
  if(c.req.header('DNT')!=='1'&&c.req.header('Sec-GPC')!=='1')c.executionCtx.waitUntil(recordEvent(c.env,kind==='career'?'/careers':'/visiting','form_success',branch).catch(()=>{}))
  return c.json({ok:true,id,message:'접수되었습니다. 담당자 확인 후 연락드립니다. 예약·채용·통역 제공 확정은 아닙니다.'},201)
 })
-adminRequests.get('/requests',async c=>{await cleanup(c.env);c.executionCtx.waitUntil(dispatchNotifications(c.env).catch(()=>{}));const r=await c.env.DB.prepare('SELECT * FROM service_requests WHERE expires_at>? ORDER BY created_at DESC LIMIT 200').bind(Date.now()).all();return c.json({requests:(r.results||[]).map((r:any)=>({id:r.id,kind:r.kind,data:JSON.parse(r.data_json),hasAttachment:!!r.attachment_key,status:r.status,note:r.note,assignedTo:r.assigned_to,revision:r.revision,createdAt:r.created_at,expiresAt:r.expires_at}))})})
+adminRequests.get('/requests',async c=>{await cleanup(c.env);c.executionCtx.waitUntil(dispatchNotifications(c.env).catch(()=>{}));const now=Date.now(),[r,v]=await c.env.DB.batch([c.env.DB.prepare('SELECT * FROM service_requests WHERE expires_at>? ORDER BY created_at DESC LIMIT 200').bind(now),c.env.DB.prepare("SELECT *,'reservation' kind,'' attachment_key FROM reservation_requests WHERE expires_at>? ORDER BY created_at DESC LIMIT 200").bind(now)]);return c.json({requests:[...(r.results||[]),...(v.results||[])].sort((a:any,b:any)=>b.created_at-a.created_at).slice(0,200).map((r:any)=>({id:r.id,kind:r.kind,data:JSON.parse(r.data_json),hasAttachment:!!r.attachment_key,status:r.status,note:r.note,assignedTo:r.assigned_to,revision:r.revision,createdAt:r.created_at,expiresAt:r.expires_at})),statuses:{service:statuses,reservation:reservationStatuses}})})
 adminRequests.post('/requests/:id',async c=>{
- const p=await c.req.json().catch(()=>null);if(!p||!statuses.includes(p.status)||typeof p.note!=='string'||p.note.length>2000||!Number.isInteger(p.revision))return c.json({error:'상태·메모·버전을 확인하세요.'},400)
+ const p=await c.req.json().catch(()=>null),reservation=!!await c.env.DB.prepare('SELECT id FROM reservation_requests WHERE id=?').bind(c.req.param('id')).first(),table=reservation?'reservation_requests':'service_requests';if(!p||!(reservation?reservationStatuses:statuses).includes(p.status)||typeof p.note!=='string'||p.note.length>2000||!Number.isInteger(p.revision))return c.json({error:'상태·메모·버전을 확인하세요.'},400)
  if(p.assignedTo!==undefined&&(typeof p.assignedTo!=='string'||p.assignedTo&&!await c.env.DB.prepare("SELECT id FROM staff_users WHERE id=? AND enabled=1 AND role IN ('admin','coordinator')").bind(p.assignedTo).first()))return c.json({error:'활성 접수 담당자를 선택하세요.'},400)
- const r=await c.env.DB.prepare('UPDATE service_requests SET status=?,note=?,assigned_to=CASE WHEN ?=1 THEN ? ELSE assigned_to END,revision=revision+1 WHERE id=? AND revision=? AND expires_at>?').bind(p.status,p.note,p.assignedTo!==undefined?1:0,p.assignedTo||'',c.req.param('id'),p.revision,Date.now()).run()
- if(r.meta.changes)await audit(c,'request.update',c.req.param('id'))
+ const r=await c.env.DB.prepare('UPDATE '+table+' SET status=?,note=?,assigned_to=CASE WHEN ?=1 THEN ? ELSE assigned_to END,revision=revision+1 WHERE id=? AND revision=? AND expires_at>?').bind(p.status,p.note,p.assignedTo!==undefined?1:0,p.assignedTo||'',c.req.param('id'),p.revision,Date.now()).run()
+ if(r.meta.changes)await audit(c,reservation?'reservation.update':'request.update',c.req.param('id'))
  return r.meta.changes?c.json({ok:true}):c.json({error:'다른 관리자가 수정했거나 접수가 만료되었습니다. 새로고침하세요.'},409)
 })
 adminRequests.get('/requests/:id/attachment',async c=>{
@@ -59,9 +64,9 @@ adminRequests.get('/requests/:id/attachment',async c=>{
  return new Response(obj.body,{headers:{'Content-Type':'application/pdf','Content-Disposition':'attachment; filename="application.pdf"','Cache-Control':'private, no-store','X-Content-Type-Options':'nosniff','Content-Security-Policy':"default-src 'none'; sandbox"}})
 })
 adminRequests.delete('/requests/:id',async c=>{
- const row=await c.env.DB.prepare('SELECT attachment_key,revision FROM service_requests WHERE id=?').bind(c.req.param('id')).first();if(!row)return c.notFound()
+ const id=c.req.param('id'),service=await c.env.DB.prepare('SELECT attachment_key,revision FROM service_requests WHERE id=?').bind(id).first(),row=service||await c.env.DB.prepare('SELECT revision FROM reservation_requests WHERE id=?').bind(id).first();if(!row)return c.notFound()
  if(Number(c.req.query('revision'))!==row.revision)return c.json({error:'변경된 접수입니다. 새로고침하세요.'},409)
  // Claim deletion atomically before object cleanup. Expired claims remain inaccessible and retryable.
- const result=await c.env.DB.prepare('UPDATE service_requests SET expires_at=0,revision=revision+1 WHERE id=? AND revision=?').bind(c.req.param('id'),row.revision).run();if(!result.meta.changes)return c.json({error:'변경 충돌'},409)
- await cleanup(c.env);return c.json({ok:true})
+ const result=await c.env.DB.prepare('UPDATE '+(service?'service_requests':'reservation_requests')+' SET expires_at=0,revision=revision+1 WHERE id=? AND revision=?').bind(id,row.revision).run();if(!result.meta.changes)return c.json({error:'변경 충돌'},409)
+ await audit(c,'request.delete',id);await cleanup(c.env);return c.json({ok:true})
 })

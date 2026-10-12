@@ -24,10 +24,12 @@
     "test:operations": "node tests/notification-unit.mjs && node tests/operations.mjs",
     "test:operations:production": "node tests/operations-production.mjs",
     "test:editorial": "node tests/editorial.mjs",
-    "test:all": "npm run test:navigation && npm test && npm run test:studio && npm run test:seo && npm run test:services && npm run test:locales && npm run test:editorial && npm run test:local-seo",
-    "test:local-seo": "node tests/local-seo.mjs"
+    "test:all": "npm run test:navigation && npm test && npm run test:studio && npm run test:seo && npm run test:services && npm run test:locales && npm run test:editorial && npm run test:local-seo && npm run test:features",
+    "test:local-seo": "node tests/local-seo.mjs",
+    "test:features": "node tests/features.mjs"
   },
   "dependencies": {
+    "@block65/webcrypto-web-push": "^2.0.0",
     "@tiptap/core": "3.31.4",
     "@tiptap/extension-image": "3.31.4",
     "@tiptap/extension-placeholder": "3.31.4",

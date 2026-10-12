@@ -28,7 +28,7 @@ try{
  const jobKey='qa-vacancy',job={...templates.vacancy,key:jobKey,title:'QA TEST VACANCY',role:'QA',employmentType:'TEST',schedule:'TEST',salary:'TEST',qualifications:'TEST',body:'SYNTHETIC QA - NOT A REAL VACANCY',verified:true,source:'QA ONLY',accepting:true,deadline:'2027-12-31'};await save('vacancy',jobKey,{...job,salary:''},'publish',400);await save('vacancy',jobKey,job,'publish')
  const id=await submit('career',{vacancy:jobKey,resume:{name:'test.pdf',mimeType:'application/pdf',buffer:fs.readFileSync('public/static/fees-0324.pdf')}})
  const foreign=await submit('interpretation');assert.equal((await anon.request.get(base+`/api/admin/requests/${id}/attachment`)).status(),401)
- let inbox=(await(await api('requests')).json()).requests;let item=inbox.find(i=>i.id===id);assert.ok(item.hasAttachment);assert.equal(item.data.consentVersion,'2026-10-12-v3');assert.ok(item.expiresAt>item.createdAt+89*86400000)
+ let inbox=(await(await api('requests')).json()).requests;let item=inbox.find(i=>i.id===id);assert.ok(item.hasAttachment);assert.equal(item.data.consentVersion,'2026-10-13-v4');assert.ok(item.expiresAt>item.createdAt+89*86400000)
  const attachment=await api(`requests/${id}/attachment`);assert.equal(attachment.status(),200);assert.match(attachment.headers()['content-disposition'],/attachment/);assert.deepEqual(await attachment.body(),fs.readFileSync('public/static/fees-0324.pdf'))
  assert.equal((await api(`requests/${foreign}`,'POST',{status:'confirmed',note:'QA',revision:1})).status(),200);assert.equal((await api(`requests/${foreign}`,'POST',{status:'closed',note:'QA',revision:1})).status(),409)
  await save('vacancy',jobKey,{...job,accepting:false},'publish');await submit('career',{vacancy:jobKey},409)

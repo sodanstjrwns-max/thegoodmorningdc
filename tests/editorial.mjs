@@ -2,7 +2,7 @@ import {chromium} from '@playwright/test'
 import assert from 'node:assert/strict'
 import fs from 'node:fs'
 const base=process.env.TEST_URL||'http://localhost:3000'
-assert.equal(base,'http://localhost:3000','Synthetic publishing QA must only run locally')
+assert.match(base,/^http:\/\/(?:localhost|127\.0\.0\.1):\d+$/,'Synthetic publishing QA must only run locally')
 const browser=await chromium.launch({args:['--no-sandbox','--disable-dev-shm-usage']}),admin=await browser.newContext(),anon=await browser.newContext({reducedMotion:'reduce'}),page=await admin.newPage(),reader=await anon.newPage(),errors=[],keys=[]
 page.on('pageerror',e=>errors.push(e.message));reader.on('pageerror',e=>errors.push(e.message))
 const api=(path,method='GET',data)=>admin.request.fetch(base+'/api/admin/'+path,{method,headers:{Origin:base},...(data?{data}:{})})

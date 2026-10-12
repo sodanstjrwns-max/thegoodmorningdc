@@ -80,6 +80,6 @@ const favicon=await get('/favicon.ico');if(live)assert.equal(favicon.status,200)
 
 // Privacy policy describes GA4 and Clarity, overseas transfer and opt-out.
 const privacy=strip(await html('/privacy'))
-for(const term of ['Google Analytics 4','Microsoft Clarity','Google LLC','Microsoft Corporation','국외','Global Privacy Control','시행일: 2026년 10월 12일'])assert.ok(privacy.includes(term),'privacy '+term)
+for(const term of ['Google Analytics 4','Microsoft Clarity','Google LLC','Microsoft Corporation','국외','Global Privacy Control','시행일: 2026년 10월 13일','홈페이지 예약 상담 신청'])assert.ok(privacy.includes(term),'privacy '+term)
 assert.doesNotMatch(privacy,/Amplitude/i)
 console.log(`PASS local SEO${live?' (live '+live+')':''}: keyword-first home title/H1, 2 Korean-only hubs (exact title/H1, 1,500–2,500 Hangul, FAQ schema = visible), exact-anchor links, VideoObject/Physician schema, GA4+Clarity loader with CSP, IndexNow key, AI robots, llms-full, lastmod on ${entries.length} URLs, privacy GA4/Clarity.`)

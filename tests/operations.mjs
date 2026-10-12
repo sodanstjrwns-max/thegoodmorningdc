@@ -2,7 +2,7 @@ import {chromium} from '@playwright/test'
 import assert from 'node:assert/strict'
 import fs from 'node:fs'
 import {execFileSync} from 'node:child_process'
-const base='http://localhost:3000';assert.ok(!process.env.TEST_URL||process.env.TEST_URL===base,'Local synthetic tests only')
+const base=process.env.TEST_URL||'http://localhost:3000';assert.match(base,/^http:\/\/(?:localhost|127\.0\.0\.1):\d+$/,'Local synthetic tests only')
 const browser=await chromium.launch({args:['--no-sandbox','--disable-dev-shm-usage']}),contexts=[],staff=[],keys=[],errors=[]
 const ctx=async()=>{const c=await browser.newContext({reducedMotion:'reduce'});contexts.push(c);return c},owner=await ctx(),anon=await ctx()
 const api=(c,path,method='GET',data,headers={})=>c.request.fetch(base+'/api/admin/'+path,{method,headers:{Origin:base,...headers},...(data===undefined?{}:{data})})

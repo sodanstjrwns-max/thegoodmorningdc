@@ -373,3 +373,11 @@ html[lang="en"] .hero-film-first h1{width:auto;max-width:100%;font-size:clamp(32
  .hero-film-first .scroll-cue{display:flex;order:1;gap:12px}
  .hero-film-first .hero-motion-controls{order:2;margin-left:auto}
 }
+
+/* Portrait27: purpose-cropped chest-up originals, never crop or zoom the hair again. */
+.doctor-card .doctor-image,
+.physician-deck-card .physician-deck-portrait{height:auto;aspect-ratio:4/5;background:#fff}
+img.clinician-portrait{object-fit:contain!important;object-position:center top!important;transform:none!important;mix-blend-mode:normal!important;filter:none!important;background:#fff}
+.doctor-detail>img.clinician-portrait{height:auto;max-height:none;max-width:520px;aspect-ratio:4/5;align-self:start;justify-self:center}
+.philosophy-portrait:has(.clinician-portrait){background:#fff}
+.mission-story-layout figure img.clinician-portrait{height:auto;aspect-ratio:4/5}

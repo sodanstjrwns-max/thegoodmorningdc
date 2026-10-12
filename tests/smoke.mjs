@@ -209,7 +209,7 @@ try{
   const recovery=await browser.newContext({viewport:{width:390,height:844},isMobile:true,hasTouch:true,reducedMotion:mode==='reduced'?'reduce':'no-preference'});
   if(mode==='saved-off')await recovery.addInitScript(()=>sessionStorage.setItem('gm_motion','off'));
   if(mode==='save-data')await recovery.addInitScript(()=>Object.defineProperty(navigator,'connection',{configurable:true,value:{saveData:true,addEventListener(){}}}));
-  if(mode==='autoplay-blocked')await recovery.addInitScript(()=>{const play=HTMLMediaElement.prototype.play;window.testPlayCalls=0;HTMLMediaElement.prototype.play=function(){window.testPlayCalls++;return navigator.userActivation.isActive?play.call(this):Promise.reject(new DOMException('Autoplay blocked','NotAllowedError'))}});
+  if(mode==='autoplay-blocked')await recovery.addInitScript(()=>{new MutationObserver(ms=>{for(const m of ms)for(const n of m.addedNodes)if(n.tagName==='VIDEO')n.removeAttribute('autoplay')}).observe(document,{childList:true,subtree:true});const play=HTMLMediaElement.prototype.play;window.testPlayCalls=0;HTMLMediaElement.prototype.play=function(){window.testPlayCalls++;return navigator.userActivation.isActive?play.call(this):Promise.reject(new DOMException('Autoplay blocked','NotAllowedError'))}});
   const rp=await recovery.newPage();rp.on('pageerror',e=>errors.push(e.message));await rp.goto(base,{waitUntil:'domcontentloaded'});
   await rp.locator('#hero-play-button').waitFor({state:'visible'});
   if(mode!=='autoplay-blocked')assert.equal(await rp.locator('video').getAttribute('src'),null,mode+' does not auto-download');

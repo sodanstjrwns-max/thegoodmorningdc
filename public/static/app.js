@@ -135,11 +135,14 @@ if(hero&&motionButton){
  function directPlay(){
   // Called synchronously inside the trusted click; do not defer play() to metadata/timers.
   explicitPlayback=true;userPaused=false;blocked=false;issue='';playPending=false;++attempt;
-  if(film?.error)film.load();hero.classList.add('motion-intro-finished');syncMotion();
+  if(film?.error||film?.networkState===3)film.load();hero.classList.add('motion-intro-finished');syncMotion();
  }
  film?.addEventListener('playing',()=>{if(!wantsPlayback()){film.pause();return}blocked=false;issue='';clearTimeout(slowTimer);hero.classList.add('film-playing');hero.dataset.filmState='playing';paintPlayback()});
  film?.addEventListener('pause',paintPlayback);
- film?.addEventListener('error',()=>{blocked=true;issue='network';playPending=false;clearTimeout(slowTimer);hero.classList.remove('film-playing');hero.dataset.filmState='poster';paintPlayback()});
+ const filmFailed=()=>{blocked=true;issue='network';playPending=false;clearTimeout(slowTimer);hero.classList.remove('film-playing');hero.dataset.filmState='poster';paintPlayback()};
+ film?.addEventListener('error',filmFailed);
+ // With <source> children a failed fetch fires 'error' on the last source, not on the video.
+ film?.querySelector('source:last-of-type')?.addEventListener('error',filmFailed);
  film?.addEventListener('timeupdate',updateFilmChapter);
  chapters.forEach(b=>b.addEventListener('click',()=>{if(!film||!Number.isFinite(film.duration))return;film.currentTime=Number(b.dataset.filmChapter)*4+.03;updateFilmChapter()}));
  playButton?.addEventListener('click',directPlay);

@@ -101,7 +101,8 @@ if(hero&&motionButton){
   hero.dataset.playbackReason=issue||(!playbackAllowed()?'preference':userPaused?'paused':playing?'playing':'loading');
   const controls=$('.film-chapters',hero);if(controls)controls.hidden=!film?.getAttribute('src');
   if(playButton)playButton.hidden=false;
-  if(status)status.textContent=issue==='network'?'영상을 불러오지 못했습니다. 다시 재생하거나 새 창에서 열어주세요.':issue==='autoplay'?'자동재생이 제한되었습니다. 눌러서 영상을 재생하세요.':issue==='slow'?'영상 연결이 지연되고 있습니다. 다시 재생하거나 새 창에서 열어주세요.':!playbackAllowed()?'자동재생은 꺼져 있습니다. 영상만 직접 재생할 수 있습니다.':userPaused?'영상이 일시정지되었습니다.':'원내 소개 영상 · 무음 재생';
+  // Never show patients an error card: a failed or slow film silently keeps the poster image.
+  if(status)status.textContent=issue==='network'?'':issue==='autoplay'?'자동재생이 제한되었습니다. 눌러서 영상을 재생하세요.':!playbackAllowed()?'자동재생은 꺼져 있습니다. 영상만 직접 재생할 수 있습니다.':userPaused?'영상이 일시정지되었습니다.':'원내 소개 영상 · 무음 재생';
   if(prompt){if(playing&&prompt.contains(document.activeElement))motionButton.focus({preventScroll:true});prompt.hidden=playing||suspended()}
  }
  function updateFilmChapter(){
@@ -118,7 +119,7 @@ if(hero&&motionButton){
   if(!film.getAttribute('src')){film.defaultMuted=true;film.muted=true;film.playsInline=true;film.src=matchMedia('(max-width:760px)').matches?film.dataset.mobile:film.dataset.desktop;film.load()}
   if(film.paused&&!playPending){
    playPending=true;const currentAttempt=++attempt;
-   clearTimeout(slowTimer);slowTimer=setTimeout(()=>{if(currentAttempt===attempt&&wantsPlayback()&&(film.paused||film.readyState<3)){issue='slow';paintPlayback()}},8000);
+   clearTimeout(slowTimer);
    film.play().catch(error=>{
     if(currentAttempt!==attempt||!wantsPlayback())return;
     blocked=true;issue=error.name==='NotAllowedError'?'autoplay':'network';hero.dataset.filmState='poster';hero.classList.remove('film-playing');

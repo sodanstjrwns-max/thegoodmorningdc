@@ -28,3 +28,8 @@ main p,main dd{line-height:1.7}
 html:not([lang="ko"]) body{word-break:normal;overflow-wrap:break-word}
 .language-reveal-section span{letter-spacing:0}
 .philosophy-manifesto{line-height:1.25}
+/* Video31: no error card. The poster stays; only a subtle round play icon remains (tap to play). */
+.hero-playback-prompt.hero-playback-quiet{width:auto;padding:0;background:none;border:0;box-shadow:none;backdrop-filter:none}
+.hero-playback-quiet button{min-width:0;min-height:0;width:64px;height:64px;padding:0;border-radius:50%;background:#11171499;border:1px solid #ffffff66;color:#fff;font-size:0}
+.hero-playback-quiet button .icon{width:26px;height:26px;margin-left:3px}
+.hero-playback-quiet button:hover{background:#111714cc}

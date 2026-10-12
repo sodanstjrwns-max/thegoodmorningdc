@@ -381,3 +381,8 @@ img.clinician-portrait{object-fit:contain!important;object-position:center top!i
 .doctor-detail>img.clinician-portrait{height:auto;max-height:none;max-width:520px;aspect-ratio:4/5;align-self:start;justify-self:center}
 .philosophy-portrait:has(.clinician-portrait){background:#fff}
 .mission-story-layout figure img.clinician-portrait{height:auto;aspect-ratio:4/5}
+/* Public business identifiers verified against the clinic-supplied certificate. */
+.footer-business{display:flex;flex-wrap:wrap;align-items:baseline;gap:8px 24px;padding:20px 0;color:#cdd2c8;font-size:12px;line-height:1.8;border-top:1px solid #ffffff24}
+.footer-business p{margin:0}
+.footer-business p:first-child{font-weight:650}
+.footer-business p span+span{white-space:nowrap;margin-left:6px}

@@ -6,7 +6,7 @@ export const legalText:[string,string][]=[
  ['홈페이지 개인정보 처리와 이용자 권리를 안내합니다.','How this website handles personal information and your rights.'],
  ['시행일: 2026년 10월 11일 · 적용 사이트: thegoodmorningdc.kr','Effective: October 11, 2026 · Website: thegoodmorningdc.kr'],
  ['1. 처리 주체와 문의 창구','1. Controller and contact'],
- ['처리 주체는 더굿모닝치과의원입니다. 기존 공식 홈페이지 고지 기준 대표자는 강종승, 사업자등록번호는 204-96-61655입니다. 진료 소개의 강도욱 원장과 사업자 대표자 표기를 구분합니다.','The controller is The Good Morning Dental Clinic. Its existing official website identifies Kang Jong-seung as the business representative, registration number 204-96-61655. This business role is distinct from the clinical profile of Dr. Kang Do-wook.'],
+ ['처리 주체는 더굿모닝치과의원입니다. 병원 제공 사업자등록증에서 확인한 대표자는 강종승, 사업자등록번호는 204-96-61655입니다. 진료 소개의 강도욱 원장과 사업자 대표자 표기를 구분합니다.','The controller is The Good Morning Dental Clinic. The business registration certificate supplied by the clinic identifies Kang Jong-seung as the business representative, registration number 204-96-61655. This business role is distinct from the clinical profile of Dr. Kang Do-wook.'],
  ['개인정보 문의·열람·정정·삭제·처리정지·동의 철회는 대표전화 02-969-3776 또는 서울특별시 동대문구 왕산로 123, 2층 병원 접수 창구로 요청할 수 있습니다. 개인정보 보호책임자 연결이 필요한 경우에도 같은 연락처로 요청해 주세요.','For privacy enquiries, access, correction, deletion, suspension or withdrawal of consent, contact 02-969-3776 or the clinic reception at 2F, 123 Wangsan-ro, Dongdaemun-gu, Seoul. You may also request connection to the person responsible for privacy through this contact.'],
  ['2. 수집 항목·목적·보유기간','2. Information, purposes and retention'],
  ['온라인 접수는 이용자의 수집·이용 동의를 받아 처리합니다. 일반 페이지 열람에 환자 회원가입은 필요하지 않습니다.','Online submissions are processed with your collection-and-use consent. Patient registration is not required to browse public pages.'],

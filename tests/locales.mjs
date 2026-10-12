@@ -13,5 +13,8 @@ try{
  await page.goto(base+'/en/treatments/sedation#faq-sedation-q1');assert.equal(await page.locator('#faq-sedation-q1').getAttribute('open'),'');await page.screenshot({path:'test-results/english-treatment.png'})
  await page.goto(base+'/en/visiting');await page.locator('[name="language"]').fill('English');await page.screenshot({path:'test-results/english-request.png',fullPage:true})
  for(const query of ['?page=2','?q=zz-no-result']){await page.goto(base+'/en/column'+query);assert.doesNotMatch(await page.locator('.board-result').innerText(),/[가-힣]/,'Dynamic article count');assert.doesNotMatch(await page.title(),/[가-힣]/,'Dynamic page title')}
+ // Opening-hour labels must translate in daytime too, not only outside clinic hours.
+ await page.goto(base+'/en',{waitUntil:'networkidle'});
+ for(const [source,expected] of [['정규 일정 · 13:00까지','Regular schedule · Until 13:00'],['정규 일정 · 18:30까지','Regular schedule · Until 18:30'],['정규 일정 · 휴진','Regular schedule · Closed']]){await page.locator('#regular-hours-status').evaluate((el,text)=>el.textContent=text,source);await page.waitForFunction(text=>document.querySelector('#regular-hours-status').textContent===text,expected)}
  assert.deepEqual(errors,[]);console.log(`PASS locales: complete ${source.length}-string dictionary in EN, ${urls.length} translated pages, ${urls.length*3} viewport combinations, localized headings/canonical/schema/alternates/search/forms and FAQ anchors. Browser errors: 0.`)
 }finally{await browser.close()}

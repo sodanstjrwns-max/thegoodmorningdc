@@ -13,6 +13,7 @@ export function translate(s:string,locale:Locale):string{
  const key=normalize(decode(s)),translated=dictionaries[locale][key];if(translated)return translated
  if(locale==='en'){
   // Translate interface patterns, not arbitrary patient stories or external article titles.
+  const until=/^(\d{2}:\d{2})까지$/.exec(key);if(until)return 'Until '+until[1]
   const branded=/^(.*) \| 더굿모닝치과$/.exec(key);if(branded)return translate(branded[1],locale)+' | THE GOOD MORNING DENTAL'
   const numbered=/^(.*) · (\d+)페이지$/.exec(key);if(numbered)return translate(numbered[1],locale)+' · Page '+numbered[2]
   const count=/^(\d+)개의 이야기 · (\d+) \/ (\d+) 페이지$/.exec(key);if(count)return `${count[1]} articles · Page ${count[2]} / ${count[3]}`
@@ -44,5 +45,5 @@ export function localizeHTML(html:string,locale:Locale,path:string,origin:string
  }).join('')
  if(locale==='en'&&path==='/')output=output.replace(/<h1\b[\s\S]*?<\/h1>/,'<h1 aria-label="A dental clinic that listens once more."><span class="hero-title-line hero-title-intro"><span>A dental clinic that</span></span><span class="hero-title-line hero-title-main"><span><em>listens once more.</em></span></span></h1>')
  output=output.replace(/(<meta (?:name="(?:description|twitter:description)"|property="og:description") content=")([^"]*)(")/g,(_m,a,v,b)=>a+esc(snippet(decode(v),180))+b)
- return output.replace('<html lang="ko">',`<html lang="${locale==='zh'?'zh-Hans':locale}" data-locale="${locale}">`).replace(/<nav class="locale-switch"[\s\S]*?<\/nav>/,languageSwitch(path,locale)).replace(/<link rel="canonical" href="[^"]*">/,`<link rel="canonical" href="${esc(localizedUrl)}">`).replace(/<meta property="og:url" content="[^"]*">/,`<meta property="og:url" content="${esc(localizedUrl)}">`).replace(/<meta property="og:locale" content="[^"]*">/,`<meta property="og:locale" content="${{en:'en_US',ja:'ja_JP',zh:'zh_CN'}[locale]}">`).replace(/(<main\b[^>]*id="main"[^>]*>)/,`$1<aside class="translation-notice wrap">${notices[locale]}</aside>`).replace('</body>',`<script src="/static/locale.js?v=13" defer></script></body>`)
+ return output.replace('<html lang="ko">',`<html lang="${locale==='zh'?'zh-Hans':locale}" data-locale="${locale}">`).replace(/<nav class="locale-switch"[\s\S]*?<\/nav>/,languageSwitch(path,locale)).replace(/<link rel="canonical" href="[^"]*">/,`<link rel="canonical" href="${esc(localizedUrl)}">`).replace(/<meta property="og:url" content="[^"]*">/,`<meta property="og:url" content="${esc(localizedUrl)}">`).replace(/<meta property="og:locale" content="[^"]*">/,`<meta property="og:locale" content="${{en:'en_US',ja:'ja_JP',zh:'zh_CN'}[locale]}">`).replace(/(<main\b[^>]*id="main"[^>]*>)/,`$1<aside class="translation-notice wrap">${notices[locale]}</aside>`).replace('</body>',`<script src="/static/locale.js?v=request-audit-28" defer></script></body>`)
 }

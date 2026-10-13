@@ -1,6 +1,6 @@
 // Import-free constants and [ko,en] copy for the reservation form (kept separate to avoid an
 // import cycle: locales → reservations → ui → locales).
-export const RESERVATION_RETENTION_DAYS=90
+export const RESERVATION_RETENTION_DAYS=365
 export const RESERVATION_WINDOW_DAYS=60
 export const timeSlots:[string,string,string][]=[['morning','오전 (09:30–13:00)','Morning (09:30–13:00)'],['afternoon','오후 (14:30–18:30 · 평일)','Afternoon (14:30–18:30 · weekdays)'],['any','시간 무관 · 연락 시 조율','Any time · arrange by phone']]
 // [ko,en] pairs for the server-rendered form on /en/reservation (extends the generated dictionary).
@@ -17,7 +17,7 @@ export const reservationPairs:[string,string][]=[
  ['진단명·복용 약·주민등록번호 등 민감한 정보는 적지 마시고 내원 상담에서 말씀해 주세요.','Please do not enter diagnoses, medicines, ID numbers or other sensitive details; share them at your consultation instead.'],
  ['수집 항목·목적·보유기간 확인','Information collected, purposes and retention'],
  ['처리 주체: 더굿모닝치과의원. 목적: 예약 상담 연락과 진료 일정 조율. 필수: 이름·연락처·희망 진료·희망 날짜·희망 시간대. 선택: 문의 내용. 접수 언어·동의 문안 버전·접수일시를 함께 저장합니다.','Controller: The Good Morning Dental Clinic. Purpose: contacting you about your reservation and arranging an appointment. Required: name, telephone number, treatment of interest, preferred date and time. Optional: message. Submission language, consent version and time are also recorded.'],
- [`보유기간: 접수일로부터 ${RESERVATION_RETENTION_DAYS}일. 기간 경과 후 열람을 차단하고 이후 접수 또는 관리자 요청 시 삭제합니다. 권한 있는 관리자·접수 담당자만 열람하며 광고에 이용하지 않습니다. 새 신청 알림(병원 관리자 기기)에는 이름과 희망 진료·날짜만 표시하고 연락처는 넣지 않습니다.`,`Retention: ${RESERVATION_RETENTION_DAYS} days from submission. Access is blocked after expiry and the record is deleted on a later submission or administrator request. Only authorised administrators and reception staff can view it, and it is never used for advertising. New-request alerts on clinic staff devices show only your name, treatment of interest and date, never your telephone number.`],
+ [`보유기간: 접수일로부터 ${RESERVATION_RETENTION_DAYS}일. 기간 경과 후 열람을 차단하고 이후 접수 또는 관리자 요청 시 삭제합니다. 권한 있는 관리자·접수 담당자만 열람하며 광고에 이용하지 않습니다. 새 신청 알림(병원 관리자 기기)에는 희망 진료·날짜만 표시하고 이름·연락처는 넣지 않습니다.`,`Retention: ${RESERVATION_RETENTION_DAYS} days from submission. Access is blocked after expiry and the record is deleted on a later submission or administrator request. Only authorised administrators and reception staff can view it, and it is never used for advertising. New-request alerts on clinic staff devices show only the treatment of interest and date, never your name or telephone number.`],
  ['위 수집·이용 안내를 확인하고 동의합니다. (필수)','I have read the above and consent to the collection and use of my information. (Required)'],
  ['예약 상담 신청하기','Send reservation request'],
  ['온라인 신청에는 JavaScript가 필요합니다. 전화·네이버 예약·카카오 상담을 이용해 주세요.','Online requests require JavaScript. Please use telephone, Naver booking or Kakao instead.'],

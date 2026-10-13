@@ -142,7 +142,7 @@ try{
  for(const term of ['예약 알림을 휴대폰으로 받는 법','홈 화면에 추가','알림 받기','테스트 알림 보내기','예약 접수함 사용법','수가 공개 ON/OFF','공지 팝업 올리기','발행 시 자동 색인 제출','15,000,000원'])assert.ok(guide.includes(term),'handover '+term)
  assert.doesNotMatch(guide,/별도 팝업 기능이 있는 것처럼|일반 진료 상담은 전화·네이버 예약·카카오·톡톡 등 연결된 채널에서 확인|자동 이메일 알림은 현재 연결되지 않았으므로|\*\*/)
  // 6. Privacy policy + EN parity
- const privacy=await (await anon.request.get(base+'/privacy')).text();assert.match(privacy,/홈페이지 예약 상담 신청: .*90일/);assert.match(privacy,/2026년 10월 13일/);assert.doesNotMatch(privacy,/자동 이메일 알림 서비스는 연결되어 있지 않습니다/)
+ const privacy=await (await anon.request.get(base+'/privacy')).text();assert.match(privacy,/홈페이지 예약 상담 신청: .*1년/);assert.match(privacy,/2026년 10월 13일/);assert.doesNotMatch(privacy,/자동 이메일 알림 서비스는 연결되어 있지 않습니다/)
  const enPrivacy=await (await anon.request.get(base+'/en/privacy')).text();assert.match(enPrivacy,/Online reservation requests/);assert.match(enPrivacy,/web push alert/)
  const enRes=await (await anon.request.get(base+'/en/reservation')).text(),formHtml=enRes.slice(enRes.indexOf('id="reservation-form"'),enRes.indexOf('</form>',enRes.indexOf('id="reservation-form"')));assert.doesNotMatch(formHtml.replace(/<[^>]+>/g,' '),/[가-힣]/,'EN reservation form fully translated')
  assert.deepEqual(errors,[]);assert.deepEqual(csp,[])

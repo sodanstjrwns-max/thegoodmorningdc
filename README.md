@@ -1,5 +1,13 @@
 # 더굿모닝치과 — Good Morning Web
 
+## Media34 — 진료별 치료 전후 사례·관련 영상, 임플란트 스크롤 스토리, 환자 리뷰 링크 (2026-10-13, Claude Code)
+
+- **치료 전후 사례(진료 페이지 `#before-after`):** 원장 드라이브 `홈페이지/!!4-x-x …/비포애프터` 이미지 60장(중복 제외)을 800px WebP(EXIF 제거)로 `public/static/images/cases/ba-NN.webp`에 두고, 진료별로 6장 + ‘사례 n건 더 보기’(`<details>`). 카드 클릭 → 해당 원장 칼럼(인블로그, `thegoodmorningdental.com/blog/…`) 새 탭. 매핑은 `src/case-media-data.ts`(사이트맵 번호 4-2-1=implant-sedation … 4-5-3=gum-contouring). 환자 인물 사진이 들어간 1장(ba-49)은 사본에서 가림. 촬영 방식·개인차·결과 비보장 고지 포함. Review/AggregateRating 스키마 없음.
+- **관련 영상(`#related-videos`):** 드라이브 ‘관련영상’ YouTube 바로가기 → 진료별 2~6편. 기존 정책대로 YouTube 썸네일 대신 주제 표지 카드, 클릭 시 기존 `#video-dialog`에서 youtube-nocookie 재생(클릭 전 외부 요청 없음). 기존 진료 하단 영상 2편은 새 섹션이 있는 진료에서 생략.
+- **임플란트 스크롤 스토리(홈 `#implant-scroll-story`, CMS 섹션 키 `implant-scroll-story`, 기본 순서 care-priorities 다음):** sticky 스테이지에서 3D 장면 5장(GPT Image 2.5 생성, `static/images/implant-story/`)이 스크롤 진행률에 따라 크로스페이드 + 단계 카피·진행 바. `static/implant-story.js`/`media.css`. reduced-motion·Save-Data·사이트 모션 OFF면 정적 단계 목록.
+- **환자 리뷰 확인(홈 `#patient-reviews`, 기본 순서 visit 앞):** 네이버 플레이스 리뷰(place 19524548)·구글 지도(cid 9331921146403260855) 링크 버튼 + 어두운 상담 CTA. 리뷰 본문·별점 인용 없음.
+- 영어(/en)는 `mediaPairs`로 고정 문구·영상 제목 번역, 외부 칼럼 제목(`.external-title`)은 한국어 유지.
+
 ## Features33 — 홈페이지 예약 상담·웹 푸시 알림·수가 관리·공지 팝업·자동 색인 제출 (2026-10-13, Claude Code)
 
 - **예약 상담 신청:** `/reservation#reservation-form`(KO, `/en/reservation` 영문 동일 폼). 이름·연락처(전화)·희망 진료(31개+상담 후 결정)·희망 날짜(오늘~60일)·시간대(오전/오후/무관, 주말 오후·휴진일 거부)·내용(선택)·동의 필수, 허니팟, IP 시간당 5회. 새 테이블 `reservation_requests`(마이그레이션 0008, additive — `service_requests`의 kind CHECK는 additive로 바꿀 수 없어 분리) → 기존 접수함에 `예약 상담` 종류로 합류, 상태 신규·연락완료·예약확정·취소, 메모·담당자, 관리자·접수 담당 권한, 90일 보유·만료 정리 동일. 동의 버전 `2026-10-13-v4`, 개인정보처리방침 시행일 2026-10-13(예약 항목·목적·보유, 웹 푸시 전달, 팝업 브라우저 저장). CTA: 공통 하단 ‘온라인 상담 신청’, 진료 페이지 사이드·모바일 문맥 바(`?treatment=<slug>` 자동 선택), 모바일 하단 바 4번째 칸 ‘예약 신청’(전화·카카오·네이버 예약 유지, ‘오시는 길’은 메뉴·푸터로).

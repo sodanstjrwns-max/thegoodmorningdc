@@ -1,0 +1,117 @@
+/* 2026-10-13 · treatment B/A + related videos, implant scroll story, patient review links. Good Morning tokens only. */
+.ba-section,.media-video-section{--gm-ink:#242725;--gm-sun:#f2d45e;--gm-olive:#5e6b51;--gm-line:#dedfd4;--gm-paper:#fffef9}
+.ba-lead{color:#5e6b51;font-size:15px;line-height:1.75;margin:-8px 0 26px;word-break:keep-all}
+.ba-grid,.media-video-grid{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:22px 18px}
+.ba-card a{display:flex;flex-direction:column;height:100%;color:inherit;text-decoration:none;background:#fffef9;border:1px solid #e3e3d8;transition:transform .3s,box-shadow .3s,border-color .3s}
+.ba-card a:hover,.ba-card a:focus-visible{transform:translateY(-3px);box-shadow:0 14px 30px #24272514;border-color:#c9cbb9}
+.ba-card a:focus-visible{outline:2px solid #242725;outline-offset:3px}
+.ba-figure{position:relative;margin:0;aspect-ratio:16/9;background:#111;overflow:hidden}
+.ba-figure img{display:block;width:100%;height:100%;object-fit:cover;transition:transform .5s}
+.ba-card a:hover .ba-figure img{transform:scale(1.03)}
+.ba-badge{position:absolute;left:10px;top:10px;padding:4px 8px;background:#242725d9;color:#f2d45e;font-size:9px;font-weight:800;letter-spacing:.12em}
+.ba-card h3{margin:14px 14px 8px;font-size:15px;line-height:1.5;font-weight:700;color:#272a27;word-break:keep-all;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.ba-meta{margin:auto 14px 14px;display:flex;flex-wrap:wrap;gap:4px 10px;align-items:center;font-size:12px;color:#7a826d}
+.ba-meta .ba-open{margin-left:auto;display:inline-flex;align-items:center;gap:4px;color:#242725;font-weight:700}
+.ba-meta .icon{width:13px;height:13px}
+.ba-more{margin-top:20px}
+.ba-more>summary{cursor:pointer;display:inline-flex;align-items:center;gap:8px;padding:12px 18px;border:1px solid #c4c7bd;font-size:14px;font-weight:700;list-style:none;margin-bottom:20px}
+.ba-more>summary::-webkit-details-marker{display:none}
+.ba-more>summary::after{content:'+';font-size:18px;line-height:1}
+.ba-more[open]>summary::after{content:'−'}
+.ba-legal{margin-top:20px;padding:14px 16px;background:#efefe6;color:#5e6b51;font-size:13px;line-height:1.7;word-break:keep-all}
+.media-video-grid{grid-template-columns:repeat(auto-fill,minmax(240px,1fr))}
+.media-video-cover{all:unset;box-sizing:border-box;cursor:pointer;position:relative;display:flex;flex-direction:column;justify-content:space-between;width:100%;aspect-ratio:16/9;padding:18px;background:radial-gradient(120% 90% at 85% 15%,#3b3f37 0,#242725 55%,#1b1e1c 100%);color:#fff;overflow:hidden;transition:transform .3s}
+.media-video-cover::after{content:'';position:absolute;right:-30px;bottom:-30px;width:120px;height:120px;border-radius:50%;border:1px solid #f2d45e55}
+.media-video-cover:hover,.media-video-cover:focus-visible{transform:translateY(-3px)}
+.media-video-cover:focus-visible{outline:2px solid #f2d45e;outline-offset:3px}
+.media-video-kicker{font-size:9px;letter-spacing:.14em;color:#f2d45e;font-weight:800}
+.media-video-cover strong{font-size:16px;line-height:1.45;word-break:keep-all;max-width:88%}
+.media-video-play{position:absolute;right:16px;bottom:16px;width:40px;height:40px;border-radius:50%;background:#f2d45e;color:#242725;display:grid;place-items:center;z-index:1}
+.media-video-play .icon{width:16px;height:16px}
+.media-video p{display:flex;flex-wrap:wrap;justify-content:space-between;gap:4px 10px;margin:10px 2px 0;font-size:12px;color:#7a826d}
+.media-video p a{color:#242725;font-weight:700;display:inline-flex;align-items:center;gap:4px}
+.media-video p .icon{width:12px;height:12px}
+.media-more{display:flex;flex-wrap:wrap;gap:12px 22px;align-items:center;margin-top:24px}
+@media(max-width:1100px){.ba-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:600px){.ba-grid{grid-template-columns:1fr;gap:16px}.ba-card h3{font-size:15px}.media-video-grid{grid-template-columns:1fr}}
+
+/* Implant scroll story (home). Static stacked list by default; .is-scrub (JS + motion allowed) turns it into a sticky scrubbed stage. */
+.implant-scroll{position:relative;background:#16201a;color:#f4f2e8;padding:96px 0 80px}
+.implant-scroll-stage{width:min(1320px,calc(100% - 112px));margin:auto}
+.implant-scroll-head .eyebrow{color:#f2d45e}
+.implant-scroll-head h2{font-size:clamp(30px,4.2vw,56px);line-height:1.22;margin:10px 0 14px;letter-spacing:-.02em;word-break:keep-all;color:#fff}
+.implant-scroll-head h2 em{font-style:normal;color:#f2d45e}
+.implant-scroll-sub{color:#c9cfbf;margin:0 0 40px}
+.implant-scroll-steps{list-style:none;margin:0;padding:0;display:grid;gap:44px}
+.implant-step{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);gap:36px;align-items:center}
+.implant-step-figure{margin:0;border-radius:4px;overflow:hidden;background:#16201a}
+.implant-step-figure img{display:block;width:100%;height:auto}
+.implant-step-num{display:block;font-family:'Manrope','Good Morning Sans',sans-serif;font-size:44px;font-weight:800;color:#f2d45e;line-height:1}
+.implant-step-num small{font-size:12px;letter-spacing:.12em;color:#c9cfbf;margin-left:8px;font-weight:700}
+.implant-step h3{font-size:clamp(20px,2vw,28px);line-height:1.4;margin:16px 0 10px;color:#fff;word-break:keep-all}
+.implant-step p{color:#d3d8ca;line-height:1.8;margin:0;word-break:keep-all}
+.implant-scroll-rail{display:none}
+.implant-scroll-note{margin:36px 0 0;font-size:12px;color:#9ea795;line-height:1.6}
+.implant-scroll-finale{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:18px;margin-top:48px;padding-top:32px;border-top:1px solid #ffffff22}
+.implant-scroll-finale p{margin:0;font-size:18px;color:#fff;word-break:keep-all}
+.implant-scroll-actions{display:flex;flex-wrap:wrap;gap:10px}
+.implant-scroll .btn.outline{color:#fff;border-color:#ffffff55}
+
+.implant-scroll.is-scrub{padding:0 0 80px}
+.implant-scroll.is-scrub .implant-scroll-track{height:calc(var(--scenes,5) * 90vh + 100vh)}
+.implant-scroll.is-scrub .implant-scroll-stage{position:sticky;top:0;height:100vh;height:100svh;width:100%;overflow:hidden}
+.implant-scroll.is-scrub .implant-scroll-head{position:absolute;z-index:3;left:max(56px,calc((100% - 1320px)/2));top:clamp(70px,11vh,120px);max-width:520px;transition:opacity .4s,transform .4s}
+.implant-scroll.is-scrub.past-intro .implant-scroll-head{opacity:0;transform:translateY(-16px);pointer-events:none}
+.implant-scroll.is-scrub .implant-scroll-steps{display:block;position:absolute;inset:0}
+.implant-scroll.is-scrub .implant-step{display:block}
+.implant-scroll.is-scrub .implant-step-figure{position:absolute;inset:0;border-radius:0;opacity:var(--o,0);transform:scale(var(--s,1.04));will-change:opacity,transform}
+.implant-scroll.is-scrub .implant-step-figure img{width:100%;height:100%;object-fit:cover;object-position:70% 50%}
+.implant-scroll.is-scrub .implant-step-figure::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,#16201af2 0,#16201ab3 30%,#16201a00 58%)}
+.implant-scroll.is-scrub .implant-step-copy{position:absolute;z-index:2;left:max(56px,calc((100% - 1320px)/2));top:50%;width:min(440px,38vw);opacity:0;transform:translateY(calc(-50% + 24px));transition:opacity .45s,transform .45s;pointer-events:none}
+.implant-scroll.is-scrub .implant-step.is-active .implant-step-copy{opacity:1;transform:translateY(-50%);pointer-events:auto}
+.implant-scroll.is-scrub:not(.past-intro) .implant-step-copy{opacity:0!important}
+.implant-scroll.is-scrub .implant-scroll-rail{display:block;position:absolute;z-index:3;left:max(56px,calc((100% - 1320px)/2));right:max(56px,calc((100% - 1320px)/2));bottom:64px;height:2px;background:#ffffff26}
+.implant-scroll.is-scrub .implant-scroll-rail i{display:block;height:100%;width:100%;background:#f2d45e;transform-origin:0 50%;transform:scaleX(var(--p,0))}
+.implant-scroll.is-scrub .implant-scroll-note{position:absolute;z-index:3;left:max(56px,calc((100% - 1320px)/2));right:max(56px,calc((100% - 1320px)/2));bottom:24px;margin:0}
+.implant-scroll.is-scrub .implant-scroll-finale{margin-top:56px}
+
+@media(max-width:900px){
+ .implant-scroll{padding:72px 0 64px}
+ .implant-scroll-stage{width:calc(100% - 40px)}
+ .implant-step{grid-template-columns:1fr;gap:18px}
+ .implant-step-num{font-size:34px}
+ .implant-scroll.is-scrub .implant-scroll-head{left:20px;right:20px;top:72px}
+ .implant-scroll.is-scrub .implant-step-figure img{object-fit:contain;object-position:50% 34%;height:auto;margin-top:calc(26svh)}
+ .implant-scroll.is-scrub .implant-step-figure::after{background:linear-gradient(180deg,#16201a 0,#16201a00 18%,#16201a00 52%,#16201af0 70%)}
+ .implant-scroll.is-scrub .implant-step-copy{left:20px;right:20px;width:auto;top:auto;bottom:96px;transform:translateY(24px)}
+ .implant-scroll.is-scrub .implant-step.is-active .implant-step-copy{transform:none}
+ .implant-scroll.is-scrub .implant-step h3{font-size:20px;margin:10px 0 6px}
+ .implant-scroll.is-scrub .implant-step p{font-size:14px;line-height:1.65}
+ .implant-scroll.is-scrub .implant-scroll-rail{left:20px;right:20px;bottom:70px}
+ .implant-scroll.is-scrub .implant-scroll-note{left:20px;right:20px;bottom:18px;font-size:11px}
+ .implant-scroll-finale{width:calc(100% - 40px)}
+}
+@media(prefers-reduced-motion:reduce){.ba-card a,.ba-figure img,.media-video-cover{transition:none}.ba-card a:hover{transform:none}}
+
+/* Patient review links (no review text, ratings or schema). */
+.patient-reviews{padding:110px 0;background:#f8f7f2}
+.patient-reviews-head{max-width:720px}
+.patient-reviews-head h2{font-size:clamp(30px,3.6vw,46px);line-height:1.25;margin:10px 0 14px;letter-spacing:-.02em}
+.patient-reviews-head p{color:#5e6b51;line-height:1.8;word-break:keep-all;margin:0}
+.review-platforms{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin:36px 0 22px;max-width:760px}
+.review-platform{display:flex;align-items:center;gap:14px;padding:18px 20px;background:#fff;border:1px solid #dcdcd0;color:#272a27;text-decoration:none;transition:border-color .3s,transform .3s}
+.review-platform:hover,.review-platform:focus-visible{border-color:#242725;transform:translateY(-2px)}
+.review-platform>span:nth-child(2){display:flex;flex-direction:column;flex:1}
+.review-platform strong{font-size:16px}
+.review-platform small{font-size:12px;color:#7a826d}
+.review-logo{width:40px;height:40px;display:grid;place-items:center;font-family:'Manrope',sans-serif;font-weight:800;font-size:18px;color:#fff;flex:none}
+.review-naver .review-logo{background:#03c75a}
+.review-google .review-logo{background:#fff;color:#4285f4;border:1px solid #dadce0}
+.review-cta{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:22px;padding:36px 40px;background:#242725;color:#fff}
+.review-cta h3{font-size:clamp(21px,2.2vw,28px);line-height:1.4;margin:0 0 10px;color:#fff;word-break:keep-all}
+.review-cta p{margin:0;color:#c9cfbf;word-break:keep-all}
+.review-cta-actions{display:flex;flex-wrap:wrap;gap:10px}
+.review-cta .btn.outline{color:#fff;border-color:#ffffff59}
+.review-call .icon{width:16px;height:16px}
+.review-note{margin:14px 0 0;font-size:12px;color:#7a826d}
+@media(max-width:600px){.patient-reviews{padding:72px 0}.review-platforms{grid-template-columns:1fr}.review-cta{padding:26px 20px}.review-cta-actions,.review-cta-actions .btn{width:100%}}

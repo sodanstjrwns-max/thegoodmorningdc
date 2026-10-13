@@ -72,7 +72,7 @@
 .implant-scroll.is-scrub:not(.past-intro) .implant-step-copy{opacity:0!important}
 .implant-scroll.is-scrub .implant-scroll-rail{display:block;position:absolute;z-index:3;left:max(56px,calc((100% - 1320px)/2));right:max(56px,calc((100% - 1320px)/2));bottom:64px;height:2px;background:#ffffff26}
 .implant-scroll.is-scrub .implant-scroll-rail i{display:block;height:100%;width:100%;background:#f2d45e;transform-origin:0 50%;transform:scaleX(var(--p,0))}
-.implant-scroll.is-scrub .implant-scroll-note{position:absolute;z-index:3;left:max(56px,calc((100% - 1320px)/2));right:max(56px,calc((100% - 1320px)/2));bottom:24px;margin:0}
+.implant-scroll.is-scrub .implant-scroll-note{position:absolute;z-index:3;left:max(120px,calc((100% - 1320px)/2));right:max(56px,calc((100% - 1320px)/2));bottom:24px;margin:0;text-align:right}
 .implant-scroll.is-scrub .implant-scroll-finale{margin-top:56px}
 
 @media(max-width:900px){
@@ -80,15 +80,15 @@
  .implant-scroll-stage{width:calc(100% - 40px)}
  .implant-step{grid-template-columns:1fr;gap:18px}
  .implant-step-num{font-size:34px}
- .implant-scroll.is-scrub .implant-scroll-head{left:20px;right:20px;top:72px}
- .implant-scroll.is-scrub .implant-step-figure img{object-fit:contain;object-position:50% 34%;height:auto;margin-top:calc(26svh)}
- .implant-scroll.is-scrub .implant-step-figure::after{background:linear-gradient(180deg,#16201a 0,#16201a00 18%,#16201a00 52%,#16201af0 70%)}
- .implant-scroll.is-scrub .implant-step-copy{left:20px;right:20px;width:auto;top:auto;bottom:96px;transform:translateY(24px)}
+ .implant-scroll.is-scrub .implant-scroll-head{left:20px;right:20px;top:128px}
+ .implant-scroll.is-scrub .implant-step-figure img{position:absolute;left:0;top:26svh;width:100%;height:40svh;object-fit:cover;object-position:74% 50%}
+ .implant-scroll.is-scrub .implant-step-figure::after{background:linear-gradient(180deg,#16201a 0,#16201a 26svh,#16201a00 32svh,#16201a00 60svh,#16201a 66svh)}
+ .implant-scroll.is-scrub .implant-step-copy{left:20px;right:20px;width:auto;top:auto;bottom:128px;transform:translateY(24px)}
  .implant-scroll.is-scrub .implant-step.is-active .implant-step-copy{transform:none}
  .implant-scroll.is-scrub .implant-step h3{font-size:20px;margin:10px 0 6px}
  .implant-scroll.is-scrub .implant-step p{font-size:14px;line-height:1.65}
- .implant-scroll.is-scrub .implant-scroll-rail{left:20px;right:20px;bottom:70px}
- .implant-scroll.is-scrub .implant-scroll-note{left:20px;right:20px;bottom:18px;font-size:11px}
+ .implant-scroll.is-scrub .implant-scroll-rail{left:20px;right:20px;bottom:112px}
+ .implant-scroll.is-scrub .implant-scroll-note{left:20px;right:20px;bottom:62px;font-size:11px;text-align:left}
  .implant-scroll-finale{width:calc(100% - 40px)}
 }
 @media(prefers-reduced-motion:reduce){.ba-card a,.ba-figure img,.media-video-cover{transition:none}.ba-card a:hover{transform:none}}

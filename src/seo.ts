@@ -1,6 +1,7 @@
 import {branchPlaceUrl,type Content} from './content'
 import {textSummary} from './markdown'
 import {hubs} from './area'
+import {topics,topicPath,topicByPath,OG_SIZE} from './area-topics'
 export const snippet=(text:string,max=180)=>{const value=textSummary(text);return value.length>max?value.slice(0,max-1).trimEnd()+'…':value}
 export function listingQuery(search:URLSearchParams){const q=(search.get('q')||'').trim().slice(0,100),raw=search.get('page')||'1',page=Number(raw);return {q,page,valid:/^[1-9]\d*$/.test(raw)&&Number.isSafeInteger(page)}}
 export function listingPath(base:string,q:string,page:number){const params=new URLSearchParams();if(q)params.set('q',q);if(page>1)params.set('page',String(page));return base+(params.size?'?'+params:'')}
@@ -13,10 +14,10 @@ export const siteOrigin=(configured:string|undefined,requestUrl:string)=>product
 export const launchIndexable=(configured:string|undefined,requestUrl:string)=>!!productionOrigin(configured)&&productionOrigin(configured)===new URL(requestUrl).origin
 export const privatePath=(path:string)=>/^\/(?:admin|api|media|handover)(?:\/|$)/.test(path)
 export const plain=(text:string)=>text.replace(/\s+/g,' ').trim()
-const labels:Record<string,string>={'/':'홈','/treatments':'진료 안내','/doctors':'의료진','/mission':'더굿모닝 약속','/tour':'공간·장비','/directions':'오시는 길','/reservation':'상담·예약','/contents':'치과 콘텐츠','/video':'원장 설명 영상','/faq':'자주 묻는 질문','/symptom-checker':'증상별 정보','/cases':'치료사례 안내','/pricing':'비급여 진료비','/careers':'채용 안내','/privacy':'개인정보 안내','/terms':'이용 안내','/blog':'건강정보','/notice':'병원 소식','/encyclopedia':'치과 백과사전','/visiting':'해외·타지역 내원','/column':'원장 칼럼','/area/cheongnyangni':'청량리 치과','/area/jegi-dong':'제기동 치과'}
+const labels:Record<string,string>={'/':'홈','/treatments':'진료 안내','/doctors':'의료진','/mission':'더굿모닝 약속','/tour':'공간·장비','/directions':'오시는 길','/reservation':'상담·예약','/contents':'치과 콘텐츠','/video':'원장 설명 영상','/faq':'자주 묻는 질문','/symptom-checker':'증상별 정보','/cases':'치료사례 안내','/pricing':'비급여 진료비','/careers':'채용 안내','/privacy':'개인정보 안내','/terms':'이용 안내','/blog':'건강정보','/notice':'병원 소식','/encyclopedia':'치과 백과사전','/visiting':'해외·타지역 내원','/column':'원장 칼럼','/area/cheongnyangni':'청량리 치과','/area/jegi-dong':'제기동 치과',...Object.fromEntries(topics.map(t=>[topicPath(t),t.keyword]))}
 export function breadcrumbs(path:string,title:string){
  const items=[{name:'홈',path:'/'}];if(path==='/')return items
- const parent='/'+path.split('/')[1];if(parent!==path&&labels[parent])items.push({name:labels[parent],path:parent})
+ const parent=topicByPath(path)?'/area/cheongnyangni':'/'+path.split('/')[1];if(parent!==path&&labels[parent])items.push({name:labels[parent],path:parent})
  items.push({name:labels[path]||title,path});return items
 }
 export function pageDescription(path:string,title:string,c:Content,override=''){
@@ -24,6 +25,7 @@ export function pageDescription(path:string,title:string,c:Content,override=''){
  const descriptions:Record<string,string>={
   '/':'청량리 치과 더굿모닝치과의원. 1호선 제기동역 2번 출구 85m(동대문구 왕산로 123, 2층), 일요일 10–14시 진료. 1990년부터 2대째, 수면치료·임플란트 재수술·앞니 치료·장애인 진료. 02-969-3776',
   ...Object.fromEntries(hubs.map(h=>['/area/'+h.slug,h.description])),
+  ...Object.fromEntries(topics.map(t=>[topicPath(t),t.description])),
   '/treatments':'임플란트·수면센터·일반 보존·잇몸 구강외과 진료를 증상별로 찾아보세요. 각 진료의 과정, 주의사항, 관련 의료진과 질문답변을 안내합니다.',
   '/doctors':c.doctors.map(d=>d.name).join('·')+' 원장의 제공 프로필, 전체 학력과 경력, 전문과목 및 관련 진료를 확인하세요.',
   '/mission':'아버지가 시작한 치과를 이어온 강도욱 원장의 이야기. 충분히 듣는 진료, 지역 내 폭넓은 치료, 치과 공포를 덜어내는 세 가지 약속입니다.',
@@ -60,8 +62,8 @@ export function clinicSchemas(c:Content,origin:string){
  ]
 }
 export function pageSchemas(c:Content,origin:string,path:string,title:string,description:string,extra:object[]){
- const url=origin+path,medical=path.startsWith('/treatments/')
- return [...clinicSchemas(c,origin),{'@context':'https://schema.org','@type':medical?'MedicalWebPage':'WebPage','@id':url+'#webpage',url,name:title,description,inLanguage:'ko-KR',isPartOf:{'@id':origin+'/#website'},publisher:{'@id':origin+'/#organization'},...(medical?{about:{'@type':'MedicalProcedure',name:c.treatments.find(t=>path.endsWith('/'+t.slug))?.name}}:{}),...(path.startsWith('/area/')?{about:{'@id':origin+'/#'+(c.branches[0]?.id||'cheongnyangni')},mainEntity:{'@id':origin+'/#'+(c.branches[0]?.id||'cheongnyangni')}}:{})},
+ const url=origin+path,topic=topicByPath(path.split('?')[0]),medical=path.startsWith('/treatments/')||!!topic
+ return [...clinicSchemas(c,origin),{'@context':'https://schema.org','@type':medical?'MedicalWebPage':'WebPage','@id':url+'#webpage',url,name:title,description,inLanguage:'ko-KR',isPartOf:{'@id':origin+'/#website'},publisher:{'@id':origin+'/#organization'},...(medical?{about:{'@type':'MedicalProcedure',name:c.treatments.find(t=>path.endsWith('/'+t.slug))?.name}}:{}),...(path.startsWith('/area/')?{about:{'@id':origin+'/#'+(c.branches[0]?.id||'cheongnyangni')},mainEntity:{'@id':origin+'/#'+(c.branches[0]?.id||'cheongnyangni')}}:{}),...(topic?{image:{'@type':'ImageObject',url:origin+topic.image.og,width:OG_SIZE.width,height:OG_SIZE.height,caption:topic.image.alt},primaryImageOfPage:{'@type':'ImageObject',url:origin+topic.image.og},dateModified:topic.updated,specialty:'https://schema.org/Dentistry',relatedLink:topic.treatments.map(s=>origin+'/treatments/'+s)}:{})},
  {'@context':'https://schema.org','@type':'BreadcrumbList',itemListElement:breadcrumbs(path.split('?')[0],title).map((b,i,a)=>({'@type':'ListItem',position:i+1,name:b.name,item:i===a.length-1?url:origin+b.path}))},...extra]
 }
 export function llmIndex(c:Content,origin:string,preview:boolean){
@@ -77,5 +79,5 @@ export function physicianSchema(d:Content['doctors'][number],origin:string){
 }
 // Sitemap lastmod: the date each page's content last changed in source (git history), never request time.
 // Update the matching entry when page content changes. Treatments/doctors default to data.ts history.
-export const contentDates:Record<string,string>={default:'2026-10-11','/':'2026-10-12','/mission':'2026-10-12','/privacy':'2026-10-13','/reservation':'2026-10-13','/blog':'2026-10-12','/encyclopedia':'2026-09-30','/doctors/kang-dowook':'2026-10-12','/doctors/kang-jongseung':'2026-10-12','/treatments/sedation':'2026-10-12','/treatments/implant-sedation':'2026-10-12','/treatments/sedation-disabled':'2026-10-12','/treatments/sedation-systemic':'2026-10-12','/treatments/implant-disabled':'2026-10-12','/treatments/implant-systemic':'2026-10-12','/treatments/implant-front':'2026-10-12','/treatments/prosthesis':'2026-10-12','/treatments/gum-contouring':'2026-10-12','/treatments/laminate':'2026-10-12','/treatments/sinus-lift':'2026-10-12',...Object.fromEntries(hubs.map(h=>['/area/'+h.slug,h.updated]))}
+export const contentDates:Record<string,string>={default:'2026-10-11','/':'2026-10-12','/mission':'2026-10-12','/privacy':'2026-10-13','/reservation':'2026-10-13','/blog':'2026-10-12','/encyclopedia':'2026-09-30','/doctors/kang-dowook':'2026-10-12','/doctors/kang-jongseung':'2026-10-12','/treatments/sedation':'2026-10-12','/treatments/implant-sedation':'2026-10-12','/treatments/sedation-disabled':'2026-10-12','/treatments/sedation-systemic':'2026-10-12','/treatments/implant-disabled':'2026-10-12','/treatments/implant-systemic':'2026-10-12','/treatments/implant-front':'2026-10-12','/treatments/prosthesis':'2026-10-12','/treatments/gum-contouring':'2026-10-12','/treatments/laminate':'2026-10-12','/treatments/sinus-lift':'2026-10-12',...Object.fromEntries(hubs.map(h=>['/area/'+h.slug,h.updated])),...Object.fromEntries(topics.map(t=>[topicPath(t),t.updated]))}
 export const contentDate=(path:string)=>contentDates[path]||contentDates.default

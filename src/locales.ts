@@ -35,6 +35,8 @@ export function languageLinks(path:string,origin:string){return ['ko',...locales
 export const languageSwitch=(path:string,current='ko')=>`<nav class="locale-switch" aria-label="Language">${[['ko','한국어'],['en','English'],['ja','日本語'],['zh','中文']].filter(([l])=>l==='ko'||locales.includes(l as Locale)).map(([l,name])=>`<a href="${l==='ko'?path:localPath(path,l)}" lang="${l}" hreflang="${l==='zh'?'zh-Hans':l}" ${l===current?'aria-current="page"':''}>${name}</a>`).join('')}</nav>`
 const notices={en:'Machine-assisted translation of the Korean source. New posts may remain in Korean. Please contact the clinic to confirm medical information, appointments and interpreter availability.',ja:'韓国語原文の機械翻訳です。新規記事は韓国語のまま表示される場合があります。医療情報・予約・通訳の手配は医院にご確認ください。',zh:'本页由韩文原文机器辅助翻译。新内容可能仍显示为韩文。医疗信息、预约及口译安排请向诊所确认。'}
 export function localizeHTML(html:string,locale:Locale,path:string,origin:string){
+ // Korean-only local fragments (청량리 sub-page cards, their ItemList, treatment aside links) are not translated.
+ html=html.replace(/<!--ko-only-->[\s\S]*?<!--\/ko-only-->/g,'')
  const canonicalMatch=html.match(/<link rel="canonical" href="([^"]*)"/)
  let query='';try{query=new URL(decode(canonicalMatch?.[1]||'')).search}catch{}
  const localizedUrl=origin+localPath(path,locale)+query
@@ -42,7 +44,7 @@ export function localizeHTML(html:string,locale:Locale,path:string,origin:string
  const blocks=html.split(/(<script\b[^>]*>[\s\S]*?<\/script>|<style\b[^>]*>[\s\S]*?<\/style>)/gi)
  let output=blocks.map(block=>{
   if(/^<script\b/i.test(block)){
-   if(/type="application\/(?:ld\+json|json)"/.test(block))try{const open=block.indexOf('>'),close=block.lastIndexOf('</script>');const walk=(x:any):any=>typeof x==='string'?translate(x,locale):Array.isArray(x)?x.map(walk):x&&typeof x==='object'?Object.fromEntries(Object.entries(x).map(([k,v])=>[k,walk(v)])):x;const data=walk(JSON.parse(block.slice(open+1,close)));if(Array.isArray(data)&&/ld\+json/.test(block.slice(0,open))){for(const entity of data){if(['WebPage','MedicalWebPage'].includes(entity['@type'])){entity.url=localizedUrl;entity['@id']=localizedUrl+'#webpage';entity.inLanguage=locale==='zh'?'zh-Hans':locale}if(entity['@type']==='BreadcrumbList')for(const item of entity.itemListElement||[])if(item.item?.startsWith(origin+'/'))item.item=origin+localPath(item.item.slice(origin.length),locale)}}return block.slice(0,open+1)+JSON.stringify(data).replace(/</g,'\\u003c')+'</script>'}catch{return block}
+   if(/type="application\/(?:ld\+json|json)"/.test(block))try{const open=block.indexOf('>'),close=block.lastIndexOf('</script>');const walk=(x:any):any=>typeof x==='string'?translate(x,locale):Array.isArray(x)?x.map(walk):x&&typeof x==='object'?Object.fromEntries(Object.entries(x).map(([k,v])=>[k,walk(v)])):x;const data=(x=>Array.isArray(x)?x.filter((s:any)=>!(s&&s['@type']==='ItemList'&&JSON.stringify(s).includes('/area/cheongnyangni/'))):x)(walk(JSON.parse(block.slice(open+1,close))));if(Array.isArray(data)&&/ld\+json/.test(block.slice(0,open))){for(const entity of data){if(['WebPage','MedicalWebPage'].includes(entity['@type'])){entity.url=localizedUrl;entity['@id']=localizedUrl+'#webpage';entity.inLanguage=locale==='zh'?'zh-Hans':locale}if(entity['@type']==='BreadcrumbList')for(const item of entity.itemListElement||[])if(item.item?.startsWith(origin+'/'))item.item=origin+localPath(item.item.slice(origin.length),locale)}}return block.slice(0,open+1)+JSON.stringify(data).replace(/</g,'\\u003c')+'</script>'}catch{return block}
    return block
   }
   if(/^<style\b/i.test(block))return block

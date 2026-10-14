@@ -70,9 +70,34 @@ const robots=await(await get('/robots.txt')).text()
 for(const bot of ['GPTBot','OAI-SearchBot','ChatGPT-User','ClaudeBot','Claude-User','Claude-SearchBot','PerplexityBot','Perplexity-User','Google-Extended','Applebot-Extended','Bingbot','Yeti','Daumoa'])assert.match(robots,new RegExp('User-agent: '+bot+'\\nAllow: /\\nDisallow: /admin'))
 assert.match(robots,/Sitemap: https:\/\/thegoodmorningdc\.kr\/sitemap\.xml/)
 const full=await(await get('/llms-full.txt')).text();assert.ok(full.length>20000);assert.match(full,/청량리 치과/);assert.match(full,/02-969-3776/)
-const sitemap=await(await get('/sitemap.xml')).text(),entries=[...sitemap.matchAll(/<url><loc>([^<]+)<\/loc><lastmod>([^<]+)<\/lastmod><\/url>/g)]
+const sitemap=await(await get('/sitemap.xml')).text(),entries=[...sitemap.matchAll(/<url><loc>([^<]+)<\/loc><lastmod>([^<]+)<\/lastmod>(?:<image:image><image:loc>[^<]+<\/image:loc><\/image:image>)?<\/url>/g)]
 assert.equal(entries.length,(sitemap.match(/<url>/g)||[]).length,'Every URL has lastmod');for(const [,,d] of entries)assert.ok(Number.isFinite(Date.parse(d)))
-assert.ok(sitemap.includes(prod+'/area/cheongnyangni</loc><lastmod>2026-10-12'));assert.ok(sitemap.includes(prod+'/area/jegi-dong</loc>'))
+assert.ok(sitemap.includes(prod+'/area/cheongnyangni</loc><lastmod>2026-10-14'));assert.ok(sitemap.includes(prod+'/area/jegi-dong</loc>'))
+
+// 청량리 진료별 하위 페이지 (2026-10-14): one photo in og:image = first body img = schema image = sitemap image;
+// hub/home photo cards mirror ItemList; KO only (no hreflang, /en 302, /en home has no cards or ItemList).
+const topicSlugs=['sedation','implant','implant-revision','front-teeth','denture','systemic-care'],ogs=new Set()
+for(const slug of topicSlugs){
+ const path='/area/cheongnyangni/'+slug,t=await html(path),head=t.split('</head>')[0]
+ const og=/<meta property="og:image" content="([^"]+)"/.exec(head)[1];ogs.add(og)
+ assert.match(head,/<meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">/)
+ assert.ok(/<title>([^<]*)<\/title>/.exec(head)[1].startsWith('청량리 '),slug+' title starts with region')
+ assert.doesNotMatch(head,/hreflang/)
+ const article=/<article class="article-body prose">([\s\S]*?)<\/article>/.exec(t)[1]
+ assert.equal(prod+/<img src="([^"]+)"/.exec(article)[1],og,slug+' first body image = og')
+ const all=schemas(t),page=all.find(s=>s['@type']==='MedicalWebPage');assert.equal(page.image.url,og)
+ assert.equal(all.find(s=>s['@type']==='BreadcrumbList').itemListElement[1].item,prod+'/area/cheongnyangni')
+ assert.ok(sitemap.includes('<loc>'+prod+path+'</loc><lastmod>2026-10-14</lastmod><image:image><image:loc>'+og+'</image:loc>'),slug+' sitemap image')
+ const body=strip(t.slice(t.indexOf('<section id="topic-1"'),t.indexOf('<section class="area-topics">')));assert.ok((body.match(/[가-힣]/g)||[]).length>=1200,slug+' body length')
+ assert.doesNotMatch(strip(t),/최고|유일|1위|잘하는|무통|보장|할인|전후/)
+ const en=await get('/en'+path);assert.equal(en.status,302)
+}
+assert.equal(ogs.size,6,'unique og per sub-page')
+for(const p of ['/','/area/cheongnyangni']){const t=await html(p),cards=[...t.matchAll(/<a href="(\/area\/cheongnyangni\/[a-z-]+)" class="area-topic-card"><img src="([^"]+)"/g)];assert.equal(cards.length,6,p+' cards')
+ const list=[...t.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)].flatMap(m=>[JSON.parse(m[1])].flat()).find(s=>s['@type']==='ItemList')
+ assert.deepEqual(list.itemListElement.map(i=>[i.url,i.image]),cards.map(c=>[prod+c[1],prod+c[2]]))}
+if(!live){const enRes=await app.fetch(new Request(prod+'/en'),env,{waitUntil(){},passThroughOnException(){}});assert.equal(enRes.status,200);const enHome=await enRes.text();assert.match(enHome,/listens once more/);assert.doesNotMatch(enHome,/area-topic-card|"ItemList"/)}
+assert.match(await html('/treatments/sedation'),/href="\/area\/cheongnyangni\/sedation"/)
 const langs=await(await get('/sitemap-languages.xml')).text();assert.doesNotMatch(langs,/\/area\//)
 const cases=await get('/cases');const casesHtml=await cases.text()
 if(!/<a href="\/cases\/[a-z0-9-]+"/.test(casesHtml)){assert.match(cases.headers.get('x-robots-tag')||'',/noindex/);assert.doesNotMatch(sitemap,/\/cases</)}

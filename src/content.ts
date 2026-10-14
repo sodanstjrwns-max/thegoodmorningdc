@@ -2,7 +2,7 @@ import * as source from './data'
 import {readWithRetry as readQuery} from './reliability'
 import {markdown,imagePath} from './markdown'
 
-export const nativeSections = ['hero-section','care-priorities','director-story','opening-films','sedation-story','inclusive-care','trust','philosophy','question-story','why-goodmorning','treatments','preservation-assembly','revision-story','physician-deck','clinic-space-story','language-reveal','journal','visit-story','visit','implant-scroll-story','patient-reviews']
+export const nativeSections = ['hero-section','care-priorities','director-story','opening-films','sedation-story','inclusive-care','trust','philosophy','question-story','why-goodmorning','treatments','preservation-assembly','revision-story','physician-deck','clinic-space-story','language-reveal','journal','visit-story','visit','implant-scroll-story','patient-reviews','cheongnyangni-guide']
 export const officialSource = 'https://thegoodmorningdental.com/'
 // Official-site links, kept separate from clinic-owned player videos and RSS feeds.
 // HTTPS GET follows to the same Talk account; no chat message is sent by this site.
@@ -31,7 +31,7 @@ export const defaults = {
  doctor:baseDoctors,
  video:source.videos.map((v,i)=>({...v,key:v.id,order:i})),
  faq:source.generalFaq.map(([question,answer],i)=>({key:'general-'+(i+1),question,answer,order:i})),
- section:[...nativeSections.slice(0,-2).map((key,order)=>({key,title:key,body:'',enabled:true,order})),{key:'implant-scroll-story',title:'implant-scroll-story',body:'',enabled:true,order:1.5},{key:'patient-reviews',title:'patient-reviews',body:'',enabled:true,order:17.5}],
+ section:[...nativeSections.slice(0,-3).map((key,order)=>({key,title:key,body:'',enabled:true,order})),{key:'cheongnyangni-guide',title:'cheongnyangni-guide',body:'',enabled:true,order:1.7},{key:'implant-scroll-story',title:'implant-scroll-story',body:'',enabled:true,order:1.5},{key:'patient-reviews',title:'patient-reviews',body:'',enabled:true,order:17.5}],
  branch:baseBranches,
  channel:initialChannels,
  site:[{key:'mission',story:source.missionStory,promises:source.missionPromises}],

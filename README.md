@@ -1,5 +1,14 @@
 # 더굿모닝치과 — Good Morning Web
 
+## SubpageCards35 — 청량리 진료별 하위 페이지·사진 카드·새 파비콘 (2026-10-14, Claude Code)
+
+- **하위 페이지 6개(한국어 전용, `src/area-topics.ts`):** `/area/cheongnyangni/{sedation,implant,implant-revision,front-teeth,denture,systemic-care}` = 청량리 수면치료·임플란트·임플란트 재수술·앞니 치료·틀니·전신질환 치과. 진료 페이지와 겹치지 않도록 청량리·제기동 생활권 접근, 선택 기준, 상담·예약 흐름, FAQ 4개(FAQPage, 진료 FAQ와 문항 중복 없음) 위주. hreflang 없음, `/en/area/*` 302. 빵부스러기 홈 > 청량리 치과 > 페이지.
+- **대표 사진 1장 = 네 곳:** `static/images/area/cheongnyangni-<slug>-og.jpg`(1200×630)가 og:image(+width/height) = 본문 첫 img = MedicalWebPage.image = 사이트맵 `image:image`. 카드용 `-card.webp`(600×600). 출처: 실제 진료실(space-37)·CT실(space-34) + GPT Image 2.5 연출 4장(원본 `pfwebengine/tools/subpage-cards/gen/thegoodmorningdc/`).
+- **카드 그리드:** 청량리 허브(목차 바로 아래)와 홈 CMS 섹션 `cheongnyangni-guide`(기본 순서 1.7, 관리자에서 끄면 ItemList도 같이 빠짐)에 6장 + `ItemList`(화면과 1:1). `/en` 홈은 `<!--ko-only-->` 마커로 카드·ItemList 제거. 진료 페이지 aside에 해당 하위 페이지 링크(KO만).
+- 기본 og(hero 1920×1280)·의료진 사진(1000×1250)에 og:image:width/height 추가.
+- **파비콘:** 승인된 새 아이콘(`public/favicon.ico`, `favicon-48/96/192/512.png`, `apple-touch-icon.png`), 공개·안내서 head 링크 `?v=fav20261014`로 통일(logo-mark.png 아이콘 링크 제거). `public/_routes.json`에 정적 제외 목록을 고정(새 PNG가 워커 404로 가지 않게, /sw.js는 기존처럼 워커 처리).
+- 검사: `tests/local-seo.mjs`에 하위 페이지 검사 추가(PASS), 로컬 features·seo-mobile·locales·navigation·services PASS. handover는 WebKit 미설치로 Chromium 구간만.
+
 ## Media34 — 진료별 치료 전후 사례·관련 영상, 임플란트 스크롤 스토리, 환자 리뷰 링크 (2026-10-13, Claude Code)
 
 - **치료 전후 사례(진료 페이지 `#before-after`):** 원장 드라이브 `홈페이지/!!4-x-x …/비포애프터` 이미지 60장(중복 제외)을 800px WebP(EXIF 제거)로 `public/static/images/cases/ba-NN.webp`에 두고, 진료별로 6장 + ‘사례 n건 더 보기’(`<details>`). 카드 클릭 → 해당 원장 칼럼(인블로그, `thegoodmorningdental.com/blog/…`) 새 탭. 매핑은 `src/case-media-data.ts`(사이트맵 번호 4-2-1=implant-sedation … 4-5-3=gum-contouring). 환자 인물 사진이 들어간 1장(ba-49)은 사본에서 가림. 촬영 방식·개인차·결과 비보장 고지 포함. Review/AggregateRating 스키마 없음.

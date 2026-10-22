@@ -115,3 +115,60 @@
 .review-call .icon{width:16px;height:16px}
 .review-note{margin:14px 0 0;font-size:12px;color:#7a826d}
 @media(max-width:600px){.patient-reviews{padding:72px 0}.review-platforms{grid-template-columns:1fr}.review-cta{padding:26px 20px}.review-cta-actions,.review-cta-actions .btn{width:100%}}
+
+/* 2026-10-22 · related videos use the real YouTube thumbnail (lazy, 16:9) with the title below. */
+.media-video-cover.has-thumb{padding:0;background:#1b1e1c;justify-content:flex-start}
+.media-video-cover.has-thumb::after{display:none}
+.media-video-cover.has-thumb img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;transition:transform .5s,filter .3s}
+.media-video-cover.has-thumb:hover img,.media-video-cover.has-thumb:focus-visible img{transform:scale(1.03);filter:brightness(.92)}
+.media-video-cover.has-thumb .media-video-kicker{position:absolute;left:10px;top:10px;z-index:1;padding:4px 8px;background:#242725d9;max-width:calc(100% - 20px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.media-video-cover.has-thumb .media-video-play{width:48px;height:48px;box-shadow:0 6px 18px #0006}
+.media-video-title{margin:12px 2px 0;font-size:15px;line-height:1.5;font-weight:700;color:#272a27;word-break:keep-all;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.media-video-title+p{margin-top:6px}
+
+/* 2026-10-22 · sedation safety block (KDSA membership, emergency readiness, sedation records) on the two sedation pages. */
+.sedation-safety{--gm-ink:#242725;--gm-sun:#f2d45e;--gm-olive:#5e6b51}
+.sedation-safety h3{font-size:clamp(19px,1.8vw,23px);line-height:1.45;margin:10px 0 10px;word-break:keep-all}
+.sedation-safety p{line-height:1.8;word-break:keep-all}
+.sedation-tag{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;background:#242725;color:#f2d45e;font-size:12px;font-weight:800;letter-spacing:.04em}
+.sedation-tag .icon{width:14px;height:14px}
+.sedation-note{font-size:13px;color:#5e6b51;margin:10px 0 0}
+.sedation-cert{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:28px;align-items:center;padding:24px;background:#fffef9;border:1px solid #e3e3d8}
+.sedation-cert-figures{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.sedation-cert-figures figure{margin:0}
+.sedation-cert-figures img{display:block;width:100%;height:auto;border:1px solid #dcdcd0;box-shadow:0 10px 24px #24272514;background:#f7f3e3}
+.sedation-cert-figures figcaption{font-size:12px;color:#7a826d;margin-top:6px;text-align:center}
+.sedation-readiness{margin-top:22px;padding:26px 24px;background:#242725;color:#f4f2e8}
+.sedation-readiness h3{color:#fff}
+.sedation-readiness ul{list-style:none;margin:16px 0 0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px}
+.sedation-readiness li{display:flex;flex-direction:column;gap:6px;padding:16px;border:1px solid #ffffff24;background:#ffffff08}
+.sedation-readiness li strong{color:#f2d45e;font-size:15px}
+.sedation-readiness li span{color:#d3d8ca;font-size:14px;line-height:1.7;word-break:keep-all}
+.sedation-readiness .sedation-note{color:#b8bfad}
+.sedation-records{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:28px;align-items:center;margin-top:22px}
+.sedation-records figure{margin:0;overflow:hidden;background:#111}
+.sedation-records img{display:block;width:100%;height:auto}
+@media(max-width:900px){.sedation-cert,.sedation-records{grid-template-columns:1fr;gap:18px}.sedation-cert{padding:16px}.sedation-readiness{padding:22px 16px}}
+
+/* 2026-10-22 · implant cross-section scrubbed by scroll (scrub mode only; the static list keeps the 3D scene images). */
+.implant-anatomy{display:none;margin:0}
+.implant-anatomy svg{display:block;width:100%;height:100%;overflow:visible}
+.implant-anatomy text{font-family:'Good Morning Sans','Pretendard',sans-serif}
+.implant-scroll.is-scrub .implant-step-figure{display:none}
+.implant-scroll.is-scrub .implant-anatomy{display:block;position:absolute;z-index:1;right:max(40px,calc((100% - 1320px)/2));top:50%;height:min(76vh,640px);aspect-ratio:600/640;transform:translateY(-46%)}
+.implant-scroll.is-scrub .implant-anatomy::before{content:'';position:absolute;inset:-12% -18%;background:radial-gradient(closest-side,#2c3a30 0,#16201a00 100%);z-index:-1}
+.ia-ghost{opacity:var(--ia-ghost,0)}
+.ia-scan{opacity:var(--ia-scan,0)}
+.ia-scan-line{transform:translateY(calc(300px + var(--ia-scan-y,0) * 340px))}
+.ia-measure{opacity:var(--ia-measure,0)}
+.ia-fixture{opacity:var(--ia-fix-o,0);transform:translateY(calc((1 - var(--ia-fix,0)) * -330px))}
+.ia-threads{transform:translateY(calc(var(--ia-turn,0) * 16px))}
+.ia-glow{opacity:var(--ia-glow,0)}
+.ia-abutment{opacity:var(--ia-abut-o,0);transform:translateY(calc((1 - var(--ia-abut,0)) * -230px))}
+.ia-crown{opacity:var(--ia-crown-o,0);transform:translateY(calc((1 - var(--ia-crown,0)) * -250px))}
+@media(max-width:900px){
+ .implant-scroll.is-scrub .implant-anatomy{left:50%;right:auto;top:24svh;height:42svh;transform:translateX(-50%)}
+ .implant-scroll.is-scrub .implant-anatomy::before{inset:-6% -30%}
+ .implant-scroll.is-scrub .implant-step-copy{background:linear-gradient(180deg,#16201a00,#16201ae6 18%);padding-top:14px}
+}
+@media(max-width:900px){.implant-scroll.is-scrub:not(.past-intro) .implant-anatomy{opacity:.3}.implant-scroll.is-scrub .implant-anatomy{transition:opacity .4s}}

@@ -1,0 +1,12 @@
+/* 더굿모닝치과 메인 스크롤 몰입 보조 레이어 — /static/immersive.js 가 html.mx 를 붙였을 때만 작동 */
+/* 원장 인용: 왼쪽 금색 줄 위로 아침 햇살 같은 노란 줄이 위에서부터 차오름 */
+html.mx .director-quote.mx-sunline { position: relative; }
+html.mx .director-quote.mx-sunline::before {
+  content: ''; position: absolute; left: -3px; top: 0; width: 3px; height: 100%;
+  background: linear-gradient(to bottom, #f2d45e, #f7e7a1); box-shadow: 0 0 14px rgba(242,212,94,.6);
+  transform: scaleY(var(--mx-sun, 0)); transform-origin: 50% 0; pointer-events: none;
+}
+/* 모션 OFF 로 바뀌면 장식은 끝 상태 */
+html.motion-off .director-quote.mx-sunline::before { transform: none; }
+/* 양옆에서 들어오는 리뷰 창구가 가로 스크롤을 만들지 않도록 */
+html.mx #patient-reviews, html.mx #director-story { overflow-x: clip; }

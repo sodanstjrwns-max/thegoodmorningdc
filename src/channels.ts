@@ -11,7 +11,7 @@ export function parseFeed(xml:string,type:string):FeedItem[]{
  if(type==='column'){let end=0;for(let i=0;i<12;i++){const next=xml.indexOf('</item>',end);if(next<0)break;end=next+7}if(end)xml=xml.slice(0,end)+'</channel></rss>'}
  const parsed=new XMLParser({ignoreAttributes:false,removeNSPrefix:true,processEntities:false}).parse(xml)
  const rows=type==='youtube'?array(parsed.feed?.entry):array(parsed.rss?.channel?.item)
- return rows.map((r:any)=>({title:text(r.title),url:type==='youtube'?array(r.link).find((l:any)=>l['@_rel']==='alternate')?.['@_href']||array(r.link)[0]?.['@_href']:text(r.link),date:text(r.published||r.pubDate)})).filter((r:FeedItem)=>r.title&&safeUrl(r.url,type==='youtube'?['www.youtube.com']:type==='column'?['thegoodmorningdental.com']:['blog.naver.com','m.blog.naver.com'])).slice(0,12)
+ return rows.map((r:any)=>({title:text(r.title),url:type==='youtube'?array(r.link).find((l:any)=>l['@_rel']==='alternate')?.['@_href']||array(r.link)[0]?.['@_href']:text(r.link),date:text(r.published||r.pubDate)})).filter((r:FeedItem)=>r.title&&safeUrl(r.url,type==='youtube'?['www.youtube.com']:type==='column'?['thegoodmorningdc.kr','thegoodmorningdental.com']:['blog.naver.com','m.blog.naver.com'])).slice(0,12)
 }
 export function feedUrl(channel:Content['channels'][number]){
  if(channel.type==='column')return 'https://inblog.ai/tgm-dental/rss'
@@ -47,7 +47,7 @@ export async function channelListing(db:any,content:Content,waitUntil?:(promise:
    if(cached){
     const value=JSON.parse(cached.items_json)
     if(!Array.isArray(value))throw Error('Invalid channel cache')
-    items=value.filter((i:any)=>i&&typeof i.title==='string'&&typeof i.url==='string'&&typeof i.date==='string'&&safeUrl(i.url,ch.type==='youtube'?['www.youtube.com']:ch.type==='column'?['thegoodmorningdental.com']:['blog.naver.com','m.blog.naver.com'])).slice(0,12)
+    items=value.filter((i:any)=>i&&typeof i.title==='string'&&typeof i.url==='string'&&typeof i.date==='string'&&safeUrl(i.url,ch.type==='youtube'?['www.youtube.com']:ch.type==='column'?['thegoodmorningdc.kr','thegoodmorningdental.com']:['blog.naver.com','m.blog.naver.com'])).slice(0,12)
    }
   }catch{stale=true;console.warn('Optional channel cache unavailable')}
   if(db&&feedUrl(ch)&&(!cached||cached.next_attempt<Date.now())&&waitUntil)waitUntil(refreshChannel(db,ch).catch(()=>{console.warn('Optional channel refresh unavailable')}))

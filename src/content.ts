@@ -16,7 +16,7 @@ export function branchPlaceUrl(b:{id:string;address:string}){const id:Record<str
 export const initialChannels = [
  {key:'blog-cheongnyangni',title:'공식 네이버 블로그',branch:'cheongnyangni',type:'naver',url:'https://blog.naver.com/thegoodmorningdent',feedId:'thegoodmorningdent',source:officialSource,enabled:true},
  {key:'youtube',title:'더굿모닝치과 YouTube',branch:'all',type:'youtube',url:'https://www.youtube.com/channel/UCYLjg7-qpfI4ev-QkfpubFQ',feedId:'UCYLjg7-qpfI4ev-QkfpubFQ',source:officialSource,enabled:true},
- {key:'column',title:'강도욱 원장 칼럼 · 인블로그',branch:'cheongnyangni',type:'column',url:'https://thegoodmorningdental.com/blog/',feedId:'',source:officialSource,enabled:true},
+ {key:'column',title:'강도욱 원장 칼럼 · 인블로그',branch:'cheongnyangni',type:'column',url:'https://thegoodmorningdc.kr/blog/',feedId:'',source:officialSource,enabled:true},
  // Profile name/location and indexed clinician posts match Cheongnyangni.
  // External link only: no Instagram scraping, embedded feed or inferred branch account.
  {key:'instagram-cheongnyangni',title:'더굿모닝치과 인스타그램',branch:'cheongnyangni',type:'instagram',url:'https://www.instagram.com/_thegoodmorning/',feedId:'',source:'https://www.instagram.com/_thegoodmorning/',enabled:true}
@@ -116,7 +116,7 @@ export function validate(kind:Kind,key:string,value:any,publishing=false){
  }
  if(kind==='channel'){
   if(!['naver','youtube','column','instagram'].includes(value.type)||!['all',...source.branches.map(b=>b.id)].includes(value.branch))throw Error('채널 종류와 지점을 확인하세요.')
-  const hosts:Record<string,string[]>={naver:['blog.naver.com'],youtube:['www.youtube.com'],column:['thegoodmorningdental.com'],instagram:['www.instagram.com']}
+  const hosts:Record<string,string[]>={naver:['blog.naver.com'],youtube:['www.youtube.com'],column:['thegoodmorningdc.kr','thegoodmorningdental.com'],instagram:['www.instagram.com']}
   if(!safeUrl(value.url,hosts[value.type])||!safeUrl(value.source))throw Error('공식 채널 URL과 확인 출처가 필요합니다.')
   if(value.type==='naver'&&!/^[a-zA-Z0-9_-]{1,50}$/.test(value.feedId))throw Error('네이버 블로그 ID를 확인하세요.')
   if(value.type==='youtube'&&!/^UC[\w-]{22}$/.test(value.feedId))throw Error('YouTube 채널 ID를 확인하세요.')

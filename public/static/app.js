@@ -18,13 +18,16 @@ function syncSiteMotion(){
 siteMotionButton?.addEventListener('click',()=>{sitePaused=!sitePaused;try{sessionStorage.setItem('gm_motion',sitePaused?'off':'on')}catch{}syncSiteMotion()});
 motionPreference.addEventListener('change',syncSiteMotion);navigator.connection?.addEventListener?.('change',syncSiteMotion);
 // Retain the original heading structure and accessible name; only visual glyphs are split.
+const clipTextHost=node=>{for(let e=node.parentElement;e;e=e.parentElement){const cs=getComputedStyle(e);if(cs.webkitBackgroundClip==='text'||cs.backgroundClip==='text')return e}return null};
 if(!location.pathname.startsWith('/admin')){
  $$('#main h1,#main h2,.closing-inner h2').forEach(heading=>{
   if(heading.querySelector('button,input,a')||!motionAllowed())return;
   const copy=heading.cloneNode(true);$$('br',copy).forEach(br=>br.replaceWith(' '));
   heading.setAttribute('aria-label',heading.getAttribute('aria-label')||copy.textContent.replace(/\s+/g,' ').trim());
-  const walker=document.createTreeWalker(heading,NodeFilter.SHOW_TEXT),nodes=[];let node,index=0;
-  while(node=walker.nextNode())if(node.textContent.trim())nodes.push(node);
+  const walker=document.createTreeWalker(heading,NodeFilter.SHOW_TEXT),nodes=[],hosts=[];let node,index=0;
+  while(node=walker.nextNode())if(node.textContent.trim()){const host=clipTextHost(node);if(host){if(!hosts.includes(host))hosts.push(host)}else nodes.push(node)}
+  // Gradient text (background-clip:text) turns transparent when split into inline-block glyphs: move the host whole as one glyph.
+  hosts.forEach(host=>{if(host===heading||host.contains(heading))return;host.classList.add('kinetic-char');host.style.setProperty('--char-index',String(Math.min(index++,40)))});
   nodes.forEach(text=>{const fragment=document.createDocumentFragment();text.textContent.split(/(\s+)/).forEach(word=>{
    if(!word.trim()){fragment.append(document.createTextNode(word));return}
    const group=document.createElement('span');group.className='kinetic-word';group.setAttribute('aria-hidden','true');

@@ -51,13 +51,14 @@ const doctorCard=(d:typeof doctors[number])=>`<a class="doctor-card" href="/doct
 const videoThumbnail=(v:typeof videos[number])=>{
  const alt=esc(v.title+' 영상 썸네일');
  if(v.image&&!v.image.startsWith('space-'))return img(v.image,v.title+' 영상 썸네일');
- if(['f3C458akJog','Q3w-rsppT_g'].includes(v.id)){
+ // 2026-11-06: 원장 요청대로 YouTube 원본 썸네일(maxres → 960/480 WebP 자체 호스팅)로 통일. 글자 표지는 썸네일 파일이 없는 새 영상만.
+ if(['Ljh4gLCFs6Y','xW7k824_a_o','DQdEDnEaN4c','59WYhK9pWe0','f3C458akJog','Q3w-rsppT_g'].includes(v.id)){
   const path='/static/images/video-'+v.id;
   return `<img class="video-thumbnail" data-video-thumbnail="${esc(v.id)}" src="${path}.webp" srcset="${path}-small.webp 480w, ${path}.webp 960w" sizes="(max-width:600px) calc(100vw - 40px), (max-width:1100px) 45vw, 30vw" alt="${alt}" loading="lazy" decoding="async" width="960" height="540">`;
  }
  const covers:Record<string,[string,string,string]>={Ljh4gLCFs6Y:['01','수면치료와 전체 임플란트','moon'],xW7k824_a_o:['02','신경치료 후 앞니가 검게 보이는 이유','tooth'],DQdEDnEaN4c:['03','임플란트 주위염, 뼈부터 다시 살펴보기','shield'],'59WYhK9pWe0':['04','상악동 염증과 치과 치료','search']};
  const [number,title,symbol]=covers[v.id]||['PLAY',v.title,'play'];
- return `<span class="video-topic-cover" data-video-thumbnail="${esc(v.id)}" data-thumbnail-kind="topic"><span class="cover-kicker">THE GOOD MORNING / ${number}</span><strong>${esc(title)}</strong><span class="cover-description">${covers[v.id]?'환자사진 대신 진료 주제로 구성한 표지':'영상 미리보기 · 재생해서 확인'}</span><span class="cover-symbol" aria-hidden="true">${icon(symbol)}</span></span>`;
+ return `<span class="video-topic-cover" data-video-thumbnail="${esc(v.id)}" data-thumbnail-kind="topic"><span class="cover-kicker">THE GOOD MORNING / ${number}</span><strong>${esc(title)}</strong><span class="cover-description">영상 미리보기 · 재생해서 확인</span><span class="cover-symbol" aria-hidden="true">${icon(symbol)}</span></span>`;
 }
 const videoCard=(v:typeof videos[number])=>`<article class="video-card" data-category="${esc(v.category)}"><button class="video-image" data-video="${esc(v.id)}" aria-label="${esc(v.title)} 영상 재생">${videoThumbnail(v)}<span class="play-circle">${icon('play')}</span><span class="video-label">DOCTOR'S TALK</span></button><span class="eyebrow">${esc(v.category)}</span><h3><button class="text-button" data-video="${esc(v.id)}">${esc(v.title)}</button></h3></article>`
 const storyControls=()=>`<div class="story-playback" hidden><span class="story-playback-status">자동 연출</span><button type="button" data-story-pause aria-pressed="false">연출 정지</button><button type="button" data-story-replay>다시 보기 ${icon('arrow')}</button></div>`

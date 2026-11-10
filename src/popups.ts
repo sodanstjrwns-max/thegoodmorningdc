@@ -28,7 +28,7 @@ function card(p:Popup,i:number){
 }
 export function popupMarkup(list:Popup[]){
  const items=list.slice(0,POPUP_MAX);if(!items.length)return ''
- return `<div class="gm-popup-overlay" id="gm-popups" role="dialog" aria-modal="true" aria-label="병원 공지" hidden><div class="gm-popup-bar"><span class="gm-popup-bar-t">병원 공지 <b class="gm-popup-count">${items.length}</b></span><button type="button" class="gm-popup-all">모두 닫기 ×</button></div><div class="gm-popup-stack">${items.map(card).join('')}</div><div class="gm-popup-nav" hidden><button type="button" class="gm-popup-prev" aria-label="이전 공지">‹</button><span class="gm-popup-dots" aria-hidden="true"></span><span class="gm-popup-ind" aria-live="polite"></span><button type="button" class="gm-popup-next" aria-label="다음 공지">›</button></div></div><link rel="stylesheet" href="/static/popups.css?v=1"><script src="/static/popups.js?v=1" defer></script>`
+ return `<div class="gm-popup-overlay" id="gm-popups" role="dialog" aria-modal="true" aria-label="병원 공지" hidden><div class="gm-popup-bar"><span class="gm-popup-bar-t">병원 공지 <b class="gm-popup-count">${items.length}</b></span><button type="button" class="gm-popup-all">모두 닫기 ×</button></div><div class="gm-popup-stack">${items.map(card).join('')}</div><div class="gm-popup-nav" hidden><button type="button" class="gm-popup-prev" aria-label="이전 공지">‹</button><span class="gm-popup-dots" aria-hidden="true"></span><span class="gm-popup-ind" aria-live="polite"></span><button type="button" class="gm-popup-next" aria-label="다음 공지">›</button></div></div><link rel="stylesheet" href="/static/popups.css?v=2"><script src="/static/popups.js?v=1" defer></script>`
 }
 
 function clean(input:any){

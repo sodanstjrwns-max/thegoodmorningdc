@@ -8,7 +8,7 @@
 .ba-figure{position:relative;margin:0;aspect-ratio:16/9;background:#111;overflow:hidden}
 .ba-figure img{display:block;width:100%;height:100%;object-fit:cover;transition:transform .5s}
 .ba-card a:hover .ba-figure img{transform:scale(1.03)}
-.ba-badge{position:absolute;left:10px;top:10px;padding:4px 8px;background:#242725d9;color:#f2d45e;font-size:9px;font-weight:800;letter-spacing:.12em}
+.ba-badge{position:absolute;left:10px;top:10px;padding:4px 8px;background:#242725d9;color:#f2d45e;font-size:12px;font-weight:800;letter-spacing:.12em}
 .ba-card h3{margin:14px 14px 8px;font-size:15px;line-height:1.5;font-weight:700;color:#272a27;word-break:keep-all;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .ba-meta{margin:auto 14px 14px;display:flex;flex-wrap:wrap;gap:4px 10px;align-items:center;font-size:12px;color:#7a826d}
 .ba-meta .ba-open{margin-left:auto;display:inline-flex;align-items:center;gap:4px;color:#242725;font-weight:700}
@@ -24,7 +24,7 @@
 .media-video-cover::after{content:'';position:absolute;right:-30px;bottom:-30px;width:120px;height:120px;border-radius:50%;border:1px solid #f2d45e55}
 .media-video-cover:hover,.media-video-cover:focus-visible{transform:translateY(-3px)}
 .media-video-cover:focus-visible{outline:2px solid #f2d45e;outline-offset:3px}
-.media-video-kicker{font-size:9px;letter-spacing:.14em;color:#f2d45e;font-weight:800}
+.media-video-kicker{font-size:12px;letter-spacing:.14em;color:#f2d45e;font-weight:800}
 .media-video-cover strong{font-size:16px;line-height:1.45;word-break:keep-all;max-width:88%}
 .media-video-play{position:absolute;right:16px;bottom:16px;width:40px;height:40px;border-radius:50%;background:#f2d45e;color:#242725;display:grid;place-items:center;z-index:1}
 .media-video-play .icon{width:16px;height:16px}
@@ -88,7 +88,7 @@
  .implant-scroll.is-scrub .implant-step h3{font-size:20px;margin:10px 0 6px}
  .implant-scroll.is-scrub .implant-step p{font-size:14px;line-height:1.65}
  .implant-scroll.is-scrub .implant-scroll-rail{left:20px;right:20px;bottom:112px}
- .implant-scroll.is-scrub .implant-scroll-note{left:20px;right:20px;bottom:62px;font-size:11px;text-align:left}
+ .implant-scroll.is-scrub .implant-scroll-note{left:20px;right:20px;bottom:62px;font-size:13px;text-align:left}
  .implant-scroll-finale{width:calc(100% - 40px)}
 }
 @media(prefers-reduced-motion:reduce){.ba-card a,.ba-figure img,.media-video-cover{transition:none}.ba-card a:hover{transform:none}}

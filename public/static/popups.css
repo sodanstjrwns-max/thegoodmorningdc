@@ -18,7 +18,7 @@
 a.gm-popup-link:hover .gm-popup-more,a.gm-popup-link:focus-visible .gm-popup-more{text-decoration:underline}
 .gm-popup-img img{display:block;width:100%;height:auto;max-height:52vh;object-fit:contain;background:#f4f3ee}
 .gm-popup-body{padding:24px 24px 20px}
-.gm-popup-tag{display:inline-block;font-size:11px;font-weight:800;letter-spacing:.16em;color:#5d6b4f;background:#eef0e4;padding:4px 11px;border-radius:99px;margin-bottom:10px}
+.gm-popup-tag{display:inline-block;font-size:12px;font-weight:800;letter-spacing:.16em;color:#5d6b4f;background:#eef0e4;padding:4px 11px;border-radius:99px;margin-bottom:10px}
 .gm-popup-title{font-size:20px;font-weight:800;line-height:1.35;letter-spacing:-.01em;margin:0 44px 8px 0;word-break:keep-all;overflow-wrap:anywhere}
 .gm-popup-text{font-size:15px;line-height:1.7;color:#4a4f48;word-break:keep-all;overflow-wrap:anywhere}
 .gm-popup-text p{margin:.4em 0}
@@ -40,7 +40,7 @@ a.gm-popup-link:hover .gm-popup-more,a.gm-popup-link:focus-visible .gm-popup-mor
 .gm-popup-deck .gm-popup-back .gm-popup-x{visibility:hidden}
 .gm-popup-deck .gm-popup-peek{display:flex;align-items:center;position:absolute;top:0;left:0;right:0;height:var(--gm-dy,32px);z-index:4;margin:0;padding:0 16px;border:0;border-bottom:1px solid #ecebe3;background:#f7f6f0;color:#242725;font-size:13px;font-weight:700;text-align:left;cursor:pointer;opacity:0;visibility:hidden}
 .gm-popup-deck .gm-popup-back .gm-popup-peek{opacity:1;visibility:visible}
-.gm-popup-peek-n{flex:none;font-size:11px;font-weight:800;color:#5d6b4f;margin-right:8px;letter-spacing:.08em}
+.gm-popup-peek-n{flex:none;font-size:12px;font-weight:800;color:#5d6b4f;margin-right:8px;letter-spacing:.08em}
 .gm-popup-peek-t{overflow:hidden;white-space:nowrap;text-overflow:ellipsis;min-width:0}
 /* 모바일: 한 장씩 */
 .gm-popup-nav{display:none}

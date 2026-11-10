@@ -9,6 +9,9 @@ export const NAVER_SITE_VERIFICATION='f785841c2e30468ae35aa3553ae334175a084986'
 export const INDEXNOW_KEY='98fd1c7b41dc3340ee91b700aef8397d'
 // Central PF dashboard stats endpoint. Bearer token is the Pages secret STATS_API_TOKEN only.
 export const STATS_API_URL='https://pf-dashboard-2nt.pages.dev/api/stats/thegoodmorningdc.kr'
+// PF first-party beacon (pv, scroll depth, phone/booking/Kakao clicks; no cookies or identifiers). Same gate as GA4/Clarity.
+export const PF_BEACON_ORIGIN='https://pf-dashboard-2nt.pages.dev'
+export const PF_BEACON_SRC=PF_BEACON_ORIGIN+'/beacon.js'
 export const CLARITY_DASHBOARD_URL='https://clarity.microsoft.com/projects/view/'+CLARITY_PROJECT_ID+'/dashboard'
 const idPattern=/^[A-Za-z0-9_-]{1,80}$/
 export type Measurement={ga:string;clarity:string;naver:string}
@@ -17,9 +20,9 @@ export function measurement(enabled:boolean,env:{NAVER_SITE_VERIFICATION?:string
  const naver=(env.NAVER_SITE_VERIFICATION||NAVER_SITE_VERIFICATION).trim()
  return {ga:enabled&&idPattern.test(GA_MEASUREMENT_ID)?GA_MEASUREMENT_ID:'',clarity:enabled&&idPattern.test(CLARITY_PROJECT_ID)?CLARITY_PROJECT_ID:'',naver:enabled&&idPattern.test(naver)?naver:''}
 }
-// CSP additions for GA4 and Clarity (Clarity's tag loads scripts.clarity.ms and reports to *.clarity.ms / c.bing.com).
+// CSP additions for GA4, Clarity and the PF beacon (Clarity's tag loads scripts.clarity.ms and reports to *.clarity.ms / c.bing.com).
 export const analyticsCsp={
- script:['https://www.googletagmanager.com','https://www.clarity.ms','https://*.clarity.ms'],
- connect:['https://*.google-analytics.com','https://*.analytics.google.com','https://*.googletagmanager.com','https://www.clarity.ms','https://*.clarity.ms','https://c.bing.com'],
+ script:['https://www.googletagmanager.com','https://www.clarity.ms','https://*.clarity.ms',PF_BEACON_ORIGIN],
+ connect:['https://*.google-analytics.com','https://*.analytics.google.com','https://*.googletagmanager.com','https://www.clarity.ms','https://*.clarity.ms','https://c.bing.com',PF_BEACON_ORIGIN],
  img:['https://*.google-analytics.com','https://*.googletagmanager.com','https://*.clarity.ms','https://c.bing.com']
 }

@@ -13,6 +13,8 @@ export const broadcastLinks = [
 ]
 // Single public clinic: Kang Do-wook, booking 1019716 / place 19524548.
 export function branchPlaceUrl(b:{id:string;address:string}){const id:Record<string,string>={cheongnyangni:'19524548'};return id[b.id]?'https://map.naver.com/p/entry/place/'+id[b.id]:'https://map.naver.com/p/search/'+encodeURIComponent('더굿모닝치과 '+b.address)}
+// 병원 좌표 — 네이버 플레이스 기준(2026-11-10 확인). 구조화 데이터 geo 에만 쓴다(관리자 지점 편집값과 무관한 고정값).
+export const branchGeo:Record<string,{latitude:number;longitude:number}>={cheongnyangni:{latitude:37.5784193,longitude:127.0370443}}
 export const initialChannels = [
  {key:'blog-cheongnyangni',title:'공식 네이버 블로그',branch:'cheongnyangni',type:'naver',url:'https://blog.naver.com/thegoodmorningdent',feedId:'thegoodmorningdent',source:officialSource,enabled:true},
  {key:'youtube',title:'더굿모닝치과 YouTube',branch:'all',type:'youtube',url:'https://www.youtube.com/channel/UCYLjg7-qpfI4ev-QkfpubFQ',feedId:'UCYLjg7-qpfI4ev-QkfpubFQ',source:officialSource,enabled:true},

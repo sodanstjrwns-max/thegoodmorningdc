@@ -1,4 +1,4 @@
-import {branchPlaceUrl,type Content} from './content'
+import {branchGeo,branchPlaceUrl,type Content} from './content'
 import {textSummary} from './markdown'
 import {hubs} from './area'
 import {topics,topicPath,topicByPath,OG_SIZE} from './area-topics'
@@ -51,14 +51,14 @@ export function pageDescription(path:string,title:string,c:Content,override=''){
  const text=override||(treatment?`${treatment.name}: ${treatment.description} 치료 과정·주의사항·자주 묻는 질문과 관련 의료진을 확인하세요.`:doctor?`${doctor.name} 원장 · ${doctor.role}. ${doctor.bio.slice(0,2).join(' · ')}. 전체 약력과 진료 분야를 확인하세요.`:descriptions[path]||title)
  return snippet(text)
 }
-// Region/locality are read from the published street address itself; no unverified postal code or coordinates.
+// Region/locality are read from the published street address itself; no unverified postal code. Coordinates: Naver Place values in branchGeo only.
 const addressParts=(a:string)=>{const m=/^(서울특별시)\s+(\S+구)\s/.exec(a);return m?{addressRegion:m[1],addressLocality:m[2]}:{}}
 const days=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday']
 export function clinicSchemas(c:Content,origin:string){
  const org=origin+'/#organization'
  return [
   {'@context':'https://schema.org','@type':'MedicalOrganization','@id':org,name:'더굿모닝치과의원',legalName:'더굿모닝치과의원',alternateName:['더굿모닝치과','더굿모닝치과의원 청량리','THE GOOD MORNING DENTAL'],taxID:'204-96-61655',foundingDate:'1990',url:origin+'/',logo:origin+'/static/images/logo-mark.png',sameAs:c.channels.filter(x=>x.enabled).map(x=>x.url),location:c.branches.map(b=>({'@id':origin+'/#'+b.id}))},
-  ...c.branches.map(b=>({'@context':'https://schema.org','@type':['Dentist','LocalBusiness'],'@id':origin+'/#'+b.id,name:'더굿모닝치과의원',alternateName:[b.name,'더굿모닝치과의원 청량리'],url:origin+'/directions',telephone:b.phone,image:origin+'/static/images/hero.webp',parentOrganization:{'@id':org},address:{'@type':'PostalAddress',streetAddress:b.address,...addressParts(b.address),addressCountry:'KR'},hasMap:branchPlaceUrl(b),sameAs:[branchPlaceUrl(b),b.booking,b.kakao,...c.channels.filter(x=>x.enabled&&x.branch===b.id).map(x=>x.url)].filter(Boolean),openingHoursSpecification:b.schedule.flatMap((s,i)=>s.split(',').filter(Boolean).map(period=>{const [opens,closes]=period.split('-');return {'@type':'OpeningHoursSpecification',dayOfWeek:'https://schema.org/'+days[i],opens,closes}})),...(b.exceptions.length?{specialOpeningHoursSpecification:b.exceptions.flatMap(e=>(e.hours||'00:00-00:00').split(',').map(period=>{const [opens,closes]=period.split('-');return {'@type':'OpeningHoursSpecification',validFrom:e.date,validThrough:e.date,opens,closes}}))}:{})})),
+  ...c.branches.map(b=>({'@context':'https://schema.org','@type':['Dentist','LocalBusiness'],'@id':origin+'/#'+b.id,name:'더굿모닝치과의원',alternateName:[b.name,'더굿모닝치과의원 청량리'],url:origin+'/directions',telephone:b.phone,image:origin+'/static/images/hero.webp',parentOrganization:{'@id':org},address:{'@type':'PostalAddress',streetAddress:b.address,...addressParts(b.address),addressCountry:'KR'},...(branchGeo[b.id]?{geo:{'@type':'GeoCoordinates',...branchGeo[b.id]}}:{}),hasMap:branchPlaceUrl(b),sameAs:[branchPlaceUrl(b),b.booking,b.kakao,...c.channels.filter(x=>x.enabled&&x.branch===b.id).map(x=>x.url)].filter(Boolean),openingHoursSpecification:b.schedule.flatMap((s,i)=>s.split(',').filter(Boolean).map(period=>{const [opens,closes]=period.split('-');return {'@type':'OpeningHoursSpecification',dayOfWeek:'https://schema.org/'+days[i],opens,closes}})),...(b.exceptions.length?{specialOpeningHoursSpecification:b.exceptions.flatMap(e=>(e.hours||'00:00-00:00').split(',').map(period=>{const [opens,closes]=period.split('-');return {'@type':'OpeningHoursSpecification',validFrom:e.date,validThrough:e.date,opens,closes}}))}:{})})),
   {'@context':'https://schema.org','@type':'WebSite','@id':origin+'/#website',name:'더굿모닝치과',alternateName:['더굿모닝치과의원','THE GOOD MORNING DENTAL'],url:origin+'/',inLanguage:'ko-KR',publisher:{'@id':org}}
  ]
 }

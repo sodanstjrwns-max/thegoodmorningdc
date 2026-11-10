@@ -35,7 +35,7 @@ for(const [slug,keyword] of [['cheongnyangni','청량리 치과'],['jegi-dong','
  assert.deepEqual(faq.mainEntity.map(q=>q.name),visible);assert.deepEqual(faq.mainEntity.map(q=>q.acceptedAnswer.text),answers)
  assert.equal(all.find(s=>s['@type']==='WebPage').about['@id'],prod+'/#cheongnyangni')
  assert.equal(all.find(s=>s['@type']==='BreadcrumbList').itemListElement.at(-1).item,prod+'/area/'+slug)
- assert.equal(all.find(s=>s['@type']==='Dentist').name,'더굿모닝치과의원')
+ assert.equal(all.find(s=>[].concat(s['@type']).includes('Dentist')).name,'더굿모닝치과의원')
  assert.doesNotMatch(t.split('</head>')[0],/hreflang/,'Korean-only hub has no hreflang alternates')
  const en=await get('/en/area/'+slug);assert.equal(en.status,302);assert.equal(en.headers.get('location'),'/area/'+slug)
 }

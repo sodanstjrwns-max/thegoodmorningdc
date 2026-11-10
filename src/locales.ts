@@ -22,6 +22,7 @@ export function translate(s:string,locale:Locale):string{
  if(locale==='en'){
   // Translate interface patterns, not arbitrary patient stories or external article titles.
   const until=/^(\d{2}:\d{2})까지$/.exec(key);if(until)return 'Until '+until[1]
+  const local=/^(.*) \| 청량리 더굿모닝치과$/.exec(key);if(local)return translate(local[1]+' | 더굿모닝치과',locale)
   const branded=/^(.*) \| 더굿모닝치과$/.exec(key);if(branded)return translate(branded[1],locale)+' | THE GOOD MORNING DENTAL'
   const numbered=/^(.*) · (\d+)페이지$/.exec(key);if(numbered)return translate(numbered[1],locale)+' · Page '+numbered[2]
   const count=/^(\d+)개의 이야기 · (\d+) \/ (\d+) 페이지$/.exec(key);if(count)return `${count[1]} articles · Page ${count[2]} / ${count[3]}`

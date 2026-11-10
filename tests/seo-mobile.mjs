@@ -15,7 +15,7 @@ for(const [url,indexable,status] of [['https://clinic.example/',true,200],['http
 }
 assert.match(await (await lib.app.request('https://preview.example/robots.txt',{},env)).text(),/Disallow: \/\n/)
 const robots=await (await lib.app.request('https://clinic.example/robots.txt',{},env)).text();assert.match(robots,/Sitemap: https:\/\/clinic.example\/sitemap.xml/);assert.doesNotMatch(robots,/example\/\//)
-const data=lib.assemble(),schemas=lib.clinicSchemas(data,'https://clinic.example');assert.equal(schemas.filter(s=>s['@type']==='Dentist').length,1)
+const data=lib.assemble(),schemas=lib.clinicSchemas(data,'https://clinic.example');assert.equal(schemas.filter(s=>[].concat(s['@type']).includes('Dentist')).length,1)
 assert.equal(data.channels.find(c=>c.key==='instagram-cheongnyangni').url,'https://www.instagram.com/_thegoodmorning/')
 for(const [id,place] of [['cheongnyangni','19524548']])assert.equal(schemas.find(s=>s['@id']==='https://clinic.example/#'+id).hasMap,'https://map.naver.com/p/entry/place/'+place)
 for(const branch of data.branches){const s=schemas.find(s=>s['@id']==='https://clinic.example/#'+branch.id);assert.equal(s.telephone,branch.phone);assert.equal(s.address.streetAddress,branch.address);assert.equal(s.openingHoursSpecification.length,branch.schedule.flatMap(s=>s.split(',').filter(Boolean)).length)}
@@ -38,7 +38,7 @@ try{
   const description=await page.locator('meta[name="description"]').getAttribute('content');assert.ok(description.length>30);assert.ok(!descriptions.has(description),'unique description '+path);descriptions.add(description)
   assert.equal(await page.locator('link[rel="canonical"]').getAttribute('href'),url)
   assert.equal(await page.locator('meta[property="og:description"]').getAttribute('content'),description)
-  const all=await page.locator('script[type="application/ld+json"]').evaluate(el=>JSON.parse(el.textContent));assert.equal(all.filter(s=>s['@type']==='Dentist').length,1)
+  const all=await page.locator('script[type="application/ld+json"]').evaluate(el=>JSON.parse(el.textContent));assert.equal(all.filter(s=>[].concat(s['@type']).includes('Dentist')).length,1)
   const crumbs=all.find(s=>s['@type']==='BreadcrumbList').itemListElement;assert.equal(crumbs.at(-1).item,url)
   if(path!=='/'){const visible=await page.locator('.page-breadcrumbs li').allTextContents();assert.deepEqual(visible,crumbs.map(c=>c.name))}
   if(path.startsWith('/treatments/')){assert.equal(await page.locator('#care-summary').count(),1);assert.equal(crumbs.length,3);assert.ok(all.some(s=>s['@type']==='MedicalWebPage'))}

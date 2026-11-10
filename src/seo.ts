@@ -2,6 +2,7 @@ import {branchPlaceUrl,type Content} from './content'
 import {textSummary} from './markdown'
 import {hubs} from './area'
 import {topics,topicPath,topicByPath,OG_SIZE} from './area-topics'
+import {groups as treatmentGroups} from './data'
 export const snippet=(text:string,max=180)=>{const value=textSummary(text);return value.length>max?value.slice(0,max-1).trimEnd()+'…':value}
 export function listingQuery(search:URLSearchParams){const q=(search.get('q')||'').trim().slice(0,100),raw=search.get('page')||'1',page=Number(raw);return {q,page,valid:/^[1-9]\d*$/.test(raw)&&Number.isSafeInteger(page)}}
 export function listingPath(base:string,q:string,page:number){const params=new URLSearchParams();if(q)params.set('q',q);if(page>1)params.set('page',String(page));return base+(params.size?'?'+params:'')}
@@ -57,25 +58,55 @@ export function clinicSchemas(c:Content,origin:string){
  const org=origin+'/#organization'
  return [
   {'@context':'https://schema.org','@type':'MedicalOrganization','@id':org,name:'더굿모닝치과의원',legalName:'더굿모닝치과의원',alternateName:['더굿모닝치과','더굿모닝치과의원 청량리','THE GOOD MORNING DENTAL'],taxID:'204-96-61655',foundingDate:'1990',url:origin+'/',logo:origin+'/static/images/logo-mark.png',sameAs:c.channels.filter(x=>x.enabled).map(x=>x.url),location:c.branches.map(b=>({'@id':origin+'/#'+b.id}))},
-  ...c.branches.map(b=>({'@context':'https://schema.org','@type':'Dentist','@id':origin+'/#'+b.id,name:'더굿모닝치과의원',alternateName:[b.name,'더굿모닝치과의원 청량리'],url:origin+'/directions',telephone:b.phone,image:origin+'/static/images/hero.webp',parentOrganization:{'@id':org},address:{'@type':'PostalAddress',streetAddress:b.address,...addressParts(b.address),addressCountry:'KR'},hasMap:branchPlaceUrl(b),sameAs:[branchPlaceUrl(b),b.booking,b.kakao,...c.channels.filter(x=>x.enabled&&x.branch===b.id).map(x=>x.url)].filter(Boolean),openingHoursSpecification:b.schedule.flatMap((s,i)=>s.split(',').filter(Boolean).map(period=>{const [opens,closes]=period.split('-');return {'@type':'OpeningHoursSpecification',dayOfWeek:'https://schema.org/'+days[i],opens,closes}})),...(b.exceptions.length?{specialOpeningHoursSpecification:b.exceptions.flatMap(e=>(e.hours||'00:00-00:00').split(',').map(period=>{const [opens,closes]=period.split('-');return {'@type':'OpeningHoursSpecification',validFrom:e.date,validThrough:e.date,opens,closes}}))}:{})})),
+  ...c.branches.map(b=>({'@context':'https://schema.org','@type':['Dentist','LocalBusiness'],'@id':origin+'/#'+b.id,name:'더굿모닝치과의원',alternateName:[b.name,'더굿모닝치과의원 청량리'],url:origin+'/directions',telephone:b.phone,image:origin+'/static/images/hero.webp',parentOrganization:{'@id':org},address:{'@type':'PostalAddress',streetAddress:b.address,...addressParts(b.address),addressCountry:'KR'},hasMap:branchPlaceUrl(b),sameAs:[branchPlaceUrl(b),b.booking,b.kakao,...c.channels.filter(x=>x.enabled&&x.branch===b.id).map(x=>x.url)].filter(Boolean),openingHoursSpecification:b.schedule.flatMap((s,i)=>s.split(',').filter(Boolean).map(period=>{const [opens,closes]=period.split('-');return {'@type':'OpeningHoursSpecification',dayOfWeek:'https://schema.org/'+days[i],opens,closes}})),...(b.exceptions.length?{specialOpeningHoursSpecification:b.exceptions.flatMap(e=>(e.hours||'00:00-00:00').split(',').map(period=>{const [opens,closes]=period.split('-');return {'@type':'OpeningHoursSpecification',validFrom:e.date,validThrough:e.date,opens,closes}}))}:{})})),
   {'@context':'https://schema.org','@type':'WebSite','@id':origin+'/#website',name:'더굿모닝치과',alternateName:['더굿모닝치과의원','THE GOOD MORNING DENTAL'],url:origin+'/',inLanguage:'ko-KR',publisher:{'@id':org}}
  ]
 }
+// Home summary read aloud by assistants: the visible hero heading and its lead paragraph.
+export const HOME_SPEAKABLE=['#hero-section h1','#hero-section .hero-copy > p']
+// Fee table date: only the '적용일' printed on the public /pricing panel (verified record with a real date).
+export const feeEffectiveDate=(c:Content)=>c.operations.filter(o=>o.category==='pricing'&&o.verified&&/^\d{4}-\d{2}-\d{2}$/.test(o.effectiveDate||'')).map(o=>o.effectiveDate).sort().pop()||''
 export function pageSchemas(c:Content,origin:string,path:string,title:string,description:string,extra:object[]){
- const url=origin+path,topic=topicByPath(path.split('?')[0]),medical=path.startsWith('/treatments/')||!!topic
- return [...clinicSchemas(c,origin),{'@context':'https://schema.org','@type':medical?'MedicalWebPage':'WebPage','@id':url+'#webpage',url,name:title,description,inLanguage:'ko-KR',isPartOf:{'@id':origin+'/#website'},publisher:{'@id':origin+'/#organization'},...(medical?{about:{'@type':'MedicalProcedure',name:c.treatments.find(t=>path.endsWith('/'+t.slug))?.name}}:{}),...(path.startsWith('/area/')?{about:{'@id':origin+'/#'+(c.branches[0]?.id||'cheongnyangni')},mainEntity:{'@id':origin+'/#'+(c.branches[0]?.id||'cheongnyangni')}}:{}),...(topic?{image:{'@type':'ImageObject',url:origin+topic.image.og,width:OG_SIZE.width,height:OG_SIZE.height,caption:topic.image.alt},primaryImageOfPage:{'@type':'ImageObject',url:origin+topic.image.og},dateModified:topic.updated,specialty:'https://schema.org/Dentistry',relatedLink:topic.treatments.map(s=>origin+'/treatments/'+s)}:{})},
+ const url=origin+path,topic=topicByPath(path.split('?')[0]),medical=path.startsWith('/treatments/')||!!topic,doctorPath=c.doctors.some(d=>path==='/doctors/'+d.slug),feeDate=feeEffectiveDate(c)
+ return [...clinicSchemas(c,origin),{'@context':'https://schema.org','@type':medical?'MedicalWebPage':'WebPage','@id':url+'#webpage',url,name:title,description,inLanguage:'ko-KR',isPartOf:{'@id':origin+'/#website'},publisher:{'@id':origin+'/#organization'},...(medical?{about:{'@type':'MedicalProcedure',name:c.treatments.find(t=>path.endsWith('/'+t.slug))?.name}}:{}),...(path==='/'?{speakable:{'@type':'SpeakableSpecification',cssSelector:HOME_SPEAKABLE}}:{}),...(doctorPath?{mainEntity:{'@id':url+'#physician'}}:{}),...(path==='/pricing'&&feeDate?{dateModified:feeDate,lastReviewed:feeDate}:{}),...(path.startsWith('/area/')?{about:{'@id':origin+'/#'+(c.branches[0]?.id||'cheongnyangni')},mainEntity:{'@id':origin+'/#'+(c.branches[0]?.id||'cheongnyangni')}}:{}),...(topic?{image:{'@type':'ImageObject',url:origin+topic.image.og,width:OG_SIZE.width,height:OG_SIZE.height,caption:topic.image.alt},primaryImageOfPage:{'@type':'ImageObject',url:origin+topic.image.og},dateModified:topic.updated,specialty:'https://schema.org/Dentistry',relatedLink:topic.treatments.map(s=>origin+'/treatments/'+s)}:{})},
  {'@context':'https://schema.org','@type':'BreadcrumbList',itemListElement:breadcrumbs(path.split('?')[0],title).map((b,i,a)=>({'@type':'ListItem',position:i+1,name:b.name,item:i===a.length-1?url:origin+b.path}))},...extra]
 }
+// Fee rows quoted in the footer summary and llms.txt: the same six published items, in table order.
+export const FEE_HIGHLIGHTS=['레진 코어','인레이 · Gold','크라운 · 지르코니아 (구치)','임플란트 · 보증 4년','비보험 부분틀니','미백']
+const weekdays=['일','월','화','수','목','금','토']
+// One line per distinct timetable, Monday first: "월·화·목·금 09:30–18:30 (점심 13:00–14:30)".
+function hoursLine(schedule:string[]){
+ const text=(s:string)=>{const p=s.split(',').filter(Boolean);if(!p.length)return '휴진';const open=p[0].split('-')[0],close=p[p.length-1].split('-')[1],breaks=p.slice(1).map((x,i)=>p[i].split('-')[1]+'–'+x.split('-')[0]);return open+'–'+close+(breaks.length?' (점심 '+breaks.join(', ')+')':'')}
+ const order=[1,2,3,4,5,6,0],seen:string[]=[];for(const i of order){const t=text(schedule[i]||'');if(!seen.includes(t))seen.push(t)}
+ return seen.map(t=>order.filter(i=>text(schedule[i]||'')===t).map(i=>weekdays[i]).join('·')+' '+t).join(' / ')
+}
+// Standard fact block at the top of llms.txt / llms-full.txt. Every value comes from published content (CMS or source data).
+export function clinicFacts(c:Content,origin:string){
+ const b=c.branches[0],groups=[...new Set(c.treatments.map(t=>t.group))].sort().map(g=>treatmentGroups[g]).filter(Boolean)
+ const fees=c.feePageEnabled?c.operations.filter(o=>o.category==='pricing'&&o.verified).flatMap(o=>o.items).filter(i=>FEE_HIGHLIGHTS.includes(i.name)):[],feeDate=feeEffectiveDate(c)
+ const closed=b?b.schedule.map((s,i)=>s?'':weekdays[i]).filter(Boolean):[]
+ return ['## 병원 정보','- 이름: 더굿모닝치과의원 (표시명 더굿모닝치과 · THE GOOD MORNING DENTAL)',
+  groups.length?'- 진료 분야: 치과 — '+groups.join(', '):'',
+  ...(b?[`- 주소: ${b.address} / 가까운 역·출구: ${b.station}`,`- 전화: ${b.phone}`,`- 진료 시간: ${hoursLine(b.schedule)}${closed.length?' / 휴진: '+closed.join('·')+'요일':''}${b.note?' · '+plain(b.note):''}`,...b.exceptions.map(e=>`- 진료 일정 변경: ${e.date} ${e.hours||'휴진'}${e.note?' ('+plain(e.note)+')':''}`)]:[]),
+  c.doctors.length?'- 의료진: '+c.doctors.map(d=>`${d.name} 원장(${d.role})`).join(', '):'',
+  `- 예약: ${origin}/reservation${b?.booking?' · 네이버 예약 '+b.booking:''}${b?.kakao?' · 카카오톡 상담 '+b.kakao:''}`,
+  `- 진료 안내: ${origin}/treatments${c.feePageEnabled?` / 비용 안내: ${origin}/pricing`:''} / 의료진: ${origin}/doctors / 지역 안내(허브): ${origin}${hubs[0]?'/area/'+hubs[0].slug:'/directions'} / 자주 묻는 질문: ${origin}/faq`,
+  ...(fees.length?[`- 주요 비급여 진료비 (병원 제공 수가표${feeDate?' · 적용일 '+feeDate:''}, 치료 범위와 추가 항목에 따라 총비용은 달라질 수 있음):`,...fees.map(f=>`  - ${f.name}: ${f.amount}${f.unit?' / '+f.unit:''}${f.note?' ('+plain(f.note)+')':''}`)]:[])
+ ].filter(Boolean).join('\n')
+}
 export function llmIndex(c:Content,origin:string,preview:boolean){
- return `# 더굿모닝치과\n\n> 환자의 불편함을 한 번 더 듣는 치과. 1990년부터 이어온 진료의 마음.\n\n${preview?'제작 미리보기이며 검색 색인 대상이 아닙니다.\n\n':''}의료정보는 개인의 진단을 대신하지 않습니다. 상담·검사 후 치료 적합성과 비용을 안내합니다.\n\n## 공식 안내\n`+
+ return `# 더굿모닝치과\n\n> 환자의 불편함을 한 번 더 듣는 치과. 1990년부터 이어온 진료의 마음.\n\n${clinicFacts(c,origin)}\n\n${preview?'제작 미리보기이며 검색 색인 대상이 아닙니다.\n\n':''}의료정보는 개인의 진단을 대신하지 않습니다. 상담·검사 후 치료 적합성과 비용을 안내합니다.\n\n## 공식 안내\n`+
  Object.entries(labels).filter(([p])=>!['/','/privacy','/terms','/cases','/careers'].includes(p)).map(([p,n])=>`- [${n}](${origin+p})`).join('\n')+'\n\n## 병원 위치\n'+c.branches.map(b=>`- [${b.name}](${origin}/directions): ${b.address} · ${b.phone} · ${b.station}`).join('\n')+'\n\n## 진료별 설명·과정·FAQ\n'+c.treatments.map(t=>`- [${t.name}](${origin}/treatments/${t.slug}): ${plain(t.description)}`).join('\n')+'\n\n## 의료진 제공 프로필\n'+c.doctors.map(d=>`- [${d.name} 원장](${origin}/doctors/${d.slug}): ${d.role}`).join('\n')+'\n\n## 공식 외부 채널\n'+c.channels.filter(x=>x.enabled).map(x=>`- [${x.title}](${x.url})`).join('\n')+'\n'
 }
 
 // Doctor pages: Person + Physician with credentials stated in the published profile only.
 const alumni:Record<string,string[]>={'kang-dowook':['경희대학교 치과대학'],'lee-sanghoon':['서울대학교 치과대학'],'kang-jongseung':['경희대학교 의료경영대학원'],'lee-kyungyeon':['뉴욕대학교 치의학대학원','뉴욕주립대학교 빙엄턴'],'shin-hyunsook':['연세대학교','뉴욕대학교 치과대학원']}
-export function physicianSchema(d:Content['doctors'][number],origin:string){
- const specialties=[...d.role.matchAll(/([가-힣]+과)(?= · | 전문의|$)/g)].map(m=>m[1]).filter(x=>/전문의/.test(d.role))
- return {'@context':'https://schema.org','@type':['Person','Physician'],'@id':origin+'/doctors/'+d.slug+'#physician',url:origin+'/doctors/'+d.slug,name:d.name,jobTitle:d.role,image:origin+(d.image.startsWith('/media/')?d.image:'/static/images/'+d.image+'.webp'),medicalSpecialty:'https://schema.org/Dentistry',worksFor:{'@id':origin+'/#organization'},...(specialties.length?{hasCredential:specialties.map(name=>({'@type':'EducationalOccupationalCredential',credentialCategory:'전문의',name:name+' 전문의',recognizedBy:{'@type':'Organization',name:'보건복지부'}}))}:{}),...(alumni[d.slug]?{alumniOf:alumni[d.slug].map(name=>({'@type':'CollegeOrUniversity',name}))}:{})}
+// Memberships are read from the published profile lines themselves ("… 정회원", "… 회원", "… member").
+const memberships=(bio:string[])=>[...new Set(bio.map(line=>/^(.+?)\s+(?:정회원|회원|member)(?=\s|,|$)/i.exec(plain(line))?.[1]).filter((x):x is string=>!!x))]
+// brief=true: the fields printed on a doctor card (list page); the full profile lives on the doctor's own page.
+export function physicianSchema(d:Content['doctors'][number],origin:string,brief=false){
+ const specialties=[...d.role.matchAll(/([가-힣]+과)(?= · | 전문의|$)/g)].map(m=>m[1]).filter(x=>/전문의/.test(d.role)),member=brief?[]:memberships(d.bio)
+ return {'@context':'https://schema.org','@type':['Person','Physician'],'@id':origin+'/doctors/'+d.slug+'#physician',url:origin+'/doctors/'+d.slug,name:d.name,jobTitle:d.role,image:origin+(d.image.startsWith('/media/')?d.image:'/static/images/'+d.image+'.webp'),medicalSpecialty:['https://schema.org/Dentistry',...specialties],worksFor:{'@id':origin+'/#organization'},...(brief?{}:{...(specialties.length?{hasCredential:specialties.map(name=>({'@type':'EducationalOccupationalCredential',credentialCategory:'전문의',name:name+' 전문의',recognizedBy:{'@type':'Organization',name:'보건복지부'}}))}:{}),...(alumni[d.slug]?{alumniOf:alumni[d.slug].map(name=>({'@type':'CollegeOrUniversity',name}))}:{}),...(member.length?{memberOf:member.map(name=>({'@type':'Organization',name}))}:{})})}
 }
 // Sitemap lastmod: the date each page's content last changed in source (git history), never request time.
 // Update the matching entry when page content changes. Treatments/doctors default to data.ts history.
